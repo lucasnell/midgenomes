@@ -1,0 +1,416 @@
+---
+title: "*Tanytarsus gracilentus* sample summary"
+author: "Lucas A. Nell"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output: 
+  bookdown::pdf_document2:
+      dev: pdf
+      toc: false
+      number_sections: false
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(readxl)
+    library(rgdal)
+    library(broom)
+    library(cowplot)
+    library(viridisLite)
+})
+
+
+# This sets plotting device on my computer:
+if (!isTRUE(getOption('knitr.in.progress')) && file.exists(".Rprofile")) {
+    source(".Rprofile")
+}
+
+
+# From decimal degrees to UTM, assuming it's Iceland and using WGS84
+to_utm <- function(.df, .lat = "lat", .lon = "long") {
+    .cord.dec <- SpatialPoints(cbind(.df[[.lon]], .df[[.lat]]),
+                              proj4string=CRS("+proj=longlat"))
+    .cord.UTM <- spTransform(.cord.dec, CRS("+proj=utm +zone=28 ellps=WGS84"))
+    .df[[.lon]] <- .cord.UTM@coords[,1]
+    .df[[.lat]] <- .cord.UTM@coords[,2]
+    return(.df)
+}
+
+
+# -------------`
+# Mapping data
+# -------------`
+myvatn_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/myvatn", 
+                  layer = "Myvatn_WSGUTM28") %>% 
+    tidy()
+trap_df <- read_csv("~/Box Sync/2020/midges/trap_locations.csv") %>% 
+    rename(long = lon) %>% 
+    to_utm() %>% 
+    filter(trap != "Vindbelgur")
+# Iceland outline is from GADM data (version 3.6; https://gadm.org/)
+iceland_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/iceland", 
+                 layer = "gadm36_ISL_0") %>% 
+    tidy() %>% 
+    to_utm() %>% 
+    # -----------`
+    # Shown below are two ways to filter this dataset, to avoid
+    # plotting islands far from shore:
+    # -----------`
+    # 1. You can filter out islands that are very far from shore:
+    # filter(!piece %in% c(90, 133, 143, 157, 215, 244, 257, 258, 260, 262))
+    # 2. Filter for just the mainland:
+    filter(piece == 1)
+
+```
+
+
+
+# NOTE
+
+> This file isn't updated for the potentially contaminated samples and
+> for the extra samples isolated after that.
+
+
+
+
+
+
+
+## Archived samples
+
+
+```{r archive_data}
+
+archive_pal <- viridis(7, end = 0.9)[c(6, 4, 1)]
+
+archive_df <- read_excel("~/Box Sync/2020/midges/tany_from_archive.xlsx",
+                        sheet = "data-entry") %>%
+    mutate(across(ends_with(c("_year", "_month", "_day")), as.integer)) %>%
+    mutate(gen = factor(gen, levels = 1:2, labels = c("spring", "summer")),
+           year = factor(col_year, levels = 1977L:2015L),
+           date = as.Date(paste(col_year, col_month, col_day, sep = "-")),
+           N = as.integer(num_males)) %>%
+    select(site, year, gen, date, N) %>%
+    group_by(site, year, gen, date) %>%
+    summarize(N = sum(N), .groups = "drop") %>%
+    group_by(site, year, gen) %>%
+    # filter(N == max(N)) %>%
+    summarize(N = sum(N), .groups = "drop") %>%
+    ungroup()
+
+
+tany_pop_df <- read_excel("~/Box Sync/2020/funding/ASN/Chirisl_Tany_analysis.xlsx",
+                       skip = 1,  col_names = c("year", "chir_a", "chir_b", "chir_ab",
+                                                "tany_a", "tany_b")) %>%
+    select(year, starts_with("tany")) %>%
+    gather("gen", "N", starts_with("tany")) %>%
+    mutate(year = year + ifelse(gen == "tany_a", 0, 0.5)) %>%
+    arrange(year) %>%
+    select(-gen) %>%
+    # For purposes of plotting, I'll just say this is 0.5 instead of zero, so I can
+    # log transform it:
+    mutate(N = ifelse(N == 0, 0.5, N)) %>%
+    # To play nice with the plot of numbers of midges through time:
+    rename(date = year) %>%
+    mutate(N = (log(N) - min(log(N))) * 40 / diff(range(log(N))))
+
+
+# Numbers of males through time:
+archive_ts_df <- crossing(year = factor(1977L:2015L, levels = 1977L:2015L),
+                          gen = factor(1:2, levels = 1:2,
+                                       labels = c("spring", "summer")),
+                          site = sort(unique(archive_df$site[archive_df$N > 0]))) %>%
+    split(interaction(.$year, .$gen, .$site)) %>%
+    map_dfr(function(.x) {
+        .z <- archive_df %>%
+            filter(year == .x$year, gen == .x$gen, site == .x$site)
+        .N <- case_when(sum(.z$N) > 0 ~ sum(.z$N),
+                        # .x$site == "SN" ~ 0L,
+                        TRUE ~ NA_integer_)
+        mutate(.x, N = .N)
+    }) %>%
+    mutate(date = as.numeric(paste(year)) + ifelse(gen == "spring", 0, 0.5),
+           N = case_when(N > 40 ~ 40.0,
+                         TRUE ~ N * 1.0),
+           Z = factor(as.integer(N > 0), levels = 0:1)) %>%
+    split(interaction(.$year, .$gen, drop = TRUE)) %>%
+    map_dfr(function(.x) {
+        stopifnot(nrow(.x) > 0)
+        logl <- duplicated(.x$N) & !is.na(.x$N) & .x$N > 0
+        if (any(logl)) {
+            .x$N[logl] <- .x$N[logl] + (1:sum(logl))
+        }
+        return(.x)
+    }) %>%
+    mutate(period = case_when(date < 1990 ~ 0,
+                              date < 2003 ~ 1,
+                              TRUE ~ 2) %>%
+               factor(levels = 0:2),
+           using = case_when(is.na(N) ~ 0,
+                             N >= 10 ~ 1,
+                             TRUE ~ 0) %>% 
+               factor(levels = 0:1),
+           # Convert to more accurate site names:
+           site = case_when(site == "SN" ~ "Syðri Neslönd",
+                            site == "KS" ~ "Kálfaströnd",
+                            site == "H" ~ "Haganes",
+                            site == "V" ~ "Vindbelgur",
+                            TRUE ~ NA_character_))
+```
+
+
+
+From the time series from 1977--2015, I extracted at least 
+10 *Tanytarsus gracilentus* individuals from
+`r archive_df %>% filter(N >= 10) %>% nrow()` samples
+(Figure \@ref(fig:archive)A).
+These samples span
+`r archive_df %>% filter(N >= 10) %>% distinct(year, gen) %>% nrow()` 
+of the 78 possible generations.
+I chose 10 as a fairly arbitrary cutoff to prevent issues with having 
+low numbers of individuals in a sequencing pool.
+These include an increased chance of bias associated 
+with unequal amounts of DNA from each individual and 
+with non-random sampling of individuals from the population.
+Where we didn't have enough individuals from our primary site, Syðri Neslönd,
+I pulled samples from either Haganes or Kálfaströnd
+(Figure \@ref(fig:archive)B).
+I extracted individuals from multiple sites for 
+`r archive_df %>% filter(N >= 10) %>% group_by(year, gen) %>% summarize(N = length(unique(site)), .groups = "drop") %>% filter(N > 1) %>% nrow()`
+generations, which should help inform whether the Lake Mývatn population of
+*T. gracilentus* is as panmictic as we think.
+
+
+
+
+
+
+```{r archive_cap}
+archive_p_cap <- paste("Sample summary for archived samples.",
+                       "(A) Number of *Tanytarsus gracilentus* individuals",
+                       "separated from each generation and site's original",
+                       "mixed-species sample.",
+                       "Solid points indicate samples I plan to sequence",
+                       "(those with at least 10 individuals), and",
+                       "hollow points are samples I don't plan to sequence.",
+                       "Lines connect consecutive points from the same site.",
+                       "The gray shaded region indicates the log-transformed",
+                       "*T. gracilentus* abundance at Syðri Neslönd.",
+                       "(B) A map of the different sites at Lake Mývatn.",
+                       "(A,B) Color indicates site.")
+```
+```{r archive, fig.height=4, fig.width=6.5, fig.cap=archive_p_cap}
+
+archive_ts_p <- archive_ts_df %>%
+    # filter(N > 0) %>% 
+    ggplot(aes(date, N)) +
+    geom_area(data = tany_pop_df %>%
+                  mutate(period = case_when(date < 1990 ~ 0,
+                                            date < 2003 ~ 1,
+                                            TRUE ~ 2) %>%
+                             factor(levels = 0:2)),
+              fill = "gray90") +
+    geom_vline(data = tibble(date = map(1977:2015, ~ .x + c(0, 0.5)) %>%
+                                 do.call(what = c)) %>%
+                   mutate(period = case_when(date < 1990 ~ 0,
+                                             date < 2003 ~ 1,
+                                             TRUE ~ 2) %>%
+                              factor(levels = 0:2)),
+               aes(xintercept = date), color = "gray70") +
+    # geom_hline(yintercept = 10, color = "gray70", linetype = 2) +
+    geom_point(aes(shape = using, color = site), na.rm = TRUE) +
+    # geom_point(data = archive_ts_df %>% filter(N == 0),
+    #            aes(color = site), shape = 4, na.rm = TRUE) +
+    geom_line(aes(color = site), na.rm = TRUE) +
+    facet_wrap(~ period, nrow = 3, scales = "free_x") +
+    scale_shape_manual(values = c(1, 19), guide = FALSE) +
+    # scale_color_manual(values = c("dodgerblue", "firebrick", "gray30")) +
+    # scale_color_brewer(NULL, palette = "Dark2") +
+    scale_color_manual(NULL, values = archive_pal, guide = FALSE) +
+    scale_x_continuous(breaks = seq(1978, 2014, 2)) +
+    ylab("Number of individuals") +
+    theme_classic() +
+    theme(strip.background = element_blank(),
+          strip.text = element_blank(),
+          axis.title.x = element_blank(), 
+          legend.position = "right")
+
+
+myvatn_map <- myvatn_df %>%
+    ggplot(aes(x = long, y = lat)) +
+    geom_polygon(aes(group = group, fill = hole), color = "black", size = 0.1) +
+    geom_point(data = trap_df, aes(color = trap), size = 4) +
+    geom_segment(data = tibble(longe = 405e3, long = longe - 1e3, lat = 7280e3),
+                 aes(xend = longe, yend = lat), size = 1) +
+    geom_text(data = tibble(lat = 7280e3 + 200,  long = 405e3-500),
+              label = "1 km", vjust = 0, hjust = 0.5, size = 10 / 2.83465) +
+    scale_fill_manual(values = c("lightblue", "white"), guide = FALSE) +
+    # scale_color_brewer(NULL, guide = FALSE, palette = "Dark2") +
+    scale_color_manual(NULL, values = archive_pal) +
+    guides(color = guide_legend(override.aes = list(shape = 19, size = 3))) +
+    coord_equal() +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+
+
+archive_legend <- get_legend(myvatn_map)
+
+archive_p <- plot_grid(archive_ts_p, 
+                       plot_grid(myvatn_map + theme(legend.position = "none"), 
+                                 archive_legend, ncol = 1,
+                                 rel_heights = c(1, 0.5)), 
+                       labels = LETTERS[1:2],
+                       rel_widths = c(1, 0.5), label_fontface = "plain")
+
+# # To test for proper sizing:
+# ggsave("~/Desktop/archive_plot.pdf", archive_p, width = 6.5, height = 4)
+
+archive_p
+
+```
+
+
+
+\clearpage
+
+
+## Other lakes
+
+```{r lakes_data}
+all_lake_samples <- read_excel("~/Box Sync/2020/midges/tany_other_lakes.xlsx",
+                               sheet = "all-samples", na = c("", "NA")) %>% 
+    select(lake, sample, month, day, lat, lon) %>% 
+    mutate(month = map_int(month, ~ which(month.name == .x)),
+           date = as.Date(sprintf("2019-%i-%i", month, day)))
+lakes_df <- read_excel("~/Box Sync/2020/midges/tany_other_lakes.xlsx",
+                       sheet = "data-entry") %>% 
+    select(lake, sample, col_month, col_day, n_tany) %>% 
+    rename(month = col_month, day = col_day) %>% 
+    filter(n_tany > 0) %>% 
+    # Had to add this bc in the "all-samples" sheet, before June 20th, 
+    # when only a single sample was taken from a site on a particular day, 
+    # I called it sample # 1.
+    # After June 20th, I just left it blank.
+    # In the "data-entry" sheet, I just always left these blank.
+    mutate(sample = ifelse(is.na(sample) & month == 6 & day < 20, 
+                           1, sample)) %>%
+    left_join(all_lake_samples %>% select(-date),
+              by = c("lake", "sample", "month", "day")) %>% 
+    # "Blonduos" is the lake's nearest town; the lake is "Grafarvatn"
+    mutate(lake = ifelse(lake == "Blonduos", "Grafarvatn", lake)) %>% 
+    # To account for combining from Myvatn - SN
+    group_by(lake, month, day) %>% 
+    summarize(n_tany = sum(n_tany), 
+              lat = mean(lat),
+              long = mean(lon),
+              .groups = "drop") %>% 
+    to_utm() %>% 
+    mutate(tany_num_f = ifelse(n_tany >= 40, 1, 0) %>% factor())
+```
+
+
+From `r format(min(all_lake_samples$date), '%d %b %Y')` through
+`r format(max(all_lake_samples$date), '%d %b %Y')`, I sampled 
+`r (all_lake_samples$lake %>% unique() %>% length()) - 3` lakes outside Mývatn, 
+of which `r (lakes_df$lake %>% unique() %>% length()) - 3` yielded
+*T. gracilentus* (Figure \@ref(fig:lakes)).
+I also sampled 3 sites at Lake Mývatn (see inset; all yielded *T. gracilentus*).
+Most of these samples are on the north coast, but I was able to get a
+couple in the SW corner near/within Reykjavík and another
+near Snæfellsjökull in the west.
+Only 4 of the samples yielded < 40 individuals, but 
+I vote that we still sequence them all separately.
+
+
+
+
+
+
+
+
+```{r lakes_cap}
+lakes_p_cap <- paste("Map of lakes with *Tanytarsus gracilentus* sampled in",
+                     "spring 2019.",
+                     "Blue points indicate lakes where at least 40 individual",
+                     "*T. gracilentus* were sampled.",
+                     "Points in red represent lakes with < 40, and the",
+                     "nearby number indicates how many.",
+                     "The inset shows the samples taken from Lake Mývatn.")
+```
+
+```{r lakes, fig.height=4.5, fig.width=6.5, fig.cap=lakes_p_cap}
+
+
+
+lakes_iceland_p <- iceland_df %>%
+    ggplot(aes(x = long, y = lat)) +
+    geom_polygon(aes(group = group), color = "black", size = 0.1, 
+                 fill = "gray80") +
+    geom_point(data = lakes_df %>% filter(!grepl("Mývatn", lake)), 
+               aes(color = tany_num_f), size = 3) +
+    geom_text(data = lakes_df %>% 
+                  filter(n_tany < 40) %>% 
+                  arrange(lake) %>% 
+                  mutate(long = long + c(0, 0, -15, 0) * 1e3,
+                         lat = lat + c(-10, -10, 5, -10) * 1e3), 
+              aes(color = tany_num_f, label = n_tany), size = 8 / 2.83465,
+              vjust = 1, hjust = 0.5) +
+    geom_rect(data = tibble(x = 403118.1 - 100, xe = 411932.0 + 100, 
+                            y = 7271491 - 100, ye = 7282704 + 100),
+              aes(xmin = x, xmax = xe, ymin = y, ymax = ye), 
+              inherit.aes = FALSE, size = 0.75, fill = NA, color = "black") +
+    scale_color_manual(values = c("firebrick1", "dodgerblue"), guide = FALSE) +
+    coord_equal() +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+
+
+lakes_myvatn_p <- myvatn_df %>%
+    ggplot(aes(x = long, y = lat)) +
+    geom_rect(data = tibble(x = 403118.1 - 100, xe = 411932.0 + 100, 
+                            y = 7271491 - 100, ye = 7282704 + 100),
+              aes(xmin = x, xmax = xe, ymin = y, ymax = ye), 
+              inherit.aes = FALSE, size = 0.75, fill = "white", color = "black") +
+    geom_polygon(aes(group = group, fill = hole), color = "black", size = 0.1) +
+    geom_point(data = lakes_df %>% filter(grepl("Mývatn", lake)), 
+               size = 4, color = "dodgerblue3") +
+    geom_segment(data = tibble(longe = 405e3, long = longe - 1e3, lat = 7280e3),
+                 aes(xend = longe, yend = lat), size = 1) +
+    geom_text(data = tibble(lat = 7280e3 + 200,  long = 405e3-500),
+              label = "1 km", vjust = 0, hjust = 0.5, size = 10 / 2.83465) +
+    scale_fill_manual(values = c("lightblue", "white"), guide = FALSE) +
+    coord_equal(xlim = c(403118.1 - 100, 411932.0 + 100),
+                ylim = c(7271491 - 100, 7282704 + 100)) +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+
+
+
+lakes_p <- ggdraw() +
+  draw_plot(lakes_iceland_p) +
+  draw_plot(lakes_myvatn_p, x = 0.75, y = 0.0, width = 0.25, height = 0.5)
+
+
+# # To test for proper sizing:
+# ggsave("~/Desktop/lakes_plot.pdf", lakes_p, width = 6.5, height = 4.5)
+
+lakes_p
+
+```
+

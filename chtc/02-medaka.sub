@@ -1,0 +1,31 @@
+# polish.sub
+
+# Run nanopolish on Tanytarsus gracilentus assembly
+
+NAME=polish
+
+universe = vanilla
+
+log = $NAME.log
+error = $NAME.err
+executable = $NAME.sh
+output = $NAME.out
+
+## Specify that HTCondor should transfer files to and from the
+##  computer where each job runs. The last of these lines *would* be
+##  used if there were any other files needed for the executable to run.
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = nanopolish.tar.gz
+
+## IMPORTANT! Require execute servers that have access to staging and CentOS 7
+requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
+
+## Tell HTCondor what amount of compute resources
+##  each job will need on the computer where it runs.
+request_cpus = 32
+request_memory = 32GB
+request_disk = 5000GB
+
+# Tell HTCondor to run 1 instance of this job:
+queue 1

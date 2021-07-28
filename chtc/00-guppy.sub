@@ -1,0 +1,30 @@
+# guppy.sub
+
+# Basecalling raw nanopore signals for Tanytarsus gracilentus sequencing
+
+universe = vanilla
+log = guppy/guppy.log
+error = guppy/guppy.err
+
+executable = guppy/guppy.sh
+output = guppy/guppy.out
+
+
+## Require execute servers that have staging and CentOS 7 and newest CUDA
+requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7) && (CUDACapability == 7.5)
+
+## GPU specifications
+request_gpus = 2
++WantGPULab = true
++GPUJobLength = "medium"
+# Can also request "long" or "short"
+
+
+## Tell HTCondor what amount of compute resources
+##  each job will need on the computer where it runs.
+request_cpus = 12
+request_memory = 64GB
+request_disk = 1000GB
+
+# Tell HTCondor to run 1 instance of this job:
+queue 1
