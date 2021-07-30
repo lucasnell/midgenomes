@@ -20,7 +20,7 @@ export PATH=$PATH:$(pwd)/guppy/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/guppy/lib
 
 
-export out_fn=basecalls_guppy-4.5.2
+export out_fn=basecalls_guppy-5.0.11
 
 mkdir ${out_fn}
 
@@ -43,4 +43,13 @@ tar -cf ${out_fn}.tar ${out_fn}
 mv ${out_fn}.tar /staging/lnell/
 # Removing files used in this job:
 rm -r ./${out_fn} ./fast5 ./guppy
+
+
+
+# ********************************************
+# After this is done running, you need to combine all fastq files into one.
+# ********************************************
+
+
+
 

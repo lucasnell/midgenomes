@@ -4,7 +4,7 @@
 
 
 # Copying the compressed fastq file from staging into the working directory:
-export FASTQ=basecalls_guppy-4.5.2
+export FASTQ=basecalls_guppy-5.0.11
 cp /staging/lnell/$FASTQ.fastq.gz ./
 
 # Un-taring software (it should be sent from the home directory)
@@ -33,6 +33,9 @@ echo -e "\n\nFinished assembly\t" $(date +%F) " " $(date +%H:%M:%S) "\n\n"
 
 echo -e "Current directory:\n"
 ls -lh
+
+echo -e "\n\nDisk used:\n"
+du -h -d1
 
 # Compressing output and sending to staging:
 tar -czf ${out_fn}.tar.gz ${out_fn}

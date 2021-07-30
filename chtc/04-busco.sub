@@ -3,20 +3,20 @@
 # BUSCO score for Tanytarsus genome
 
 universe = docker
-docker_image = ezlabgva/busco:v5.0.0_cv1
+docker_image = ezlabgva/busco:v5.2.2_cv1
 
 
-log = busco.log
-error = busco.err
-executable = busco.sh
-output = busco.out
+log = busco/busco.log
+error = busco/busco.err
+executable = busco/busco.sh
+output = busco/busco.out
 
 #
 # Specify that HTCondor should transfer files to and from the
 #  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = redundans_contigs.fasta
+transfer_input_files = redundans_contigs.fasta.gz
 
 ## IMPORTANT! Require execute servers that have CentOS 7
 requirements = (OpSysMajorVer == 7)

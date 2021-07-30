@@ -1,29 +1,29 @@
-# medaka.sub
+# purge_dups.sub
 
-# Run medaka to polish the Tanytarsus gracilentus assembly
+# Run purge_dups to account for heterozygosity in the Tanytarsus
+# gracilentus assembly
 
 universe = vanilla
 
-log = medaka/medaka.log
-error = medaka/medaka.err
-executable = medaka/medaka.sh
-output = medaka/medaka.out
+log = purge_dups/purge_dups.log
+error = purge_dups/purge_dups.err
+executable = purge_dups/purge_dups.sh
+output = purge_dups/purge_dups.out
 
 ## Specify that HTCondor should transfer files to and from the
-##  computer where each job runs. The last of these lines *would* be
-##  used if there were any other files needed for the executable to run.
+##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = medaka_bin.tar.gz
+transfer_input_files = purge_dups/purge_progs.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
-request_cpus = 36
-request_memory = 72GB
-request_disk = 500GB
+request_cpus = 14
+request_memory = 40GB
+request_disk = 100GB
 
 # Tell HTCondor to run 1 instance of this job:
 queue 1
