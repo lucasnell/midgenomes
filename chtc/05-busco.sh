@@ -26,15 +26,18 @@
 
 # For the cluster, use this:
 
-gunzip redundans_contigs.fasta.gz
+
+export REF=scaffolds.fasta
+
+gunzip ${REF}.gz
 
 busco \
     -m genome \
     -l diptera_odb10 \
-    -i redundans_contigs.fasta \
+    -i $REF \
     -o busco_out \
     --cpu 12
 
 
 tar -czf busco_out.tar.gz busco_out
-rm -r busco_out redundans_contigs.fasta
+rm -r busco_out $REF

@@ -2,10 +2,9 @@
 # Assemble Nanopore reads for Tanytarsus gracilentus genome
 
 
-
 # Copying the compressed fastq file from staging into the working directory:
-export FASTQ=basecalls_guppy-5.0.11
-cp /staging/lnell/$FASTQ.fastq.gz ./
+export FASTQ=basecalls_guppy-5.0.11.fastq.gz
+cp /staging/lnell/$FASTQ ./
 
 # Un-taring software (it should be sent from the home directory)
 tar -xJf canu-2.1.1.Linux-amd64.tar.xz
@@ -16,18 +15,20 @@ export PATH=$PATH:$(pwd)/canu-2.1.1/bin
 
 # Assemble Nanopore reads:
 
-export out_fn=assembly_canu-2.1.1
+export OUTDIR=assembly_canu
+export CONTIGS=contigs.fasta
+export PREFIX=tany
 
 echo -e "Started assembly\t" $(date +%F) " " $(date +%H:%M:%S) "\n\n"
 
 canu \
-  -p tany -d ${out_fn} \
+  -p ${PREFIX} -d ${OUTDIR} \
   genomeSize=100m \
   useGrid=false \
   -corOutCoverage=100 \
   -maxMemory=64g \
   -maxThreads=32 \
-  -nanopore-raw ${FASTQ}.fastq.gz
+  -nanopore-raw $FASTQ
 
 echo -e "\n\nFinished assembly\t" $(date +%F) " " $(date +%H:%M:%S) "\n\n"
 
@@ -37,9 +38,16 @@ ls -lh
 echo -e "\n\nDisk used:\n"
 du -h -d1
 
-# Compressing output and sending to staging:
-tar -czf ${out_fn}.tar.gz ${out_fn}
-mv ${out_fn}.tar.gz /staging/lnell/
+# Compressing full output and sending to staging:
+tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
+mv ${OUTDIR}.tar.gz /staging/lnell/
+
+# Sending renamed, compressed copy of just contigs to staging:
+cp ./${OUTDIR}/${PREFIX}.contigs.fasta ./
+mv ${PREFIX}.contigs.fasta ${CONTIGS}
+gzip ${CONTIGS}
+mv ${CONTIGS}.gz /staging/lnell/
+
 # Removing files used in this job:
-rm -r ${out_fn} canu-2.1.1 ${FASTQ}.fastq.gz
+rm -r ${OUTDIR} canu-2.1.1 $FASTQ
 

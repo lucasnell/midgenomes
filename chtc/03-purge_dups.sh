@@ -1,10 +1,12 @@
 #!/bin/bash
 
-export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
-export REF=midge.contigs.fasta.gz
 
-mv /staging/lnell/${LONGREADS} ./
-mv /staging/lnell/${REF} ./
+
+export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
+export REF=polished_contigs.fasta.gz
+
+cp /staging/lnell/${LONGREADS} ./
+cp /staging/lnell/${REF} ./
 
 
 # purge_dups (version 1.2.5)
@@ -33,6 +35,7 @@ cd runner && python3 setup.py install --user && cd ..
 
 echo $(pwd)/$LONGREADS > nano.fofn
 
+# Do not adjust! This is automatically set by `pd_config.py`.
 OUTDIR=${REF/.fasta/}
 OUTDIR=${OUTDIR/.fa/}
 OUTDIR=${OUTDIR/.gz/}
@@ -51,10 +54,26 @@ python3 ./purge_dups/scripts/run_purge_dups.py \
     ./purge_dups/bin \
     tany
 
-mv ${OUTDIR} tany_purged
-export OUTDIR=tany_purged
+
+echo -e "Current directory:\n"
+ls -lh
+
+echo -e "\n\nDisk used:\n"
+du -h -d1
+
+
+mv ${OUTDIR} haploid_purge_dups
+export OUTDIR=haploid_purge_dups
 tar -czf ${OUTDIR}.tar.gz $OUTDIR
 mv ${OUTDIR}.tar.gz /staging/lnell/
+
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# LEFT OFF: Where is final contigs file?
+# I'm calling it `haploid_polished_contigs.fasta.gz` downstream
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
 rm -rf minimap2-2.21 purge_dups runner $REF $LONGREADS

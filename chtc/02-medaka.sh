@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+
+
+
 # Re-install latest medaka version:
 # https://chtc.cs.wisc.edu/conda-installation.shtml
 # For the `conda create` step, use...
@@ -43,35 +47,52 @@ export PATH=$PATH:$(pwd)/medaka_bin/bin
 
 # Set up and activate `medaka-env` conda environment
 ENVNAME=medaka-env
-ENVDIR=$ENVNAME
-cp /staging/lnell/$ENVNAME.tar.gz ./
+ENVDIR=${ENVNAME}
+cp /staging/lnell/${ENVNAME}.tar.gz ./
 export PATH
-mkdir $ENVDIR
-tar -xzf $ENVNAME.tar.gz -C $ENVDIR
-. $ENVDIR/bin/activate
-rm $ENVNAME.tar.gz
+mkdir ${ENVDIR}
+tar -xzf ${ENVNAME}.tar.gz -C ${ENVDIR}
+. ${ENVDIR}/bin/activate
+rm ${ENVNAME}.tar.gz
 
 
 # Bringing over the basecall and draft files:
-BASECALLS=basecalls_guppy-5.0.11.fastq
-DRAFT=contigs_canu-2.1.1.fasta
+export BASECALLS=basecalls_guppy-5.0.11.fastq
+export DRAFT=contigs.fasta
 cp /staging/lnell/${BASECALLS}.gz ./ && gunzip ${BASECALLS}.gz
-cp /staging/lnell/${DRAFT}.gz ./ && gunzip ${DRAFT}.gz ./
+cp /staging/lnell/${DRAFT}.gz ./ && gunzip ${DRAFT}.gz
 
 
 
-NPROC=36
-OUTDIR=medaka_consensus
+export NPROC=36
+export OUTDIR=consensus_medaka
+export CONSENSUS=polished_contigs.fasta
 # For the model to use, the "r941_min_" should remain constant even if you
 # use a later version of guppy because this specifies the pore and device.
-MODEL=r941_min_hac_g507
+export MODEL=r941_min_hac_g507
 
 medaka_consensus -i ${BASECALLS} -d ${DRAFT} -o ${OUTDIR} -t ${NPROC} \
     -m ${MODEL}
 
 
-rm -r ./medaka_bin ./$ENVDIR ${BASECALLS} ${DRAFT}
+echo -e "Current directory:\n"
+ls -lh
 
+echo -e "\n\nDisk used:\n"
+du -h -d1
+
+
+
+# Compressing full output and sending to staging:
 tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
 mv ${OUTDIR}.tar.gz /staging/lnell/
 
+# Compressing just contigs output and sending to staging:
+cp ./${OUTDIR}/consensus.fasta ./
+mv consensus.fasta ${CONSENSUS}
+gzip ${CONSENSUS}
+mv ${CONSENSUS}.gz /staging/lnell/
+
+
+
+rm -r ./medaka_bin ./${ENVDIR} ${BASECALLS} ${DRAFT} ./${OUTDIR}

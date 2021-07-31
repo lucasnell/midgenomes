@@ -2,6 +2,9 @@
 
 # Basecalling for Nanopore reads
 
+# Set guppy version:
+export GUPPY_V=5.0.11
+
 # Copying the raw signal files and guppy from staging into the working directory:
 cp /staging/lnell/ives_fast5.tar.bz2 ./
 mkdir fast5
@@ -20,13 +23,13 @@ export PATH=$PATH:$(pwd)/guppy/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/guppy/lib
 
 
-export out_fn=basecalls_guppy-5.0.11
+export OUTDIR=basecalls_guppy-${GUPPY_V}
 
-mkdir ${out_fn}
+mkdir ${OUTDIR}
 
 guppy_basecaller \
   --input_path ./fast5 \
-  --save_path ./${out_fn} \
+  --save_path ./${OUTDIR} \
   --records_per_fastq 0 \
   --compress_fastq \
   --trim_barcodes \
@@ -37,19 +40,18 @@ guppy_basecaller \
   --flowcell FLO-MIN106 --kit SQK-LSK109
 
 
-# FASTQ file should already be compressed, so just tar-ing the folder , then
+
+# Making a single FASTQ file of just passing reads, then sending it to staging.
+# This file will be used for downstream processes.
+cd ${OUTDIR}/pass
+cat *.fastq.gz > ${OUTDIR}.fastq.gz
+mv ${OUTDIR}.fastq.gz /staging/lnell/
+cd ../../
+
+# FASTQ file should already be compressed, so just tar-ing the folder, then
 # sending to staging:
-tar -cf ${out_fn}.tar ${out_fn}
-mv ${out_fn}.tar /staging/lnell/
+tar -cf ${OUTDIR}.tar ${OUTDIR}
+mv ${OUTDIR}.tar /staging/lnell/
 # Removing files used in this job:
-rm -r ./${out_fn} ./fast5 ./guppy
-
-
-
-# ********************************************
-# After this is done running, you need to combine all fastq files into one.
-# ********************************************
-
-
-
+rm -r ./${OUTDIR} ./fast5 ./guppy
 
