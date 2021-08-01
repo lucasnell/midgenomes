@@ -34,12 +34,15 @@ guppy_basecaller \
   --compress_fastq \
   --trim_barcodes \
   --disable_pings \
-  --chunks_per_runner 1024 \
-  --gpu_runners_per_device 4 \
   --device cuda:0,1	\
   --flowcell FLO-MIN106 --kit SQK-LSK109
 
 
+
+# FASTQ file should already be compressed, so just tar-ing the folder, then
+# sending to staging:
+tar -cf ${OUTDIR}.tar ${OUTDIR}
+mv ${OUTDIR}.tar /staging/lnell/
 
 # Making a single FASTQ file of just passing reads, then sending it to staging.
 # This file will be used for downstream processes.
@@ -48,10 +51,7 @@ cat *.fastq.gz > ${OUTDIR}.fastq.gz
 mv ${OUTDIR}.fastq.gz /staging/lnell/
 cd ../../
 
-# FASTQ file should already be compressed, so just tar-ing the folder, then
-# sending to staging:
-tar -cf ${OUTDIR}.tar ${OUTDIR}
-mv ${OUTDIR}.tar /staging/lnell/
 # Removing files used in this job:
 rm -r ./${OUTDIR} ./fast5 ./guppy
+
 
