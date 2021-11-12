@@ -44,15 +44,18 @@ to_utm <- function(.df, .lat = "lat", .lon = "long") {
 # -------------`
 # Mapping data
 # -------------`
-myvatn_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/myvatn", 
+myvatn_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
+                                  "shapefiles/myvatn"), 
                   layer = "Myvatn_WSGUTM28") %>% 
     tidy()
-trap_df <- read_csv("~/Box Sync/2020/midges/trap_locations.csv") %>% 
+trap_df <- read_csv("~/Box Sync/midges/location_data/trap_locations.csv", 
+                    col_types = cols()) %>% 
     rename(long = lon) %>% 
     to_utm() %>% 
     filter(trap != "Vindbelgur")
 # Iceland outline is from GADM data (version 3.6; https://gadm.org/)
-iceland_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/iceland", 
+iceland_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
+                                   "shapefiles/iceland"), 
                  layer = "gadm36_ISL_0") %>% 
     tidy() %>% 
     to_utm() %>% 
@@ -87,25 +90,45 @@ iceland_df <- readOGR(dsn = "~/Box Sync/2020/midges/shapefiles/iceland",
 
 archive_pal <- viridis(7, end = 0.9)[c(6, 4, 1)]
 
-archive_df <- read_excel("~/Box Sync/2020/midges/tany_from_archive.xlsx",
+
+# Sample names with successful library preps:
+lib_df <- read_excel(paste0("~/Box Sync/midges/dna_extraction_sequencing/DNA/",
+                            "Successful_Ives Libraries_20210927.xlsx"), 
+                     col_names = c("id", "na"), skip = 1) %>% 
+  select(1)
+
+
+# The code below was edited to find samples that had DNA extracted:
+
+dubs <- c("SN-1-81", "KS-2-83", "KS-2-90", "SN-2-91", "SN-2-94", "KS-2-09",
+          "SN-2-13", "KS-2-14", "KS-1-15", "MyKS-19")
+archive_df <-  read_excel(paste0("~/Box Sync/midges/tany_identifying/",
+                                "tany_from_archive.xlsx"),
                         sheet = "data-entry") %>%
     mutate(across(ends_with(c("_year", "_month", "_day")), as.integer)) %>%
     mutate(gen = factor(gen, levels = 1:2, labels = c("spring", "summer")),
            year = factor(col_year, levels = 1977L:2015L),
            date = as.Date(paste(col_year, col_month, col_day, sep = "-")),
-           N = as.integer(num_males)) %>%
+           date_sep = as.Date(paste(sep_year, sep_month, sep_day, sep = "-")),
+           N = as.integer(num_males)) %>% 
+    # NOTE: this doesn't account for combining multiple samples.
+    # However, I checked, and I don't see any of these that were combined 
+    # with other samples. So, the `N` values should be accurate.
+    filter(biotech_id %in% lib_df$id) %>% 
     select(site, year, gen, date, N) %>%
-    group_by(site, year, gen, date) %>%
-    summarize(N = sum(N), .groups = "drop") %>%
-    group_by(site, year, gen) %>%
-    # filter(N == max(N)) %>%
-    summarize(N = sum(N), .groups = "drop") %>%
-    ungroup()
+    identity()
 
 
-tany_pop_df <- read_excel("~/Box Sync/2020/funding/ASN/Chirisl_Tany_analysis.xlsx",
-                       skip = 1,  col_names = c("year", "chir_a", "chir_b", "chir_ab",
-                                                "tany_a", "tany_b")) %>%
+
+
+
+
+
+
+tany_pop_df <- read_excel(paste0("~/Box Sync/zzz-archive/2020/funding/",
+                                 "ASN/Chirisl_Tany_analysis.xlsx"),
+                       skip = 1,  col_names = c("year", "chir_a", "chir_b",
+                                                "chir_ab", "tany_a", "tany_b")) %>%
     select(year, starts_with("tany")) %>%
     gather("gen", "N", starts_with("tany")) %>%
     mutate(year = year + ifelse(gen == "tany_a", 0, 0.5)) %>%
@@ -116,7 +139,7 @@ tany_pop_df <- read_excel("~/Box Sync/2020/funding/ASN/Chirisl_Tany_analysis.xls
     mutate(N = ifelse(N == 0, 0.5, N)) %>%
     # To play nice with the plot of numbers of midges through time:
     rename(date = year) %>%
-    mutate(N = (log(N) - min(log(N))) * 40 / diff(range(log(N))))
+    mutate(Np = (log(N) - min(log(N))) * 40 / diff(range(log(N))))
 
 
 # Numbers of males through time:
@@ -150,16 +173,153 @@ archive_ts_df <- crossing(year = factor(1977L:2015L, levels = 1977L:2015L),
                               date < 2003 ~ 1,
                               TRUE ~ 2) %>%
                factor(levels = 0:2),
-           using = case_when(is.na(N) ~ 0,
-                             N >= 10 ~ 1,
-                             TRUE ~ 0) %>% 
-               factor(levels = 0:1),
            # Convert to more accurate site names:
            site = case_when(site == "SN" ~ "Syðri Neslönd",
                             site == "KS" ~ "Kálfaströnd",
                             site == "H" ~ "Haganes",
                             site == "V" ~ "Vindbelgur",
                             TRUE ~ NA_character_))
+
+
+
+yield_df <- read_excel("~/Box Sync/2021/midges/Picogreen_Results_20210803.xlsx") %>% 
+    select(1, 5) %>% 
+    set_names(c("sample", "yield")) %>% 
+    mutate(year = str_sub(sample, -2, -1),
+           year = ifelse(year >= 77, paste0("19", year),
+                         paste0("20", year)) %>% 
+               as.integer(),
+           site = str_sub(sample, 1, 2) %>% str_remove("-")) %>% 
+    mutate(site = case_when(site == "SN" ~ "Syðri Neslönd",
+                            site == "KS" ~ "Kálfaströnd",
+                            site == "H" ~ "Haganes",
+                            TRUE ~ NA_character_)) %>% 
+    filter(!is.na(site)) %>% 
+    mutate(site = factor(site, levels = c("Syðri Neslönd", "Kálfaströnd", 
+                                          "Haganes")),
+           gen = str_sub(sample, -4, -4) %>% as.integer(),
+           date = year + ifelse(gen == 1, 0, 0.5)) %>% 
+    arrange(date, site)
+
+
+# 1.	1981 gen 1 (yield = 5.54 ng)
+# 2.	1983 gen 2 (yield = 4.23 ng)
+# 3.	1990 gen 2 (yield = 5.54 ng)
+# 4.	1991 gen 2 (yield = 4.88 ng)
+# 5.	1994 gen 2 (yield = 2.28 ng)
+# 6.	2009 gen 2 (yield = 4.23 ng)
+# 7.	2013 gen 2 (yield = 2.28 ng)
+# 8.	2014 gen 2 (yield ≈ 0 ng)
+# 9.	2015 gen 1 (yield ≈ 0 ng)
+
+
+
+
+
+
+
+plot_mod <- function(.df) {
+    .df %>%
+        mutate(resample = (year == 1981 & gen == 1) |
+                   (year == 1983 & gen == 2) |
+                   (year == 1990 & gen == 2) |
+                   (year == 1991 & gen == 2) |
+                   (year == 1994 & gen == 2) |
+                   (year == 2009 & gen == 2) |
+                   (year == 2013 & gen == 2) |
+                   (year == 2014 & gen == 2) |
+                   (year == 2015 & gen == 1)) %>% 
+        mutate(cutoff = case_when(yield >= 10 ~ "above cutoff",
+                                  TRUE ~ "below cutoff") %>% 
+                   factor(levels = c("above cutoff", "below cutoff")),
+               yield = ifelse(yield > 10, 10, yield),
+               yield = ifelse(yield < 0, 0, yield),
+               period = case_when(date < 1990 ~ 0,
+                                  date < 2003 ~ 1,
+                                  TRUE ~ 2) %>%
+                   factor(levels = 0:2),
+               N = case_when(site == "Haganes" ~ 12.5,
+                             site == "Kálfaströnd" ~ 12.5 + 2,
+                             TRUE ~ 12.5 + 2 * 2)
+        )
+}
+
+
+yield_df %>% 
+    plot_mod() %>% 
+    ggplot(aes(date, N)) +
+    geom_area(data = tany_pop_df %>%
+                  mutate(period = case_when(date < 1990 ~ 0,
+                                            date < 2003 ~ 1,
+                                            TRUE ~ 2) %>%
+                             factor(levels = 0:2),
+                         N = log1p(N)),
+              fill = "gray90") +
+    geom_vline(data = tibble(date = map(1977:2015, ~ .x + c(0, 0.5)) %>%
+                                 do.call(what = c)) %>%
+                   mutate(period = case_when(date < 1990 ~ 0,
+                                             date < 2003 ~ 1,
+                                             TRUE ~ 2) %>%
+                              factor(levels = 0:2)),
+               aes(xintercept = date), color = "gray70") +
+    geom_label(data = yield_df %>% 
+                   plot_mod() %>% 
+                   filter(resample) %>% 
+                   distinct(date, period) %>% 
+                   mutate(N = 10, lab = 1:n()),
+               aes(label = lab), 
+               size = 12 / 2.83465, vjust = 0) +
+    geom_point(aes(fill = yield, color = cutoff, shape = site),
+               size = 3) +
+    facet_wrap(~ period, nrow = 3, scales = "free_x") +
+    theme_minimal() +
+    scale_x_continuous("Date", breaks = seq(1978, 2014, 2)) +
+    ylab("log(N)") +
+    scale_color_manual(NULL, values = c("black", "red")) +
+    scale_shape_manual(NULL, values = c(23, 24, 22)) +
+    scale_fill_gradient(low = "white", high = "black", 
+                        breaks = seq(0, 10, 2.5),
+                        labels = c(seq(0, 7.5, 2.5), "≥10")) +
+    guides(color = guide_legend(override.aes = list(shape = 1)),
+           shape = guide_legend(override.aes = list(color = "black", fill = NA, 
+                                                    size = 3))) +
+    theme(strip.text = element_blank())
+
+
+
+
+yield_df %>% 
+    mutate(period = case_when(date < 1990 ~ 0,
+                              date < 2003 ~ 1,
+                              TRUE ~ 2) %>%
+               factor(levels = 0:2),
+           N = case_when(yield > 10 ~ 10,
+                         yield < 0 ~ 0,
+                         TRUE ~ yield)
+           ) %>% 
+    ggplot(aes(date, N)) +
+    geom_vline(data = tibble(date = map(1977:2015, ~ .x + c(0, 0.5)) %>%
+                                 do.call(what = c)) %>%
+                   mutate(period = case_when(date < 1990 ~ 0,
+                                             date < 2003 ~ 1,
+                                             TRUE ~ 2) %>%
+                              factor(levels = 0:2)),
+               aes(xintercept = date), color = "gray70") +
+    # geom_area(data = tany_pop_df %>%
+    #               mutate(period = case_when(date < 1990 ~ 0,
+    #                                         date < 2003 ~ 1,
+    #                                         TRUE ~ 2) %>%
+    #                          factor(levels = 0:2),
+    #                      N = (log(N) - min(log(N))) * 10 / diff(range(log(N)))),
+    #           fill = "gray90") +
+    geom_point(aes(color = site)) +
+    facet_wrap(~ period, nrow = 3, scales = "free_x") +
+    theme_minimal() +
+    scale_x_continuous("Date", breaks = seq(1978, 2014, 2)) +
+    ylab("log(N)") +
+    scale_color_manual(NULL, values = archive_pal)
+
+
 ```
 
 
@@ -213,6 +373,7 @@ archive_ts_p <- archive_ts_df %>%
                                             date < 2003 ~ 1,
                                             TRUE ~ 2) %>%
                              factor(levels = 0:2)),
+              aes(y = Np),
               fill = "gray90") +
     geom_vline(data = tibble(date = map(1977:2015, ~ .x + c(0, 0.5)) %>%
                                  do.call(what = c)) %>%
@@ -222,15 +383,15 @@ archive_ts_p <- archive_ts_df %>%
                               factor(levels = 0:2)),
                aes(xintercept = date), color = "gray70") +
     # geom_hline(yintercept = 10, color = "gray70", linetype = 2) +
-    geom_point(aes(shape = using, color = site), na.rm = TRUE) +
+    geom_point(aes(color = site), na.rm = TRUE) +
     # geom_point(data = archive_ts_df %>% filter(N == 0),
     #            aes(color = site), shape = 4, na.rm = TRUE) +
     geom_line(aes(color = site), na.rm = TRUE) +
     facet_wrap(~ period, nrow = 3, scales = "free_x") +
-    scale_shape_manual(values = c(1, 19), guide = FALSE) +
+    scale_shape_manual(values = c(1, 19), guide = "none") +
     # scale_color_manual(values = c("dodgerblue", "firebrick", "gray30")) +
     # scale_color_brewer(NULL, palette = "Dark2") +
-    scale_color_manual(NULL, values = archive_pal, guide = FALSE) +
+    scale_color_manual(NULL, values = archive_pal, guide = "none") +
     scale_x_continuous(breaks = seq(1978, 2014, 2)) +
     ylab("Number of individuals") +
     theme_classic() +
@@ -248,7 +409,7 @@ myvatn_map <- myvatn_df %>%
                  aes(xend = longe, yend = lat), size = 1) +
     geom_text(data = tibble(lat = 7280e3 + 200,  long = 405e3-500),
               label = "1 km", vjust = 0, hjust = 0.5, size = 10 / 2.83465) +
-    scale_fill_manual(values = c("lightblue", "white"), guide = FALSE) +
+    scale_fill_manual(values = c("lightblue", "white"), guide = "none") +
     # scale_color_brewer(NULL, guide = FALSE, palette = "Dark2") +
     scale_color_manual(NULL, values = archive_pal) +
     guides(color = guide_legend(override.aes = list(shape = 19, size = 3))) +
@@ -414,3 +575,56 @@ lakes_p
 
 ```
 
+
+
+
+## Map of Paracladopelma laminata
+
+
+```{r lakes_data}
+
+all_lake_samples <- read_excel(paste0("~/Box Sync/midges/tany_identifying/",
+                                      "tany_other_lakes.xlsx"),
+                               sheet = "all-samples", na = c("", "NA")) %>% 
+    select(lake, sample, month, day, lat, lon) %>% 
+    mutate(month = map_int(month, ~ which(month.name == .x)),
+           date = as.Date(sprintf("2019-%i-%i", month, day)))
+
+p_lam_df <- read_excel(paste0("~/Box Sync/midges/tany_identifying/",
+                                      "tany_other_lakes.xlsx"),
+                               sheet = "data-entry") %>% 
+    filter(grepl("laminata", other_spp)) %>% 
+    select(lake, sample, col_month, col_day, n_tany) %>% 
+    rename(month = col_month, day = col_day) %>% 
+     mutate(sample = ifelse(is.na(sample) & month == 6 & day < 20, 
+                           1, sample)) %>%
+    left_join(all_lake_samples %>% select(-date),
+              by = c("lake", "sample", "month", "day")) %>% 
+    # "Blonduos" is the lake's nearest town; the lake is "Grafarvatn"
+    mutate(lake = ifelse(lake == "Blonduos", "Grafarvatn", lake)) %>% 
+    rename(long = lon) %>% 
+    to_utm()
+
+
+iceland_df %>%
+    ggplot(aes(x = long, y = lat)) +
+    geom_polygon(aes(group = group), color = "black", size = 0.1, 
+                 fill = "gray80") +
+    geom_point(data = all_lake_samples %>% 
+                   group_by(lake) %>% 
+                   summarize(lat = mean(lat, na.rm=TRUE), 
+                             long = mean(lon, na.rm=TRUE), 
+                             .groups = "drop") %>% 
+                   to_utm(), 
+               size = 2, color = "firebrick") +
+    geom_point(data = p_lam_df, size = 3, color = "dodgerblue") +
+    coord_equal() +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+
+
+```
