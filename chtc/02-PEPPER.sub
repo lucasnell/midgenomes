@@ -25,7 +25,7 @@ requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 ##  each job will need on the computer where it runs.
 request_cpus = 32
 request_memory = 80GB
-request_disk = 200GB
+request_disk = 300GB
 
 # Tell HTCondor to run 1 instance of this job:
 queue 1

@@ -5,8 +5,13 @@
 # https://github.com/kishwarshafin/pepper/tree/r0.4
 
 
-export OUTDIR=polish_PEPPER
+export OUTDIR=polish_pepper
 export ALIGNDIR=ont_align_minimap2
+export SAMPLE_NAME=tany
+export THREADS=32
+
+export POLISHED_HAP1=polished_hap1.fasta
+export POLISHED_HAP2=polished_hap2.fasta
 
 # Copying the compressed fastq file from staging into the working directory:
 export FASTQ=basecalls_guppy-5.0.11.fastq
@@ -27,12 +32,13 @@ export ALIGNMENT=ont_alignment.bam
 tar -jxvf minimap2-2.22_x64-linux.tar.bz2
 rm minimap2-2.22_x64-linux.tar.bz2
 
-./minimap2-2.22_x64-linux/minimap2 -a -L --sam-hit-only -t 31 -K 1G \
+./minimap2-2.22_x64-linux/minimap2 -a -L --sam-hit-only \
+    -t $((THREADS - 1)) -K 1G \
     ${CONTIGS} ${FASTQ} > ${ALIGNMENT/bam/sam}
 
 # Convert to aligned BAM file (samtools should be on this docker container):
 samtools view -u -b ${ALIGNMENT/bam/sam} | \
-    samtools sort -@ 30 -o ${ALIGNMENT} -
+    samtools sort -@ $((THREADS - 2)) -o ${ALIGNMENT} -
 
 rm ${ALIGNMENT/bam/sam}
 
@@ -46,18 +52,6 @@ samtools faidx ${CONTIGS} -o ${CONTIGS}.fai
 
 
 
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-
-# LEFT OFF --> PASTED THESE FROM THEIR WEBSITE
-#   https://github.com/kishwarshafin/pepper/blob/r0.4/docs/pipeline_docker/ONT_polishing.md
-# Also, does Docker have access to staging folder?
-
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-
 run_pepper_margin_deepvariant polish_assembly \
     -b "${ALIGNMENT}" \
     -f "${CONTIGS}" \
@@ -66,21 +60,23 @@ run_pepper_margin_deepvariant polish_assembly \
     -s ${SAMPLE_NAME} \
     --ont
 
-
-
-bcftools consensus \
-    -f "${INPUT_DIR}/${ASM}" \
-    -H 2 \
-    -s "${SAMPLE_NAME}" \
-    -o "${OUTPUT_DIR}/${POLISHED_ASM_HAP1}" \
-    "${OUTPUT_DIR}/${HAP1_VCF}"
+# this generates 2 VCFs, one per haplotype
+HAP1_VCF=PEPPER_MARGIN_DEEPVARIANT_ASM_POLISHED_HAP1.vcf.gz
+HAP2_VCF=PEPPER_MARGIN_DEEPVARIANT_ASM_POLISHED_HAP2.vcf.gz
 
 bcftools consensus \
-    -f "${INPUT_DIR}/${ASM}" \
+    -f "${CONTIGS}" \
     -H 2 \
     -s "${SAMPLE_NAME}" \
-    -o "${OUTPUT_DIR}/${POLISHED_ASM_HAP2}" \
-    "${OUTPUT_DIR}/${HAP2_VCF}"
+    -o "${OUTDIR}/${POLISHED_HAP1}" \
+    "${OUTDIR}/${HAP1_VCF}"
+
+bcftools consensus \
+    -f "${CONTIGS}" \
+    -H 2 \
+    -s "${SAMPLE_NAME}" \
+    -o "${OUTDIR}/${POLISHED_HAP2}" \
+    "${OUTDIR}/${HAP2_VCF}"
 
 
 
@@ -88,16 +84,23 @@ bcftools consensus \
 
 # --------
 
-# Compressing full output and sending to staging:
-tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
-mv ${OUTDIR}.tar.gz /staging/lnell/
+# Compressing output and sending to staging
 
 mkdir ${ALIGNDIR}
 mv ${ALIGNMENT} ${ALIGNMENT}.bai ${CONTIGS} ${CONTIGS}.fai ./${ALIGNDIR}/
 tar -czf ${ALIGNDIR}.tar.gz ${ALIGNDIR}
 mv ${ALIGNDIR}.tar.gz /staging/lnell/
 
+tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
+mv ${OUTDIR}.tar.gz /staging/lnell/
 
-# Removing files used in this job:
-rm -r ${OUTDIR} minimap2-2.22_x64-linux ${FASTQ} ${CONTIGS}
+cp ${OUTDIR}/${POLISHED_HAP1} ./
+cp ${OUTDIR}/${POLISHED_HAP2} ./
+gzip ${POLISHED_HAP1}
+gzip ${POLISHED_HAP2}
+mv ${POLISHED_HAP1}.gz ${POLISHED_HAP2}.gz /staging/lnell/
+
+
+# Removing other files used in this job:
+rm -r ${OUTDIR} ${ALIGNDIR} minimap2-2.22_x64-linux ${FASTQ} ${CONTIGS}
 
