@@ -26,18 +26,31 @@
 
 # For the cluster, use this:
 
+for GENOME in contigs_shasta polished_hap1 polished_hap2
+do
+    cp /staging/lnell/${GENOME}.fasta.gz ./
+    gunzip ${GENOME}.fasta.gz
+    OUTDIR=busco__${GENOME}
 
-export REF=scaffolds.fasta
+    echo $GENOME
+    echo -e "\n\n"
 
-gunzip ${REF}.gz
+    busco \
+        -m genome \
+        -l diptera_odb10 \
+        -i ${GENOME}.fasta \
+        -o ${OUTDIR} \
+        --cpu 24
 
-busco \
-    -m genome \
-    -l diptera_odb10 \
-    -i $REF \
-    -o busco_out \
-    --cpu 12
+    echo -e "\n\n\n\n"
+    echo -e "============================================================"
+    echo -e "============================================================"
+    echo -e "\n\n\n\n"
+
+    tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
+    mv ${OUTDIR}.tar.gz /staging/lnell/
+    rm -r ${OUTDIR} ${GENOME}.fasta
+done
 
 
-tar -czf busco_out.tar.gz busco_out
-rm -r busco_out $REF
+

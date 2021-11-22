@@ -4,6 +4,9 @@
 # Note that we have to use `r0.4` version of PEPPER:
 # https://github.com/kishwarshafin/pepper/tree/r0.4
 
+# have job exit if any command returns with non-zero exit status (aka failure)
+set -e
+
 
 export OUTDIR=polish_pepper
 export ALIGNDIR=ont_align_minimap2
@@ -21,7 +24,7 @@ gunzip ${FASTQ}.gz
 
 # Assembled Nanopore reads from SHASTA:
 export CONTIGS=contigs_shasta.fasta
-cp /staging/lnell/${CONTIGS}.gz
+cp /staging/lnell/${CONTIGS}.gz ./
 gunzip ${CONTIGS}.gz
 
 
@@ -102,5 +105,7 @@ mv ${POLISHED_HAP1}.gz ${POLISHED_HAP2}.gz /staging/lnell/
 
 
 # Removing other files used in this job:
-rm -r ${OUTDIR} ${ALIGNDIR} minimap2-2.22_x64-linux ${FASTQ} ${CONTIGS}
+rm -r ${OUTDIR} ${ALIGNDIR} minimap2-2.22_x64-linux ${FASTQ}
+# don't need to move bc it's in $ALIGNDIR
+# ${CONTIGS}
 
