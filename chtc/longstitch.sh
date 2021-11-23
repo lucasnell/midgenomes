@@ -42,7 +42,7 @@ tar -xzf $ENVNAME.tar.gz -C $ENVDIR
 
 longstitch run draft=${GENOME} reads=${FASTQ} t=${THREADS} G=128000000
 
-rm ${GENOME}.fa ${FASTQ}.fq.gz
+rm -r ${GENOME}.fa ${FASTQ}.fq.gz ${ENVDIR}
 
 cd ..
 
