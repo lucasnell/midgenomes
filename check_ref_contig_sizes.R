@@ -53,3 +53,34 @@ report_stats(polish2)
 #' N50 = 169.6 kb
 #'
 #'
+
+
+# Results from just SHASTA > purge_dups
+hap_np <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_nopolish/seqs/contigs_shasta.hap.fa")
+hap_p_np <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_nopolish/seqs/contigs_shasta.purged.fa")
+
+report_stats(hap_np)
+report_stats(hap_p_np)
+
+
+# Results from SHASTA > PEPPER > purge_dups (haplotype 1)
+hap1 <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_pepper1/seqs/polished_hap1.hap.fa")
+hap_p1 <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_pepper1/seqs/polished_hap1.purged.fa")
+
+report_stats(hap1)
+report_stats(hap_p1)
+
+
+# SHASTA > PEPPER > purge_dups (haplotype 1) > purge_dups (purged contigs + haplotype 2)
+hap <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/seqs/pepper_haps.hap.fa")
+hap_p <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/seqs/pepper_haps.purged.fa")
+
+report_stats(hap)
+report_stats(hap_p)
+
+
+
+
+all_haps <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/pepper_haps.fasta")
+report_stats(all_haps)
+

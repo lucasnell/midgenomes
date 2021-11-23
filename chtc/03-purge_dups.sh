@@ -1,12 +1,20 @@
 #!/bin/bash
 
 
+# have job exit if any command returns with non-zero exit status (aka failure)
+set -e
+
 
 export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
-export REF=polished_contigs.fasta.gz
+export REF1=polished_hap1.fasta.gz
+export REF2=polished_hap2.fasta.gz
+# FASTA containing hap1 purged + hap2 all
+export REF=pepper_haps.fasta
+
 
 cp /staging/lnell/${LONGREADS} ./
-cp /staging/lnell/${REF} ./
+cp /staging/lnell/${REF1} ./
+cp /staging/lnell/${REF2} ./
 
 
 # purge_dups (version 1.2.5)
@@ -36,17 +44,55 @@ cd runner && python3 setup.py install --user && cd ..
 echo $(pwd)/$LONGREADS > nano.fofn
 
 # Do not adjust! This is automatically set by `pd_config.py`.
-OUTDIR=${REF/.fasta/}
+OUTDIR=${REF1/.fasta/}
 OUTDIR=${OUTDIR/.fa/}
 OUTDIR=${OUTDIR/.gz/}
 export OUTDIR
 
 
 ./purge_dups/scripts/pd_config.py \
+    -l pd_inputs1 \
+    -n config-tany1.json \
+    --skipB \
+    $REF1 nano.fofn
+
+python3 ./purge_dups/scripts/run_purge_dups.py \
+    -p bash \
+    config-tany1.json \
+    ./purge_dups/bin \
+    tany1
+
+
+# Combine purged haplotigs with contigs from PEPPER haplotype 2
+cat ./${OUTDIR}/seqs/${OUTDIR}.purged.fa >> ${REF}
+gunzip -c ${REF2} >> ${REF}
+
+# no longer needed:
+rm -rf ${OUTDIR} config-tany1.json nano.fofn pd_inputs1
+
+
+
+
+
+# ================================================
+# Doing it again on combined contigs:
+# ================================================
+
+
+echo $(pwd)/$LONGREADS > nano.fofn
+
+# Do not adjust! This is automatically set by `pd_config.py`.
+OUTDIR=${REF/.fasta/}
+OUTDIR=${OUTDIR/.fa/}
+OUTDIR=${OUTDIR/.gz/}
+export OUTDIR
+
+./purge_dups/scripts/pd_config.py \
     -l pd_inputs \
     -n config-tany.json \
     --skipB \
     $REF nano.fofn
+
 
 python3 ./purge_dups/scripts/run_purge_dups.py \
     -p bash \
@@ -55,29 +101,18 @@ python3 ./purge_dups/scripts/run_purge_dups.py \
     tany
 
 
-echo -e "Current directory:\n"
-ls -lh
-
-echo -e "\n\nDisk used:\n"
-du -h -d1
-
 
 mv ${OUTDIR} haploid_purge_dups
 export OUTDIR=haploid_purge_dups
-tar -czf ${OUTDIR}.tar.gz $OUTDIR
+mv ${REF} ./${OUTDIR}/
+tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
 mv ${OUTDIR}.tar.gz /staging/lnell/
 
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# LEFT OFF: Where is final contigs file?
-# I'm calling it `haploid_polished_contigs.fasta.gz` downstream
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+rm -rf minimap2-2.21 purge_dups runner ${REF1} ${REF2} ${LONGREADS}
+rm -rf ${OUTDIR} config-tany.json nano.fofn pd_inputs
 
 
-rm -rf minimap2-2.21 purge_dups runner $REF $LONGREADS
-rm -rf $OUTDIR config-tany.json nano.fofn pd_inputs
 
 
 
