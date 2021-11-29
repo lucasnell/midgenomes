@@ -34,19 +34,22 @@ set -e
     # OUTDIR=busco__${GENOME}
 
 
-cp /staging/lnell/haploid_purge_dups.tar.gz ./
-tar -xzf haploid_purge_dups.tar.gz
-rm haploid_purge_dups.tar.gz
+export DIRNAME=haps_purged
+export FILENAME=haps_purged
+
+cp /staging/lnell/${DIRNAME}.tar.gz ./
+tar -xzf ${DIRNAME}.tar.gz
+rm ${DIRNAME}.tar.gz
 
 
 for G in purged hap
 do
 
-    export GENOME=pepper_haps.${G}.fa
-    mv ./haploid_purge_dups/seqs/${GENOME} ./
+    export GENOME=${FILENAME}.${G}.fa
+    mv ./${DIRNAME}/seqs/${GENOME} ./
     echo $GENOME
     echo -e "\n\n"
-    OUTDIR=busco__${G}
+    OUTDIR=busco__${GENOME/.fa/}
 
     busco \
         -m genome \
@@ -66,4 +69,4 @@ do
 done
 
 
-
+rm -r ${DIRNAME}

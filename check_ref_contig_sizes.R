@@ -13,7 +13,12 @@ read_fasta <- function(fn) {
         mutate(start = start + 1)
 
     seqs <- pmap_chr(splits,
-                     function(start, end) str_c(fasta[start:end], collapse = ""))
+                     function(start, end) str_c(fasta[start:end],
+                                                collapse = ""))
+
+    nms <- map_chr(splits$start - 1, ~ fasta[.x])
+
+    names(seqs) <- nms
 
     return(seqs)
 }
@@ -83,4 +88,22 @@ report_stats(hap_p)
 
 all_haps <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/pepper_haps.fasta")
 report_stats(all_haps)
+
+
+
+
+
+hap1 <- read_fasta("/Users/lucasnell/_data/haps_purged/polished_hap1/seqs/polished_hap1.purged.fa")
+report_stats(hap1)
+
+hap2 <- read_fasta("/Users/lucasnell/_data/haps_purged/polished_hap2/seqs/polished_hap2.purged.fa")
+report_stats(hap2)
+
+
+
+haps <- read_fasta("/Users/lucasnell/_data/haps_purged/seqs/haps_purged.hap.fa")
+report_stats(haps)
+haps_p <- read_fasta("~/_data/haps_purged/seqs/haps_purged.purged.fa")
+report_stats(haps_p)
+
 
