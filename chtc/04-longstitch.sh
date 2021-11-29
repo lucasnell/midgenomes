@@ -12,7 +12,7 @@ mkdir ${OUTDIR}
 cd ${OUTDIR}
 
 
-export GENOME=polished_hap1
+export GENOME=haploid_purge_dups
 cp /staging/lnell/${GENOME}.fasta.gz ./ && gunzip ${GENOME}.fasta.gz
 # LongStitch requires *.fa ending
 mv ${GENOME}.fasta ${GENOME}.fa
