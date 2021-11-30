@@ -7,7 +7,6 @@ export OUTDIR=scaffold_longstitch
 export THREADS=32
 
 
-
 mkdir ${OUTDIR}
 cd ${OUTDIR}
 
@@ -30,19 +29,19 @@ cp /staging/lnell/ls-env.tar.gz ./
 ENVNAME=ls-env
 # if you need the environment directory to be named something other than the
 # environment name, change this line
-ENVDIR=$ENVNAME
+ENVDIR=${ENVNAME}
 
 # these lines handle setting up the environment; you shouldn't have to
 # modify them
 export PATH
-mkdir $ENVDIR
-tar -xzf $ENVNAME.tar.gz -C $ENVDIR
-. $ENVDIR/bin/activate
+mkdir ${ENVDIR}
+tar -xzf ${ENVNAME}.tar.gz -C ${ENVDIR}
+. ${ENVDIR}/bin/activate
 
 
-longstitch run draft=${GENOME} reads=${FASTQ} t=${THREADS} G=128000000
+longstitch run draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000
 
-rm -r ${GENOME}.fa ${FASTQ}.fq.gz ${ENVDIR}
+rm -rf ${GENOME}.fa ${FASTQ}.fq.gz ${ENVDIR}
 
 cd ..
 
