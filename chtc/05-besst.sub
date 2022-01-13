@@ -1,7 +1,7 @@
 # besst.sub
 
-# Run P_RNA to account for heterozygosity in the Tanytarsus
-# gracilentus assembly
+# Run BESST_RNA to scaffold the Tanytarsus gracilentus assembly
+# using RNA-seq reads
 
 universe = vanilla
 
@@ -10,22 +10,23 @@ error = besst/besst.err
 executable = besst/besst.sh
 output = besst/besst.out
 
-batch_name = "p_rna"
+batch_name = "besst"
 
 ## Specify that HTCondor should transfer files to and from the
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = besst/besst_progs.tar.gz
+transfer_input_files = besst/BESST_RNA.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
-request_cpus = 32
-request_memory = 80GB
-request_disk = 500GB
+request_cpus = 4
+request_memory = 40GB
+request_disk = 200GB
 
 # Tell HTCondor to run 1 instance of this job:
 queue 1
+

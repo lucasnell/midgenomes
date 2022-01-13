@@ -3,15 +3,17 @@
 # have job exit if any command returns with non-zero exit status (aka failure)
 set -e
 
-export OUTDIR=scaffold_longstitch
-export THREADS=32
+export OUTDIR=scaffolds_longstitch_arks
+export OUTFASTA=${OUTDIR}.fasta
+export THREADS=8
 
 
 mkdir ${OUTDIR}
 cd ${OUTDIR}
 
 
-export GENOME=haploid_purge_dups
+# export GENOME=haploid_purge_dups
+export GENOME=scaffolds_p_rna
 cp /staging/lnell/${GENOME}.fasta.gz ./ && gunzip ${GENOME}.fasta.gz
 # LongStitch requires *.fa ending
 mv ${GENOME}.fasta ${GENOME}.fa
@@ -22,29 +24,24 @@ cp /staging/lnell/${FASTQ}.fastq.gz ./
 mv ${FASTQ}.fastq.gz ${FASTQ}.fq.gz
 
 
-cp /staging/lnell/ls-env.tar.gz ./
+# longstitch run \
+longstitch tigmint-ntLink-arks \
+    draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000
 
-# replace env-name on the right hand side of this line with the name of your
-# conda environment
-ENVNAME=ls-env
-# if you need the environment directory to be named something other than the
-# environment name, change this line
-ENVDIR=${ENVNAME}
+rm -rf ${GENOME}.fa ${FASTQ}.fq.gz
 
-# these lines handle setting up the environment; you shouldn't have to
-# modify them
-export PATH
-mkdir ${ENVDIR}
-tar -xzf ${ENVNAME}.tar.gz -C ${ENVDIR}
-. ${ENVDIR}/bin/activate
-
-
-longstitch run draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000
-
-rm -rf ${GENOME}.fa ${FASTQ}.fq.gz ${ENVDIR}
+# Gets filename of final scaffolds FASTA file
+export LS_FASTA=$(basename -- $(readlink -f *-arks.longstitch-scaffolds.fa))
+cp $LS_FASTA ../
 
 cd ..
 
+# Moving the final FASTA to staging
+mv $LS_FASTA ${OUTFASTA}
+gzip ${OUTFASTA}
+mv ${OUTFASTA}.gz /staging/lnell/
+
+# Now the whole directory
 tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
 mv ${OUTDIR}.tar.gz /staging/lnell/
 rm -r ${OUTDIR}

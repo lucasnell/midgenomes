@@ -23,17 +23,35 @@ read_fasta <- function(fn) {
     return(seqs)
 }
 
+len_str <- function(len, .digits) {
+    fmt <- paste0("%.", .digits, "f")
+    if (len > 1e9) {
+        z <- sprintf(paste(fmt, "Gb"), len / 1e9)
+    } else if (len > 1e6) {
+        z <- sprintf(paste(fmt, "Mb"), len / 1e6)
+    } else if (len > 1e3) {
+        z <- sprintf(paste(fmt, "kb"), len / 1e3)
+    } else {
+        z <- sprintf(paste(fmt, "b"), len)
+    }
+    return(z)
+}
+
 
 # Report genome size, # contigs, N50
-report_stats <- function(seqs) {
+report_stats <- function(seqs, .digits = 2) {
 
     lens <- sort(nchar(seqs), decreasing = TRUE)
     i <- which(cumsum(lens) >= (sum(lens) / 2))[1]
 
-    cat(sprintf("size = %.2f Mb\n", sum(lens) / 1e6))
-    cat(sprintf("%s contigs\n", prettyNum(length(lens),
-                                        big.mark = ",", scientific = FALSE)))
-    cat(sprintf("N50 = %.2f kb\n", lens[i] / 1e3))
+    pn <- function(x) prettyNum(x, big.mark = ",", scientific = FALSE)
+
+    cat(sprintf("size = %s\n", len_str(sum(lens), .digits)))
+    cat(sprintf("%s contigs\n", pn(length(lens))))
+    cat(sprintf("N50 = %s\n", len_str(lens[i], .digits)))
+    cat(sprintf("min = %s\n", len_str(min(lens), .digits)))
+    cat(sprintf("max = %s\n", len_str(max(lens), .digits)))
+    cat(sprintf("total N = %s\n", len_str(sum(str_count(seqs, "N")), .digits)))
 
     invisible(NULL)
 
@@ -60,50 +78,38 @@ report_stats(polish2)
 #'
 
 
-# Results from just SHASTA > purge_dups
-hap_np <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_nopolish/seqs/contigs_shasta.hap.fa")
-hap_p_np <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_nopolish/seqs/contigs_shasta.purged.fa")
-
-report_stats(hap_np)
-report_stats(hap_p_np)
-
-
-# Results from SHASTA > PEPPER > purge_dups (haplotype 1)
-hap1 <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_pepper1/seqs/polished_hap1.hap.fa")
-hap_p1 <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups_pepper1/seqs/polished_hap1.purged.fa")
-
-report_stats(hap1)
-report_stats(hap_p1)
-
-
-# SHASTA > PEPPER > purge_dups (haplotype 1) > purge_dups (purged contigs + haplotype 2)
-hap <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/seqs/pepper_haps.hap.fa")
-hap_p <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/seqs/pepper_haps.purged.fa")
-
+# Results from SHASTA > PEPPER > purge_dups
+hap <- read_fasta("~/_data/haploid_purge_dups/seqs/polished_hap1.purged.fa")
 report_stats(hap)
-report_stats(hap_p)
+
+# Results from SHASTA > PEPPER > purge_dups > LongStitch
+scaffs_ls <- read_fasta(paste0("~/_data/longstitch-then-rna/scaffold_longstitch/",
+                            "scaffold_longstitch.fasta"))
+report_stats(scaffs_ls)
+
+# Results from SHASTA > PEPPER > purge_dups > LongStitch > BESST_RNA
+scaffs_ls_besst <- read_fasta(paste0("~/_data/longstitch-then-rna/",
+                                   "scaffold_besst/pass1/Scaffolds-pass1.fa"))
+report_stats(scaffs_ls_besst)
 
 
+# Results from SHASTA > PEPPER > purge_dups > BESST_RNA
+scaffs_besst <- read_fasta(paste0("~/_data/scaffold_besst.fasta.gz"))
+report_stats(scaffs_besst)
+
+# Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder
+scaffs_p_rna <- read_fasta("~/_data/scaffolds_p_rna/P_RNA_scaffold.fasta")
+report_stats(scaffs_p_rna)
 
 
-all_haps <- read_fasta("/Users/lucasnell/_data/haploid_purge_dups/pepper_haps.fasta")
-report_stats(all_haps)
+# Results from SHASTA > PEPPER > purge_dups > BESST_RNA > LongStitch
+scaffs_besst_ls <- read_fasta(paste0("~/_data/scaffold_longstitch_besst/",
+                                     "scaffold_longstitch_besst.fasta"))
+report_stats(scaffs_besst_ls)
 
 
-
-
-
-hap1 <- read_fasta("/Users/lucasnell/_data/haps_purged/polished_hap1/seqs/polished_hap1.purged.fa")
-report_stats(hap1)
-
-hap2 <- read_fasta("/Users/lucasnell/_data/haps_purged/polished_hap2/seqs/polished_hap2.purged.fa")
-report_stats(hap2)
-
-
-
-haps <- read_fasta("/Users/lucasnell/_data/haps_purged/seqs/haps_purged.hap.fa")
-report_stats(haps)
-haps_p <- read_fasta("~/_data/haps_purged/seqs/haps_purged.purged.fa")
-report_stats(haps_p)
+# Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder > LongStitch
+scaffs_p_rna_ls <- read_fasta("~/_data/scaffolds_longstitch_p_rna.fasta.gz")
+report_stats(scaffs_p_rna_ls)
 
 

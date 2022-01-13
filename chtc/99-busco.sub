@@ -2,14 +2,21 @@
 
 # BUSCO score for Tanytarsus genome
 
+# This will run	one instance of	BUSCO for each line in
+# the file `busco/fastas.txt`
+
 universe = docker
-docker_image = ezlabgva/busco:v5.2.2_cv1
+docker_image = ezlabgva/busco:v5.2.2_cv2
 
 
-log = busco/busco.log
-error = busco/busco.err
+log = busco/busco_$(fasta).log
+error = busco/busco_$(fasta).err
+output = busco/busco_$(fasta).out
+
 executable = busco/busco.sh
-output = busco/busco.out
+arguments = $(fasta)
+
+batch_name = busco
 
 #
 # Specify that HTCondor should transfer files to and from the
@@ -25,9 +32,7 @@ requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 #  each job will need on the computer where it runs.
 request_cpus = 24
 request_memory = 8GB
-request_disk = 10GB
+request_disk = 50GB
 
-
-
-# Tell HTCondor to run 1 instance of this job:
-queue 1
+# Run one instance of this job per line in `busco/fastas.txt`
+queue fasta from busco/fastas.txt

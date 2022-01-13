@@ -2,19 +2,22 @@
 
 # Run longstitch to scaffold the Tanytarsus gracilentus assembly
 
-universe = vanilla
+universe = docker
+docker_image = quay.io/biocontainers/longstitch:1.0.1--hdfd78af_2
+
 
 log = longstitch/longstitch.log
 error = longstitch/longstitch.err
 executable = longstitch/longstitch.sh
 output = longstitch/longstitch.out
 
+batch_name = "longstitch"
+
 ## Specify that HTCondor should transfer files to and from the
 ##  computer where each job runs.
-should_transfer_files = NO
-
-## should_transfer_files = YES
-## when_to_transfer_output = ON_EXIT
+## *NEVER CHANGE `should_transfer_files` TO `NO`
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
 ## transfer_input_files = longstitch/purge_progs.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
@@ -22,9 +25,9 @@ requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
-request_cpus = 32
-request_memory = 80GB
-request_disk = 100GB
+request_cpus = 8
+request_memory = 24GB
+request_disk = 50GB
 
 # Tell HTCondor to run 1 instance of this job:
 queue 1
