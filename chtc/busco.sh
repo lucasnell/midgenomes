@@ -24,9 +24,12 @@ busco \
     -o ${OUTDIR} \
     --cpu 24
 
-
-tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
-mv ${OUTDIR}.tar.gz /staging/lnell/busco/
+# ~~~~~~~~~~~~~
+# For now, we'll just delete the main directory. Change this when you
+# finalize the pipeline.
+# ~~~~~~~~~~~~~
+# tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
+# mv ${OUTDIR}.tar.gz /staging/lnell/busco/
 rm -r ${OUTDIR} ${GENOME}
 
 

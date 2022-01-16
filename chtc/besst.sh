@@ -16,13 +16,30 @@
 # chmod 644 besst-env.tar.gz
 # ls -sh besst-env.tar.gz
 
-# CHANGE THESE FOR DIFFERING PIPELINES:
-# The first adjusts inputs, the second the name of outputs:
-export GENOME=haploid_purge_dups.fasta
-export OUT_SUFFIX=purge_dups
 
-
+# The input FASTA is given by the submit file:
+export GENOME=$1.fasta
+if [ ! -f /staging/lnell/${GENOME}.gz ]; then
+    echo "/staging/lnell/${GENOME}.gz does not exist." 1>&2
+    exit 1
+fi
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+
+
+# The input file dictates the output name:
+export OUT_SUFFIX=besst
+
+if  [[ $GENOME == contigs* ]]
+then
+    OUT_DIR=scaffolds_${OUT_SUFFIX}
+else
+    OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
+fi
+export OUT_DIR
+
+export OUT_FASTA=${OUT_DIR}.fasta
+
+
 
 # The genome file affects which BAM file to use:
 export BAM=rna_hisat2__${GENOME/.fasta/}.bam
@@ -38,8 +55,6 @@ tar -xzf BESST_RNA.tar.gz
 rm BESST_RNA.tar.gz
 
 export WD=$(pwd)
-export OUTDIR=scaffolds_besst_${OUT_SUFFIX}
-export OUTFASTA=${OUTDIR}.fasta
 
 # conda setup
 ENVNAME=besst-env
@@ -56,7 +71,7 @@ cd BESST_RNA
 python Main.py 1 \
     -c ${WD}/${GENOME} \
     -f ${WD}/${BAM} \
-    -o ${WD}/${OUTDIR} \
+    -o ${WD}/${OUT_DIR} \
     -z 10000
 
 
@@ -64,25 +79,35 @@ python Main.py 1 \
 # -k 50 includes very small contigs
 # -z 10000 effectively turns repeat detection off (this was recommended)
 
-
+# It uses lowercase n instead of N, which I'm changing for consistency
+# with other scaffolders:
+cd ${WD}/${OUT_DIR}/pass1
+sed -i -e '/^[^>]/s/n/N/g' Scaffolds-pass1.fa
 
 
 cd ${WD}
+
+
 
 rm -r BESST_RNA ${BAM} ${BAM}.bai ${GENOME} ${ENVNAME}
 
 
 # Move just the scaffolds to the staging directory:
-cp ./${OUTDIR}/pass1/Scaffolds-pass1.fa ./
-mv Scaffolds-pass1.fa ${OUTFASTA}
-gzip ${OUTFASTA}
-mv ${OUTFASTA}.gz /staging/lnell/
+cp ./${OUT_DIR}/pass1/Scaffolds-pass1.fa ./
+mv Scaffolds-pass1.fa ${OUT_FASTA}
+./summ_scaffs ${OUT_FASTA}
+gzip ${OUT_FASTA}
+mv ${OUT_FASTA}.gz /staging/lnell/
 
-# practice run shows that it makes the `${OUTDIR}Statistics.txt` file
+# practice run shows that it makes the `${OUT_DIR}Statistics.txt` file
 # outside of the output directory,
 # so we want to make sure it's in the output dir, too
-mv ${OUTDIR}Statistics.txt ./${OUTDIR}
+mv ${OUT_DIR}Statistics.txt ./${OUT_DIR}
 
-tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
-mv ${OUTDIR}.tar.gz /staging/lnell/
-rm -r ${OUTDIR}
+# ~~~~~~~~~~~~~
+# For now, we'll just delete the main directory. Change this when you
+# finalize the pipeline.
+# ~~~~~~~~~~~~~
+# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+# mv ${OUT_DIR}.tar.gz /staging/lnell/
+rm -r ${OUT_DIR} summ_scaffs

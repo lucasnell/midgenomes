@@ -9,9 +9,9 @@ universe = docker
 docker_image = ezlabgva/busco:v5.2.2_cv2
 
 
-log = busco/busco_$(fasta).log
-error = busco/busco_$(fasta).err
-output = busco/busco_$(fasta).out
+log = busco/busco__$(fasta).log
+error = busco/busco__$(fasta).err
+output = busco/busco__$(fasta).out
 
 executable = busco/busco.sh
 arguments = $(fasta)

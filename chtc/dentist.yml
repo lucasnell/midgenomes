@@ -1,5 +1,5 @@
 __default__:
-    read-coverage: 200.0
+    read-coverage: 20.0
     ploidy: 2
     verbose: 2
     join-policy: scaffoldGaps

@@ -28,29 +28,40 @@ mamba install -c bioconda fastx_toolkit
 # # --------------------------------------
 
 
-# Argument from submit file dictates input FASTA and output name:
-
-export OUTDIR=filled_dentist__$1
-export SCAFFOLDS=$1.fasta
-if [ ! -f /staging/lnell/${SCAFFOLDS}.gz ]; then
-    echo "/staging/lnell/${SCAFFOLDS}.gz does not exist." 1>&2
+# The input FASTA is given by the submit file:
+export GENOME=$1.fasta
+if [ ! -f /staging/lnell/${GENOME}.gz ]; then
+    echo "/staging/lnell/${GENOME}.gz does not exist." 1>&2
     exit 1
 fi
+cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 
-mkdir ${OUTDIR}
-chmod +w -R ${OUTDIR}
 
-# Move all files from submit node to OUTDIR:
-mv dentist.v3.0.0.x86_64.tar.gz dentist.yml snakemake.yml ./${OUTDIR}/
-cd ${OUTDIR}
+# The input file dictates the output name:
+export OUT_SUFFIX=dentist
+
+if  [[ $GENOME == contigs* ]]
+then
+    OUT_DIR=scaffolds_${OUT_SUFFIX}
+else
+    OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
+fi
+export OUT_DIR
+
+export OUT_FASTA=${OUT_DIR}.fasta
+
+
+mkdir ${OUT_DIR}
+chmod +w -R ${OUT_DIR}
+
+# Move all files from submit node to OUT_DIR:
+mv dentist.v3.0.0.x86_64.tar.gz dentist.yml snakemake.yml ./${OUT_DIR}/
+cd ${OUT_DIR}
 # Adjust the snakemake.yml file for the input FASTA:
-sed -i "s/INPUT_SCAFFOLDS_FILE/${SCAFFOLDS}/" snakemake.yml
-
-# Now copy over scaffolds file:
-cp /staging/lnell/${SCAFFOLDS}.gz ./ && gunzip ${SCAFFOLDS}.gz
+sed -i "s/INPUT_SCAFFOLDS_FILE/${GENOME}/" snakemake.yml
 
 # It's important that this is a FASTA file!
-READS=basecalls_guppy-5.0.11.fasta
+READS=basecalls_guppy-5.0.11_filtered.fasta
 cp /staging/lnell/${READS}.gz ./ && gunzip ${READS}.gz
 # Apparently the fasta2DAM > DPsplit step can't handle a file with periods
 mv ${READS} basecalls_guppy.fasta
@@ -74,36 +85,49 @@ cp -r -t . \
 
 
 # Make sure the FASTA files aren't too wide
-mv ${SCAFFOLDS} ${SCAFFOLDS/.fasta/_orig.fasta}
+mv ${GENOME} ${GENOME/.fasta/_orig.fasta}
 mv ${READS} ${READS/.fasta/_orig.fasta}
-fasta_formatter -i ${SCAFFOLDS/.fasta/_orig.fasta} -w 80 \
-    -o ${SCAFFOLDS}
+fasta_formatter -i ${GENOME/.fasta/_orig.fasta} -w 80 \
+    -o ${GENOME}
 fasta_formatter -i ${READS/.fasta/_orig.fasta} -w 80 \
     -o ${READS}
-rm ${SCAFFOLDS/.fasta/_orig.fasta} ${READS/.fasta/_orig.fasta}
+rm ${GENOME/.fasta/_orig.fasta} ${READS/.fasta/_orig.fasta}
 
 
 # This section doesn't seem needed:
 # # Now clean up sequence names
+# mv ${GENOME} ${GENOME/.fasta/_narrow.fasta}
+# mv ${READS} ${READS/.fasta/_narrow.fasta}
 # # ... by removing everything after the first comma in the seq names:
-# sed -r 's/\,.+//' ${SCAFFOLDS/.fasta/_narrow.fasta} > ${SCAFFOLDS}
+# sed -r 's/\,.+//' ${GENOME/.fasta/_narrow.fasta} > ${GENOME}
 # # ... by removing everything after the first space in the seq names:
 # sed -r 's/\ .+//' ${READS/.fasta/_narrow.fasta} > ${READS}
-# rm ${SCAFFOLDS/.fasta/_narrow.fasta} ${READS/.fasta/_narrow.fasta}
+# rm ${GENOME/.fasta/_narrow.fasta} ${READS/.fasta/_narrow.fasta}
 
 
 snakemake --configfile=snakemake.yml --use-conda \
     --conda-prefix ${CONDA_PREFIX} --cores=${THREADS}
 
 
-rm -rf dentist.v3.0.0.x86_64 ${READS} ${SCAFFOLDS}
+rm -rf dentist.v3.0.0.x86_64 ${READS} ${GENOME}
+
+cp gap-closed.fasta ../
 
 cd ..
 
-tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
-mv ${OUTDIR}.tar.gz /staging/lnell/
+mv gap-closed.fasta ${OUT_FASTA}
+./summ_scaffs ${OUT_FASTA}
+gzip ${OUT_FASTA}
+mv ${OUT_FASTA}.gz /staging/lnell/
 
-rm -rf ${TMPDIR} mamba3 ${OUTDIR}
+# ~~~~~~~~~~~~~
+# For now, we'll just delete the main directory. Change this when you
+# finalize the pipeline.
+# ~~~~~~~~~~~~~
+# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+# mv ${OUT_DIR}.tar.gz /staging/lnell/
+
+rm -rf ${TMPDIR} mamba3 ${OUT_DIR} summ_scaffs
 
 
 

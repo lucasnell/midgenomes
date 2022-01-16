@@ -4,9 +4,9 @@
 
 universe = vanilla
 
-log = dentist/dentist_$(fasta).log
-error = dentist/dentist_$(fasta).err
-output = dentist/dentist_$(fasta).out
+log = dentist/$(fasta)_dentist.log
+error = dentist/$(fasta)_dentist.err
+output = dentist/$(fasta)_dentist.out
 
 executable = dentist/dentist.sh
 arguments = $(fasta)
@@ -18,7 +18,7 @@ batch_name = "dentist"
 #  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = dentist/dentist.v3.0.0.x86_64.tar.gz, dentist/dentist.yml, dentist/snakemake.yml
+transfer_input_files = dentist/dentist.v3.0.0.x86_64.tar.gz, dentist/dentist.yml, dentist/snakemake.yml, summ_scaffs
 
 ## IMPORTANT! Require execute servers that have /staging access and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
