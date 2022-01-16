@@ -39,7 +39,7 @@ hisat2 -x tany_hisat_idx -1 ${RNA1} -2 ${RNA2} -k 3 -p ${THREADS} \
     --pen-noncansplice 1000000 -S ${SAM}
 
 # Convert to aligned BAM file with index file for storage:
-samtools view -u -b ${SAM} | \
+samtools view -u -h -b ${SAM} | \
     samtools sort -@ $((THREADS - 2)) -o ${BAM} -
 samtools index ${BAM} ${BAM}.bai
 mv ${BAM} ${BAM}.bai /staging/lnell/

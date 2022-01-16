@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# # have job exit if any command returns with non-zero exit status (aka failure)
-# set -e
-
 export THREADS=8
 
 # The input FASTA is given by the submit file:

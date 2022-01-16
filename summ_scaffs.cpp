@@ -1,6 +1,15 @@
 // Provides some basic stats on scaffolds.
 
-// Compile with `g++ -std=c++11 summ_scaffs.cpp -o summ_scaffs`
+/*
+
+ On linux, compile with
+ g++ -std=c++11 summ_scaffs.cpp -o summ_scaffs
+
+ On your mac, compile with
+ g++ -std=c++11 -isysroot $(xcrun --show-sdk-path) summ_scaffs.cpp -o summ_scaffs
+
+ */
+
 
 #include <iostream>
 #include <fstream>

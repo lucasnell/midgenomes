@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# have job exit if any command returns with non-zero exit status (aka failure)
-set -e
-
 
 export THREADS=8
 
@@ -57,7 +54,8 @@ cd ..
 
 # Moving the final FASTA to staging
 mv $LS_FASTA ${OUT_FASTA}
-./summ_scaffs ${OUT_FASTA}
+# this doesn't work in the longstitch docker container:
+# ./summ_scaffs ${OUT_FASTA}
 gzip ${OUT_FASTA}
 mv ${OUT_FASTA}.gz /staging/lnell/
 
