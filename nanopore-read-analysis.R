@@ -58,9 +58,9 @@ lq_filter <- ss$mean_qscore_template > 16 & ss$sequence_length_template > 12.3e3
 
 sum(ss$sequence_length_template[lq_filter]) / 1e9
 
-clean_reads <- ss$read_id[lq_filter]
-# Line numbers converted to 0-based indices and accounting for 4 lines per read
-clean_lines <- (which(lq_filter) - 1) * 4
+clean_reads_names <- ss$read_id[lq_filter]
+# Read numbers converted to 0-based indices
+clean_reads <- which(lq_filter) - 1
 
 
 
@@ -71,21 +71,19 @@ clean_lines <- (which(lq_filter) - 1) * 4
 
 
 
-# Originally took 7.633329 hours
+# Takes ~17.5 min
 
-t0 <- Sys.time()
 filter_fastq(in_fn = "~/_data/basecalls_guppy-5.0.11.fastq.gz",
              out_fn = "~/_data/basecalls_guppy-5.0.11_filtered.fastq.gz",
-             read_names = clean_reads,
-             n_reads = nrow(ss))
-t1 <- Sys.time()
+             read_nums = clean_reads)
 
 
 
-# all_names_f <- get_read_names(in_fn = "~/_data/basecalls_guppy-5.0.11_filtered.fastq.gz",
-#                               n_reads = length(clean_reads))
 
+all_names_f <- get_read_names(in_fn = "~/_data/basecalls_guppy-5.0.11_filtered.fastq.gz",
+                              n_reads = length(clean_reads))
 
+identical(all_names_f, clean_reads_names)
 
 
 

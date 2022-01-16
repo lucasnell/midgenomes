@@ -98,21 +98,17 @@ std::vector<std::string> get_read_names(std::string in_fn,
 
 
 //'
-//' `read_names` is the name of the reads you want in the output FASTQ.
+//' `read_nums` is the read numbers of the reads you want in the output FASTQ.
 //'
 // [[Rcpp::export]]
 void filter_fastq(std::string in_fn,
                   std::string out_fn,
-                  std::vector<std::string> read_names,
-                  const uint32_t& n_reads) {
+                  std::deque<uint32_t> read_nums) {
 
     expand_path(in_fn);
     expand_path(out_fn);
 
-    // For easier searching bc FASTQ name lines start with '@':
-    for (std::string& s : read_names) s = '@' + s;
-
-    Progress prog_bar(n_reads, true);
+    Progress prog_bar(read_nums.size(), true);
 
     // Input
     std::ifstream in_file(in_fn.c_str(), std::ios_base::in | std::ios_base::binary);
@@ -121,6 +117,8 @@ void filter_fastq(std::string in_fn,
     in_buf.push(in_file);
     std::istream in_stream(&in_buf);
 
+    Rcpp::checkUserInterrupt();
+
     // Output
     std::ofstream out_file(out_fn.c_str(), std::ios_base::out | std::ios_base::binary);
     boost::iostreams::filtering_streambuf<boost::iostreams::output> out_buf;
@@ -128,32 +126,29 @@ void filter_fastq(std::string in_fn,
     out_buf.push(out_file);
     std::ostream out_stream(&out_buf);
 
+    Rcpp::checkUserInterrupt();
+
     // Iterate lines
     std::string line;
+    line.reserve(100000);
     bool to_out = false;
     uint32_t found_reads = 0;
-    uint32_t i = 0;
+    uint32_t line_i = 0;
+    uint32_t read_i = 0;
     while (std::getline(in_stream, line)) {
-        if (read_names.empty()) break;
-        if (i > 0 && i % 1000 == 0) {
-            Rcpp::checkUserInterrupt();
-            prog_bar.increment(250);
-        }
-        if (i % 4 == 0) {
-            to_out = false;
-            for (std::string& name : read_names) {
-                // `rfind(..., 0) == 0` effectively acts as `starts_with(...)`
-                if (line.rfind(name, 0) == 0) {
-                    to_out = true;
-                    found_reads++;
-                    break;
-                }
+        if (read_nums.empty()) break;
+        if (line_i % 1000 == 0) Rcpp::checkUserInterrupt();
+        if (line_i % 4 == 0) {
+            to_out = read_i == read_nums.front();
+            read_i++;
+            if (to_out) {
+                found_reads++;
+                read_nums.pop_front();
+                prog_bar.increment();
             }
         }
-        if (to_out) {
-            out_stream << line << std::endl;
-        }
-        i++;
+        if (to_out) out_stream << line << std::endl;
+        line_i++;
     }
 
     // Cleanup
@@ -161,15 +156,11 @@ void filter_fastq(std::string in_fn,
     boost::iostreams::close(out_buf);
     out_file.close();
 
-    if (found_reads < read_names.size()) {
-        Rcout << static_cast<uint32_t>(read_names.size() - found_reads) <<
-            " read names left!\n";
+    if (read_nums.size() > 0) {
+        Rcout << static_cast<uint32_t>(read_nums.size()) <<
+            " reads left!\n";
+        Rcout << "Found " << found_reads << " reads in total.\n";
     }
-    if (found_reads > read_names.size()) {
-        Rcout << static_cast<uint32_t>(found_reads - read_names.size()) <<
-            " too many reads?!\n";
-    }
-
 
     return;
 
