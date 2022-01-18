@@ -1,0 +1,9 @@
+name: longstitch-env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - longstitch=1.0.1
+  - python=3.9.9
+prefix: /opt/mamba3/envs/longstitch-env
