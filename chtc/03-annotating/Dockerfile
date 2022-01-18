@@ -17,8 +17,11 @@ SHELL ["/bin/bash", "--login", "-c"]
 # Basic requirements:
 RUN yum update -y
 RUN yum group install -y "Development Tools"
-RUN yum install -y wget curl git rsync which unzip bzip2-devel lzma-devel \
-    ncurses-devel xz-devel zlib-devel perl
+RUN yum install -y locales wget curl git rsync which unzip bzip2-devel \
+    lzma-devel ncurses-devel xz-devel zlib-devel
+
+# Set locales
+RUN localedef -i en_US -f UTF-8 en_US.UTF-8
 
 # Install miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
@@ -32,15 +35,12 @@ RUN conda config --add channels defaults && \
     conda config --add channels conda-forge
 
 # Make primary conda environment:
-RUN conda create -q -y -n annotating-env
+RUN conda create -q -y -n annotating-env braker2 hisat2 busco samtools
 
 # Always start in our created environment
 RUN echo "conda activate annotating-env" > ~/.bashrc
 ENV PATH /opt/miniconda3/envs/annotating-env/bin:${PATH}
 
-# Main tools we're using:
-RUN conda install -q -y braker2 hisat2 busco samtools
-
-# Clean up:
+# Clean up tarballs from installed packages:
 RUN conda clean --all -y
 
