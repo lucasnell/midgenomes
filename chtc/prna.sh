@@ -27,8 +27,8 @@ export OUT_FASTA=${OUT_DIR}.fasta
 
 
 
-export RNA1=TanyAdult_S1_L002_R1_001.fastq
-export RNA2=TanyAdult_S1_L002_R2_001.fastq
+export RNA1=trimmed_TanyAdult_S1_L002_R1_001.fastq
+export RNA2=trimmed_TanyAdult_S1_L002_R2_001.fastq
 cp /staging/lnell/${RNA1}.gz ./ && gunzip ${RNA1}.gz
 cp /staging/lnell/${RNA2}.gz ./ && gunzip ${RNA2}.gz
 

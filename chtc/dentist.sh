@@ -91,6 +91,7 @@ fasta_formatter -i ${GENOME/.fasta/_orig.fasta} -w 80 \
     -o ${GENOME}
 fasta_formatter -i ${READS/.fasta/_orig.fasta} -w 80 \
     -o ${READS}
+# can also do this with seqtk: `seqtk seq -l 80 -A IN.fasta > OUT.fasta`
 rm ${GENOME/.fasta/_orig.fasta} ${READS/.fasta/_orig.fasta}
 
 

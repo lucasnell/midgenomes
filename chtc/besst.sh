@@ -12,7 +12,7 @@
 # conda install networkx==1.10
 # conda deactivate
 # conda install -c conda-forge conda-pack
-# conda pack -n besst-envv --ignore-missing-files
+# conda pack -n besst-env --ignore-missing-files
 # chmod 644 besst-env.tar.gz
 # ls -sh besst-env.tar.gz
 
@@ -67,6 +67,10 @@ tar -xzf ${ENVNAME}.tar.gz -C ${ENVDIR}
 rm ${ENVNAME}.tar.gz
 
 cd BESST_RNA
+
+
+# If you install via `conda install besst` use the command `runBESST`
+
 
 python Main.py 1 \
     -c ${WD}/${GENOME} \
