@@ -20,7 +20,7 @@
 #include <progress.hpp>  // for the progress bar
 
 // [[Rcpp::depends(RcppProgress,BH)]]
-// [[Rcpp::plugins(cpp11)]]
+// [[Rcpp::plugins(cpp11,openmp)]]
 
 using namespace Rcpp;
 
