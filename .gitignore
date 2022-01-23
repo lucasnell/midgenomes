@@ -4,3 +4,8 @@
 .Ruserdata
 
 summ_scaffs
+
+*.fastq
+*.fastq.gz
+*.fasta
+*.fasta.gz

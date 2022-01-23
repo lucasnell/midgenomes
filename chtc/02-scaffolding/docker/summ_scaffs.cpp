@@ -81,7 +81,7 @@ int main(int argc, char* argv[]){
         uint32 n50 = sizes[i];
 
         std::cout << "size = " << total_size << std::endl;
-        std::cout << sizes.size() << " contigs" << std::endl;
+        std::cout << sizes.size() << " scaffolds" << std::endl;
         std::cout << "N50 = " << n50 << std::endl;
         std::cout << "min = " << sizes.back() << std::endl;
         std::cout << "max = " << sizes.front() << std::endl;
