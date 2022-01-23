@@ -27,7 +27,7 @@
 [MAPGD](https://github.com/LynchLab/MAPGD)
 - performs well via https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13343
 - no indels
-- I'm ging with this one
+- I'm going with this one
 
 [snape](https://github.com/EmanueleRaineri/snape-pooled)
 - performs well via https://onlinelibrary.wiley.com/doi/10.1111/1755-0998.13343
