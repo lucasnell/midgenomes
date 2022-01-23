@@ -127,49 +127,17 @@ def rnd_filter(lengths, ql_filter, seq_needed, rng):
     
     # no longer considering lengths not in filter:
     lengths = lengths[ql_filter]
-    # Max and min allowed total sequencing output:
-    median_len = np.median(lengths)
-    min_seq_needed = seq_needed - median_len
-    max_seq_needed = seq_needed + median_len
+    # Max allowed total sequencing output:
+    max_seq_needed = seq_needed + np.mean(lengths)
     # No reason to continue if we're already within our range:
     if lengths.sum() <= max_seq_needed:
         return ql_filter
-    # Get close to our needed sequencing, but added `* 1.2` to make sure to 
-    # first select a few too many.
-    # This is helpful because it's easier to remove them afterward since 
-    # we're sampling without replacement:
-    N = len(ql_filter)
-    n_sample = int(round(1.2 * (seq_needed / lengths.sum()) * float(N) + 1))
-    # We should only need to do this once, but if we somehow under-sample,
-    # this takes care of that.
-    # keep track of whether we do it more than once. print warning if so.
-    n_samp_calls = 0
-    while n_sample < N:
-        rnd_inds = rng.choice(N, n_sample, replace = False)
-        n_samp_calls += 1
-        if n_samp_calls > 5:
-            print(N)
-            print(n_sample)
-            print(seq_needed)
-            print(lengths[rnd_inds].sum())
-            sys.stderr.write("Having to sample > 5 times. Exiting now.\n")
-            sys.exit(1)
-        if lengths[rnd_inds].sum() < min_seq_needed:
-            n_sample += int(round(float(n_sample) * 0.2) + 1)
-    # Just shuffle if we need most of the samples anyway:
-    if n_sample >= N:
-        rnd_inds = rng.shuffle(np.arange(N))
-        # making this negative if we've called rng.choice()
-        n_samp_calls *= -1
-
-    if n_samp_calls > 1:
-        print("Called rng.choice() " + str(n_samp_calls) + " times. " +
-              "If this number is high, please re-write code.")
-    if n_samp_calls < 0:
-        print("WARNING: both rng.choice() and rng.shuffle() were called. "+
-              "This should never happen!")
     
-    # now remove samples until you have only the sequencing needed:
+    # Shuffle indices, then remove samples until you have only the
+    # sequencing needed:
+    rnd_inds = np.arange(len(ql_filter))
+    rng.shuffle(rnd_inds)
+    # bp of sequencing in final output:
     out_seq = lengths[rnd_inds].sum()
     # number of reads in final output:
     out_nreads = len(rnd_inds)
@@ -179,7 +147,7 @@ def rnd_filter(lengths, ql_filter, seq_needed, rng):
             out_nreads = 1
             break
         # not subtracting one from index here bc we already have above:
-        out_seq -= rnd_inds[out_nreads]
+        out_seq -= lengths[rnd_inds[out_nreads]]
     
     print("exact sequencing output: " + str(out_seq))
     
@@ -239,7 +207,7 @@ def write_filtered_fastq(in_fastq_fn, out_fastq_fn, ql_filter):
     in_fastq.close()
     out_fastq.close()
     
-    print("Filtered reads written to " + out_name)
+    print("Filtered reads written to " + out_fastq_fn)
     
     if nreads_out != len(ql_filter):
         print("WARNING: " + str(len(ql_filter)) + " reads requested but only "+
@@ -271,12 +239,10 @@ if __name__ == "__main__":
                         help = "coverage of genome desired")
     parser.add_argument("-g", "--genome_size", required = True, type=float,
                         help = "size of genome in Mb")
-    parser.add_argument("-q", "--quality", required = False, type=float, 
-                        default = 10.0,
-                        help = "minimum average read quality (default = 10)")
-    parser.add_argument("-l", "--length", required = False, type=float,
-                        default = 5000,
-                        help = "minimum read length (default = 5000)")
+    parser.add_argument("-q", "--quality", required = True, type=float, 
+                        help = "minimum average read quality")
+    parser.add_argument("-l", "--length", required = True, type=float,
+                        help = "minimum read length")
     parser.add_argument("--seed", required = False, type=int,
                         help = "set seed for random number generator for " + 
                         "reproducible output")
@@ -295,6 +261,9 @@ if __name__ == "__main__":
         sys.exit(1)
     if not os.path.exists(args.in_fastq):
         sys.stderr.write(args.in_fastq + " not found\n")
+        sys.exit(1)
+    if os.path.exists(args.out_fastq):
+        sys.stderr.write("This script refuses to overwrite files. Good day.\n")
         sys.exit(1)
     
     fastq_suffs = (".fastq.gz", ".fastq", ".fq.gz", ".fq")
