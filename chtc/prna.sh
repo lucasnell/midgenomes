@@ -33,16 +33,18 @@ cp /staging/lnell/${RNA1}.gz ./ && gunzip ${RNA1}.gz
 cp /staging/lnell/${RNA2}.gz ./ && gunzip ${RNA2}.gz
 
 # P_RNA (commit 7941e0fcb9ee2a7797fec5e2d359ecde76592139)
-tar -xzf prna_progs.tar.gz
-rm prna_progs.tar.gz
-mv ./prna_progs/P_RNA_scaffolder ./
-rm -r prna_progs
+tar -xzf P_RNA_scaffolder.tar.gz
+rm P_RNA_scaffolder.tar.gz
+# Change perl shebangs to '#!/usr/bin/env perl` so that they can use this
+# conda environment's bioperl install:
+cd P_RNA_scaffolder
+for f in *.pl
+do
+    sed -i "1s/.*/\#\!\/usr\/bin\/env\ perl/" $f
+done
+cd ..
+# Adjust permissions to make files executable:
 chmod +x -R P_RNA_scaffolder
-
-# samtools 1.14
-tar -xzf samtools-1.14.tar.gz
-rm samtools-1.14.tar.gz
-export PATH=$(pwd)/samtools-1.14/bin:${PATH}
 
 
 export BAM=rna_hisat2__${GENOME/.fasta/}.bam
@@ -68,22 +70,45 @@ bash ./P_RNA_scaffolder/P_RNA_scaffolder.sh \
 
 rm ${RNA1} ${RNA2} ${GENOME} ${SAM}
 
+if [ ! -f ./${OUT_DIR}/P_RNA_scaffold.fasta ]; then
+    echo "P_RNA_scaffolder failed to produce output." 1>&2
+    rm -r ./${OUT_DIR}
+    exit 1
+fi
+
 
 # Move just the contigs file to staging
 cp ./${OUT_DIR}/P_RNA_scaffold.fasta ./
 mv P_RNA_scaffold.fasta ${OUT_FASTA}
-./summ_scaffs ${OUT_FASTA}
-gzip ${OUT_FASTA}
+# Keep the uncompressed version for summaries below
+gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
 
+# This outputs basics about scaffold sizes:
+summ_scaffs ${OUT_FASTA}
+
+export BUSCO_OUT=busco_${OUT_DIR}
+
+
+# This outputs BUSCO scores:
+conda activate busco-env
+busco \
+    -m genome \
+    -l diptera_odb10 \
+    -i ${OUT_FASTA} \
+    -o ${BUSCO_OUT} \
+    --cpu ${THREADS}
+conda deactivate
+
+
 # ~~~~~~~~~~~~~
-# For now, we'll just delete the main directory. Change this when you
-# finalize the pipeline.
+# For now, we'll just delete the main and BUSCO directories.
+# Change this when you finalize the pipeline.
 # ~~~~~~~~~~~~~
-# # Move the whole P_RNA folder to staging
+# # Now the whole directories
 # tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 # mv ${OUT_DIR}.tar.gz /staging/lnell/
-
-rm -r ./${OUT_DIR} summ_scaffs
-
+# tar -czf ${BUSCO_OUT}.tar.gz ${BUSCO_OUT}
+# mv ${BUSCO_OUT}.tar.gz /staging/lnell/
+rm -r ${OUT_DIR} ${BUSCO_OUT} ${OUT_FASTA}

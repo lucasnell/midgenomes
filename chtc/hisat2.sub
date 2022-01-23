@@ -2,7 +2,8 @@
 
 # Align adult midge RNA reads to the Tanytarsus gracilentus assembly
 
-universe = vanilla
+universe = docker
+docker_image = lucasnell/tany_scaff:v0
 
 log = hisat2/hisat2_$(fasta).log
 error = hisat2/hisat2_$(fasta).err
@@ -17,7 +18,6 @@ batch_name = "hisat2"
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = hisat2/hisat2-2.2.1.tar.gz, hisat2/samtools-1.14.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
@@ -25,8 +25,8 @@ requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
 request_cpus = 32
-request_memory = 80GB
-request_disk = 500GB
+request_memory = 64GB
+request_disk = 350GB
 
 
 # Run one instance of this job per line in `hisat2/fastas.txt`

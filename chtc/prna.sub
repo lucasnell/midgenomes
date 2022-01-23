@@ -4,7 +4,7 @@
 # using RNA-seq reads
 
 universe = docker
-docker_image = bioperl/bioperl:latest
+docker_image = lucasnell/tany_scaff:v0
 
 log = prna/$(fasta)_prna.log
 error = prna/$(fasta)_prna.err
@@ -19,7 +19,7 @@ batch_name = "prna"
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = prna/prna_progs.tar.gz, prna/samtools-1.14.tar.gz, summ_scaffs
+transfer_input_files = prna/P_RNA_scaffolder.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)

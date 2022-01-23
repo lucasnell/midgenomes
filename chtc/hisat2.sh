@@ -24,15 +24,6 @@ export RNA2=trimmed_TanyAdult_S1_L002_R2_001.fastq
 cp /staging/lnell/${RNA1}.gz ./ && gunzip ${RNA1}.gz
 cp /staging/lnell/${RNA2}.gz ./ && gunzip ${RNA2}.gz
 
-# HISAT2 (version 2.2.1)
-tar -xzf hisat2-2.2.1.tar.gz
-rm hisat2-2.2.1.tar.gz
-export PATH=$PATH:$(pwd)/hisat2-2.2.1
-# samtools (version 1.14)
-tar -xzf samtools-1.14.tar.gz
-rm samtools-1.14.tar.gz
-export PATH=$PATH:$(pwd)/samtools-1.14/bin
-
 
 hisat2-build ${GENOME} tany_hisat_idx
 hisat2 -x tany_hisat_idx -1 ${RNA1} -2 ${RNA2} -k 3 -p ${THREADS} \
@@ -46,5 +37,5 @@ mv ${BAM} ${BAM}.bai /staging/lnell/
 
 
 # (`tany_hisat_idx*` are index files from `hisat2-build`)
-rm -r hisat2-2.2.1 ${RNA1} ${RNA2} ${GENOME} ${SAM} tany_hisat_idx*
+rm ${GENOME} ${RNA1} ${RNA2} tany_hisat_idx* ${SAM}
 

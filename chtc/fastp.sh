@@ -20,7 +20,6 @@ export THREADS=8
 # For the file `Ash-19_S5_L002_R2_001.fastq.gz`, the base of the read name
 # would be "Ash-19_S5" because everything else can be inferred.
 
-
 export READ_BASE=$1
 
 export READS1=${READ_BASE}_L002_R1_001.fastq.gz
@@ -31,13 +30,14 @@ export OUT_DIR=trimmed_${READ_BASE}
 
 
 if [ ! -f /staging/lnell/${READS1} ]; then
-    echo "/staging/lnell/${READS1} does not exist." 1>&2
-    exit 1
+    echo "/staging/lnell/${READS1} does not exist!" 1>&2
+    exit 111
 fi
 if [ ! -f /staging/lnell/${READS2} ]; then
-    echo "/staging/lnell/${READS2} does not exist." 1>&2
-    exit 1
+    echo "/staging/lnell/${READS2} does not exist!" 1>&2
+    exit 222
 fi
+
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
@@ -51,15 +51,13 @@ cp /staging/lnell/${READS2} ./
 # no quality filtering (`--disable_quality_filtering`)
 # trimming using a low threshold (`--cut_right --cut_right_mean_quality=5`)
 
-# fastp
-./fastp.0.23.1 --in1 ${READS1} --in2 ${READS2} \
+fastp --in1 ${READS1} --in2 ${READS2} \
     --out1 ${TRIM_READS1} --out2 ${TRIM_READS2} \
     --trim_poly_x \
     --length_required=50 \
     --correction \
     --disable_quality_filtering \
     --cut_right --cut_right_mean_quality=5
-
 
 mv ${TRIM_READS1} /staging/lnell/
 mv ${TRIM_READS2} /staging/lnell/
@@ -68,6 +66,7 @@ rm ${READS1} ${READS2}
 
 
 cd ..
+
 
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz /staging/lnell/

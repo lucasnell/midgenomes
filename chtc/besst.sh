@@ -16,6 +16,8 @@
 # chmod 644 besst-env.tar.gz
 # ls -sh besst-env.tar.gz
 
+# Extra threads are for BUSCO only
+export THREADS=4
 
 # The input FASTA is given by the submit file:
 export GENOME=$1.fasta
@@ -56,27 +58,38 @@ rm BESST_RNA.tar.gz
 
 export WD=$(pwd)
 
-# conda setup
-ENVNAME=besst-env
-ENVDIR=$ENVNAME
-export PATH
-mkdir ${ENVDIR}
-cp /staging/lnell/${ENVNAME}.tar.gz ./
-tar -xzf ${ENVNAME}.tar.gz -C ${ENVDIR}
-. ${ENVDIR}/bin/activate
-rm ${ENVNAME}.tar.gz
+# # conda setup
+# ENVNAME=besst-env
+# ENVDIR=$ENVNAME
+# export PATH
+# mkdir ${ENVDIR}
+# cp /staging/lnell/${ENVNAME}.tar.gz ./
+# tar -xzf ${ENVNAME}.tar.gz -C ${ENVDIR}
+# . ${ENVDIR}/bin/activate
+# rm ${ENVNAME}.tar.gz
+
+conda activate besst-env
 
 cd BESST_RNA
-
-
-# If you install via `conda install besst` use the command `runBESST`
-
 
 python Main.py 1 \
     -c ${WD}/${GENOME} \
     -f ${WD}/${BAM} \
     -o ${WD}/${OUT_DIR} \
     -z 10000
+
+conda deactivate
+
+
+cd ..
+rm -r BESST_RNA ${BAM} ${BAM}.bai ${GENOME}
+
+
+if [ ! -f ./${OUT_DIR}/pass1/Scaffolds-pass1.fa ]; then
+    echo "BESST_RNA failed to produce output." 1>&2
+    rm -r ${OUT_DIR} ${OUT_DIR}Statistics.txt
+    exit 1
+fi
 
 
 # -e 10 uses more reads than default of 3
@@ -85,22 +98,19 @@ python Main.py 1 \
 
 # It uses lowercase n instead of N, which I'm changing for consistency
 # with other scaffolders:
-cd ${WD}/${OUT_DIR}/pass1
+cd ./${OUT_DIR}/pass1
 sed -i -e '/^[^>]/s/n/N/g' Scaffolds-pass1.fa
 
 
-cd ${WD}
-
-
-
-rm -r BESST_RNA ${BAM} ${BAM}.bai ${GENOME} ${ENVNAME}
+cd ..
+cd ..
 
 
 # Move just the scaffolds to the staging directory:
 cp ./${OUT_DIR}/pass1/Scaffolds-pass1.fa ./
 mv Scaffolds-pass1.fa ${OUT_FASTA}
-./summ_scaffs ${OUT_FASTA}
-gzip ${OUT_FASTA}
+# Keep the uncompressed version for summaries below
+gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
 # practice run shows that it makes the `${OUT_DIR}Statistics.txt` file
@@ -108,10 +118,31 @@ mv ${OUT_FASTA}.gz /staging/lnell/
 # so we want to make sure it's in the output dir, too
 mv ${OUT_DIR}Statistics.txt ./${OUT_DIR}
 
+
+# This outputs basics about scaffold sizes:
+summ_scaffs ${OUT_FASTA}
+
+export BUSCO_OUT=busco_${OUT_DIR}
+
+
+# This outputs BUSCO scores:
+conda activate busco-env
+busco \
+    -m genome \
+    -l diptera_odb10 \
+    -i ${OUT_FASTA} \
+    -o ${BUSCO_OUT} \
+    --cpu ${THREADS}
+conda deactivate
+
+
 # ~~~~~~~~~~~~~
-# For now, we'll just delete the main directory. Change this when you
-# finalize the pipeline.
+# For now, we'll just delete the main and BUSCO directories.
+# Change this when you finalize the pipeline.
 # ~~~~~~~~~~~~~
+# # Now the whole directories
 # tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 # mv ${OUT_DIR}.tar.gz /staging/lnell/
-rm -r ${OUT_DIR} summ_scaffs
+# tar -czf ${BUSCO_OUT}.tar.gz ${BUSCO_OUT}
+# mv ${BUSCO_OUT}.tar.gz /staging/lnell/
+rm -r ${OUT_DIR} ${BUSCO_OUT} ${OUT_FASTA}

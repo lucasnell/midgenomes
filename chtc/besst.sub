@@ -3,7 +3,8 @@
 # Run BESST_RNA to scaffold the Tanytarsus gracilentus assembly
 # using RNA-seq reads
 
-universe = vanilla
+universe = docker
+docker_image = lucasnell/tany_scaff:v0
 
 log = besst/$(fasta)_besst.log
 error = besst/$(fasta)_besst.err
@@ -18,7 +19,7 @@ batch_name = "besst"
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = besst/BESST_RNA.tar.gz, summ_scaffs
+transfer_input_files = besst/BESST_RNA.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)

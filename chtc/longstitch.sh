@@ -3,6 +3,7 @@
 
 export THREADS=8
 
+
 # Input FASTA is given by submit file:
 export GENOME=$1
 if [ ! -f /staging/lnell/${GENOME}.fasta.gz ]; then
@@ -40,7 +41,7 @@ cp /staging/lnell/${FASTQ}.fastq.gz ./
 mv ${FASTQ}.fastq.gz ${FASTQ}.fq.gz
 
 
-# longstitch run \
+# longstitch run
 longstitch tigmint-ntLink-arks \
     draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000
 
@@ -54,17 +55,34 @@ cd ..
 
 # Moving the final FASTA to staging
 mv $LS_FASTA ${OUT_FASTA}
-# this doesn't work in the longstitch docker container:
-# ./summ_scaffs ${OUT_FASTA}
-gzip ${OUT_FASTA}
+# Keep the uncompressed version for summaries below
+gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
+
+# This outputs basics about scaffold sizes:
+summ_scaffs ${OUT_FASTA}
+
+export BUSCO_OUT=busco_${OUT_DIR}
+
+# This outputs BUSCO scores:
+conda activate busco-env
+busco \
+    -m genome \
+    -l diptera_odb10 \
+    -i ${OUT_FASTA} \
+    -o ${BUSCO_OUT} \
+    --cpu ${THREADS}
+conda deactivate
+
+
 # ~~~~~~~~~~~~~
-# For now, we'll just delete the main directory. Change this when you
-# finalize the pipeline.
+# For now, we'll just delete the main and BUSCO directories.
+# Change this when you finalize the pipeline.
 # ~~~~~~~~~~~~~
-# # Now the whole directory
+# # Now the whole directories
 # tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 # mv ${OUT_DIR}.tar.gz /staging/lnell/
-rm -r ${OUT_DIR} summ_scaffs
-
+# tar -czf ${BUSCO_OUT}.tar.gz ${BUSCO_OUT}
+# mv ${BUSCO_OUT}.tar.gz /staging/lnell/
+rm -r ${OUT_DIR} ${BUSCO_OUT} ${OUT_FASTA}

@@ -2,7 +2,8 @@
 
 # Align adult midge RNA reads to the Tanytarsus gracilentus assembly
 
-universe = vanilla
+universe = docker
+docker_image = lucasnell/tany_scaff:v0
 
 log = fastp/fastp_$(readbase).log
 error = fastp/fastp_$(readbase).err
@@ -17,7 +18,6 @@ batch_name = "fastp"
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = fastp/fastp.0.23.1
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)

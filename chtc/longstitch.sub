@@ -3,7 +3,8 @@
 # Run longstitch to scaffold the Tanytarsus gracilentus assembly
 
 universe = docker
-docker_image = quay.io/biocontainers/longstitch:1.0.1--hdfd78af_2
+## docker_image = quay.io/biocontainers/longstitch:1.0.1--hdfd78af_2
+docker_image = lucasnell/tany_scaff:v0
 
 
 log = longstitch/$(fasta)_longstitch.log
@@ -19,7 +20,6 @@ batch_name = "longstitch"
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = summ_scaffs
 
 ## IMPORTANT! Require execute servers that have access to staging and CentOS 7
 requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
@@ -27,8 +27,8 @@ requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
 request_cpus = 8
-request_memory = 12GB
-request_disk = 40GB
+request_memory = 16GB
+request_disk = 50GB
 
 # Run one instance of this job per line in `longstitch/fastas.txt`
 queue fasta from longstitch/fastas.txt
