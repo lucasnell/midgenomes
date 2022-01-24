@@ -284,6 +284,10 @@ if __name__ == "__main__":
         out_dir_file = os.path.split(args.in_fastq)
         out_fastq = os.path.join(out_dir_file[0], "filtered_" + out_dir_file[1])
     
+    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    print("FIlter REads using GUppy SUmmary file (fire-gusu)\n")
+    
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("sorting summary file (" + time_str + ")")
     # summary file sorted in the same order as the input FASTQ
@@ -319,6 +323,9 @@ if __name__ == "__main__":
 
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("finished (" + time_str + ")")
+    
+    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
     
     sys.exit(0)
 
