@@ -1,0 +1,13 @@
+name: variant-env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7.12
+  - bwa=0.7.17
+  - htslib=1.14-1
+  - picard=2.26.10
+  - gatk=3.8-11
+  - mapdamage2=2.2.1
+prefix: /opt/mamba3/envs/variant-env

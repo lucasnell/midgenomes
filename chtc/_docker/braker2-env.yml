@@ -1,0 +1,9 @@
+name: annotate-env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - braker2=2.1.6
+  - repeatmodeler=2.0.2a-0
+prefix: /opt/mamba3/envs/annotate-env
