@@ -2,8 +2,8 @@
 
 # Use HISAT2 to align RNAseq reads to assembly to help scaffold
 
-export THREADS=32
-
+export THREADS=12
+conda activate scaffolding-env
 
 # Argument from submit file defines inputs and output names:
 export GENOME=$1.fasta

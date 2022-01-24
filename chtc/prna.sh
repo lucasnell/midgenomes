@@ -2,6 +2,9 @@
 
 export THREADS=8
 
+conda activate scaffolding-env
+
+
 # The input FASTA is given by the submit file:
 export GENOME=$1.fasta
 if [ ! -f /staging/lnell/${GENOME}.gz ]; then
@@ -47,6 +50,7 @@ cd ..
 chmod +x -R P_RNA_scaffolder
 
 
+
 export BAM=rna_hisat2__${GENOME/.fasta/}.bam
 if [ ! -f /staging/lnell/${BAM} ]; then
     echo "/staging/lnell/${BAM} does not exist." 1>&2
@@ -69,6 +73,7 @@ bash ./P_RNA_scaffolder/P_RNA_scaffolder.sh \
     -t ${THREADS}
 
 rm ${RNA1} ${RNA2} ${GENOME} ${SAM}
+
 
 if [ ! -f ./${OUT_DIR}/P_RNA_scaffold.fasta ]; then
     echo "P_RNA_scaffolder failed to produce output." 1>&2

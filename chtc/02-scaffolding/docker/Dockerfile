@@ -12,9 +12,6 @@ COPY scaffolding-env.yml .
 COPY besst-env.yml .
 COPY summ_scaffs.cpp .
 
-## # Name of main environment:
-## ARG MAIN_CONDA_ENV=scaffolding-env
-
 SHELL ["/bin/bash", "--login", "-c"]
 
 # Basic requirements (~360 sec)
@@ -39,10 +36,8 @@ ENV PATH /opt/mamba3/bin:${PATH}
 RUN mamba env create -q -f scaffolding-env.yml && \
     rm scaffolding-env.yml
 
-## # Always start in our created environment
-## ENV PATH /opt/mamba3/envs/$MAIN_CONDA_ENV/bin:${PATH}
-## RUN conda init bash
-## RUN echo "conda activate $MAIN_CONDA_ENV" >> ~/.bashrc
+# Allow `conda activate`
+RUN conda init bash
 
 # new environments for the two programs that have different requirements:
 

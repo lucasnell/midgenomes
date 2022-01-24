@@ -151,9 +151,6 @@ gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
 
-conda deactivate
-
-
 # This outputs basics about scaffold sizes:
 ./summ_scaffs ${OUT_FASTA}
 

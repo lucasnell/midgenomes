@@ -2,7 +2,7 @@
 
 
 export THREADS=8
-
+conda activate scaffolding-env
 
 # Input FASTA is given by submit file:
 export GENOME=$1

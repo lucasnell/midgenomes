@@ -10,6 +10,8 @@
 # https://link.springer.com/article/10.1186/s12859-016-0956-2
 
 export THREADS=8
+conda activate scaffolding-env
+
 
 
 # Argument from submit file gives you the base of the read FASTQ file name.
@@ -58,6 +60,7 @@ fastp --in1 ${READS1} --in2 ${READS2} \
     --correction \
     --disable_quality_filtering \
     --cut_right --cut_right_mean_quality=5
+
 
 mv ${TRIM_READS1} /staging/lnell/
 mv ${TRIM_READS2} /staging/lnell/
