@@ -2,89 +2,102 @@
 # Dockerfile for Tanytarsus gracilentus genomics.
 ############################################################
 
-FROM centos:7
+
+FROM condaforge/mambaforge:4.11.0-0
 MAINTAINER Lucas Nell <lucas@lucasnell.com>
 WORKDIR /app
+ENV HOME /app
 
 # Environment configuration files:
-COPY besst-env.yml .
-COPY braker2-env.yml .
 COPY main-env.yml .
-COPY variant-env.yml .
-COPY summ_scaffs.cpp .
+COPY annotate-env.yml .
+COPY besst-env.yml .
+# Simple summary of scaffolds:
+COPY summ-scaffs.py .
 
 SHELL ["/bin/bash", "--login", "-c"]
 
+# --------------------------------
+# Making everything accessible on the cluster where they make you non-root
+# --------------------------------
+# I want to always be able to access and edit these:
+RUN chmod -R 777 /opt/conda && \
+    chmod -R 777 /app && \
+    chmod -R 777 /home
+
+
 # Basic requirements (~360 sec)
-RUN yum update -y && \
-    yum group install -y "Development Tools" && \
-    yum install -y locales wget curl git rsync which unzip nano sudo
+RUN apt-get clean && \
+    apt-get update -y && \
+    apt-get install -y build-essential && \
+    apt-get install -y locales wget rsync unzip nano sudo && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set locale
-RUN localedef -i en_US -f UTF-8 en_US.UTF-8
+RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
 ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
+# simple python script to summarize scaffold sequences:
+RUN chmod +x summ-scaffs.py && \
+    mv summ-scaffs.py /usr/local/bin/
 
-# Install mamba-using equivalent to miniconda from conda-forge (~90 sec)
-RUN wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh && \
-    bash Mambaforge-Linux-x86_64.sh -b -p /opt/mamba3 && \
-    rm Mambaforge-Linux-x86_64.sh
-ENV PATH /opt/mamba3/bin:${PATH}
-
-# Make primary conda environment (~330 sec)
+# Make primary conda environment (~300 sec)
 RUN mamba env create -q -f main-env.yml && \
-    rm main-env.yml
+    rm main-env.yml && \
+    conda clean --all -y
 
-# Allow `conda activate`
-RUN conda init bash
-
-# new environments for other programs that have different requirements:
+# new environments for other programs that need separate environments:
 
 # for BESST_RNA scaffolder (~150 sec)
 RUN mamba env create -q -f besst-env.yml && \
-    rm besst-env.yml
+    rm besst-env.yml && \
+    conda clean --all -y
 # for BUSCO (~400 sec)
-RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.2.2
-# for BRAKER2 annotating (~XXX sec)
-RUN mamba env create -q -f braker2-env.yml && \
-    rm braker2-env.yml
-# for variant calling (~XXX sec)
-RUN mamba env create -q -f variant-env.yml && \
-    rm variant-env.yml
+RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.2.2 && \
+    conda clean --all -y
+# for LongStitch scaffolder (~150 sec)
+RUN mamba create -q -y -c bioconda -c conda-forge -n longstitch-env \
+    longstitch=1.0.1 && \
+    conda clean --all -y
+# for genome annotating using BRAKER2 and RepeatModeler (~400 sec)
+RUN mamba env create -q -f annotate-env.yml && \
+    rm annotate-env.yml && \
+    conda clean --all -y
 
-
-# clean up tarballs:
-RUN conda clean --all -y
-
-# compile simple cpp script to summarize scaffold sequences:
-RUN g++ -std=c++11 summ_scaffs.cpp -o summ_scaffs && \
-    mv summ_scaffs /usr/bin/ && \
-    rm summ_scaffs.cpp
+RUN conda init bash
 
 # --------------------------------
-# Manually install MAPGD inside variant-env environment:
+# Manually install MAPGD inside main-env environment:
 # --------------------------------
-RUN wget https://github.com/LynchLab/MAPGD/archive/master.zip && \
-    unzip -q master.zip && \
-    rm -f master.zip
-# In this Makefile for gzstream, I'm going to change
-# CPPFLAGS = -I. -O
-# to
-# CPPFLAGS = -I. -I/opt/mamba3/envs/variant-env/include -O
-# or it will complain about not having access to zlib.h
-# There's probably a more elegant solution, but <shrugs>...
-RUN cd ./MAPGD-master/src/mapgd_0.4/gzstream && \
-    sed -i "s/CPPFLAGS = -I. -O/CPPFLAGS = -I. -I\/opt\/mamba3\/envs\/variant-env\/include -O/" Makefile
-# ~400 sec
-RUN conda activate variant-env && \
-    cd ./MAPGD-master && \
-    ./configure --prefix="/opt/mamba3/envs/variant-env" && \
+RUN wget https://github.com/LynchLab/MAPGD/archive/refs/tags/v0.4.26.zip && \
+    unzip -q v0.4.26.zip && \
+    rm -f v0.4.26.zip && \
+    . ~/.bashrc && \
+    conda activate main-env && \
+    cd ./MAPGD-0.4.26 && \
+    ./configure --prefix="/opt/conda/envs/main-env" && \
     make && \
-    make install && \
+    make install DESTDIR=/opt/conda/envs/main-env/bin && \
     cd .. && \
-    rm -r MAPGD-master
+    rm -r ./MAPGD-0.4.26
 
 
+# --------------------------------
+# Add scripts for BESST_RNA:
+# --------------------------------
+# Only the `src` folder needed from GitHub repo.
+# I'm using the newest commit as of 29 Jan 2022.
+# (It hasn't been updated in 6 years, but just in case...)
+RUN wget https://github.com/ksahlin/BESST_RNA/archive/9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
+    unzip 9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
+    rm 9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
+    cd BESST_RNA-9cc039b5db080e98361a9b54dd333a7bb8b35223 && \
+    mv src ../ && \
+    cd .. && \
+    rm -rf BESST_RNA-9cc039b5db080e98361a9b54dd333a7bb8b35223 && \
+    mv src BESST_RNA && \
+    chmod +x -R BESST_RNA && \
+    chmod +w -R BESST_RNA
 
