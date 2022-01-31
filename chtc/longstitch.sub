@@ -3,9 +3,7 @@
 # Run longstitch to scaffold the Tanytarsus gracilentus assembly
 
 universe = docker
-## docker_image = quay.io/biocontainers/longstitch:1.0.1--hdfd78af_2
-docker_image = lucasnell/tany_scaff:v0
-
+docker_image = lucasnell/tany_genomics:v0
 
 log = longstitch/$(fasta)_longstitch.log
 error = longstitch/$(fasta)_longstitch.err

@@ -4,7 +4,7 @@
 
 universe = vanilla
 ##universe = docker
-##docker_image = lucasnell/tany_scaff:v0
+##docker_image = lucasnell/tany_genomics:v0
 
 log = dentist/$(fasta)_dentist.log
 error = dentist/$(fasta)_dentist.err
@@ -29,8 +29,8 @@ requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 # Tell HTCondor what amount of compute resources
 #  each job will need on the computer where it runs.
 request_cpus = 32
-request_memory = 64GB
-request_disk = 200GB
+request_memory = 24GB
+request_disk = 60GB
 
 
 # Run one instance of this job per line in `dentist/fastas.txt`

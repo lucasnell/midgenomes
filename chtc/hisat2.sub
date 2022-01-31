@@ -3,7 +3,7 @@
 # Align adult midge RNA reads to the Tanytarsus gracilentus assembly
 
 universe = docker
-docker_image = lucasnell/tany_scaff:v0
+docker_image = lucasnell/tany_genomics:v0
 
 log = hisat2/hisat2_$(fasta).log
 error = hisat2/hisat2_$(fasta).err
@@ -24,9 +24,9 @@ requirements = (Target.HasCHTCStaging == true)
 
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
-request_cpus = 12
-request_memory = 24GB
-request_disk = 350GB
+request_cpus = 24
+request_memory = 12GB
+request_disk = 150GB
 
 
 # Run one instance of this job per line in `hisat2/fastas.txt`

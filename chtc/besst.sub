@@ -4,7 +4,7 @@
 # using RNA-seq reads
 
 universe = docker
-docker_image = lucasnell/tany_scaff:v0
+docker_image = lucasnell/tany_genomics:v0
 
 log = besst/$(fasta)_besst.log
 error = besst/$(fasta)_besst.err
@@ -19,7 +19,6 @@ batch_name = "besst"
 ##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files = besst/BESST_RNA.tar.gz
 
 ## IMPORTANT! Require execute servers that have access to staging
 requirements = (Target.HasCHTCStaging == true)

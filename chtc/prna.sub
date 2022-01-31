@@ -4,7 +4,7 @@
 # using RNA-seq reads
 
 universe = docker
-docker_image = lucasnell/tany_scaff:v0
+docker_image = lucasnell/tany_genomics:v0
 
 log = prna/$(fasta)_prna.log
 error = prna/$(fasta)_prna.err
@@ -27,7 +27,7 @@ requirements = (Target.HasCHTCStaging == true)
 ## Tell HTCondor what amount of compute resources
 ##  each job will need on the computer where it runs.
 request_cpus = 8
-request_memory = 24GB
+request_memory = 8GB
 request_disk = 300GB
 
 # Run one instance of this job per line in `prna/fastas.txt`
