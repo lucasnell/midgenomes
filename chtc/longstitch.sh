@@ -2,7 +2,10 @@
 
 
 export THREADS=8
-conda activate scaffolding-env
+
+. /app/.bashrc
+
+conda activate longstitch-env
 
 # Input FASTA is given by submit file:
 export GENOME=$1
@@ -42,28 +45,35 @@ mv ${FASTQ}.fastq.gz ${FASTQ}.fq.gz
 
 
 # longstitch run
+# I chose these values of `k_ntLink` and `w` by trying all combinations of
+# `k_ntLink` = 24, 32, 40 and `w` = 100, 250, 500
+# These values provided the best combination of good contiguity and
+# BUSCO scores.
 longstitch tigmint-ntLink-arks \
-    draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000
+    draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000 \
+    k_ntLink=24 w=250
 
 rm -rf ${GENOME}.fa ${FASTQ}.fq.gz
 
-# Gets filename of final scaffolds FASTA file
-export LS_FASTA=$(basename -- $(readlink -f *-arks.longstitch-scaffolds.fa))
-cp $LS_FASTA ../
+if [ ! -f *-arks.longstitch-scaffolds.fa ]; then
+    echo "LongStitch failed to produce output." 1>&2
+    cd ..
+    rm -r ./${OUT_DIR}
+    exit 1
+fi
 
-cd ..
 
 # Moving the final FASTA to staging
-mv $LS_FASTA ${OUT_FASTA}
-# Keep the uncompressed version for summaries below
+# Gets filename of final scaffolds FASTA file
+export LS_FASTA=$(basename -- $(readlink -f *-arks.longstitch-scaffolds.fa))
+cp $LS_FASTA ${OUT_FASTA}
+# Keep the uncompressed version for summaries and for output in main directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
 
 # This outputs basics about scaffold sizes:
-summ_scaffs ${OUT_FASTA}
-
-export BUSCO_OUT=busco_${OUT_DIR}
+summ-scaffs.py ${OUT_FASTA}
 
 # This outputs BUSCO scores:
 conda activate busco-env
@@ -71,18 +81,14 @@ busco \
     -m genome \
     -l diptera_odb10 \
     -i ${OUT_FASTA} \
-    -o ${BUSCO_OUT} \
+    -o busco \
     --cpu ${THREADS}
 conda deactivate
 
 
-# ~~~~~~~~~~~~~
-# For now, we'll just delete the main and BUSCO directories.
-# Change this when you finalize the pipeline.
-# ~~~~~~~~~~~~~
-# # Now the whole directories
-# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-# mv ${OUT_DIR}.tar.gz /staging/lnell/
-# tar -czf ${BUSCO_OUT}.tar.gz ${BUSCO_OUT}
-# mv ${BUSCO_OUT}.tar.gz /staging/lnell/
-rm -r ${OUT_DIR} ${BUSCO_OUT} ${OUT_FASTA}
+# Now save the whole directory
+cd ..
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
+rm -r ${OUT_DIR}
+

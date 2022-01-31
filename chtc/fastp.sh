@@ -10,7 +10,9 @@
 # https://link.springer.com/article/10.1186/s12859-016-0956-2
 
 export THREADS=8
-conda activate scaffolding-env
+
+. /app/.bashrc
+conda activate main-env
 
 
 
@@ -48,18 +50,23 @@ cp /staging/lnell/${READS1} ./
 cp /staging/lnell/${READS2} ./
 
 
-# The RNA-specific options here include
+# The main things happening here are...
+
+# Automatic adapter trimming (on by default)
+# polyG tail trimming for NovaSeq sequencing (on by default)
 # removal of polyA tails (`--trim_poly_x`)
+# enable base correction in overlapped regions for PE data (`--correction`)
 # no quality filtering (`--disable_quality_filtering`)
 # trimming using a low threshold (`--cut_right --cut_right_mean_quality=5`)
+# discard too-short reads after trimming (`--length_required=50`)
 
 fastp --in1 ${READS1} --in2 ${READS2} \
     --out1 ${TRIM_READS1} --out2 ${TRIM_READS2} \
     --trim_poly_x \
-    --length_required=50 \
     --correction \
     --disable_quality_filtering \
-    --cut_right --cut_right_mean_quality=5
+    --cut_right --cut_right_mean_quality=5 \
+    --length_required=50
 
 
 mv ${TRIM_READS1} /staging/lnell/

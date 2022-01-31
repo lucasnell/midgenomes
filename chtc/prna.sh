@@ -2,7 +2,8 @@
 
 export THREADS=8
 
-conda activate scaffolding-env
+. /app/.bashrc
+conda activate main-env
 
 
 # The input FASTA is given by the submit file:
@@ -59,7 +60,7 @@ fi
 cp /staging/lnell/${BAM} ./
 # All alignments are stored in BAM files, but P_RNA only uses SAM files.
 # So we have to convert the BAM to SAM:
-export SAM=${SAM/.bam/.sam}
+export SAM=${BAM/.bam/.sam}
 samtools view -@ $((THREADS - 2)) -o ${SAM} ${BAM}
 rm ${BAM}
 
