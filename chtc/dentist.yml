@@ -2,7 +2,7 @@ __default__:
     read-coverage: 50.0
     ploidy: 2
     verbose: 2
-    join-policy: scaffoldGaps
+    join-policy: scaffolds
     daccord: []
     daligner-consensus: []
     daligner-reads-vs-reads: []
@@ -13,6 +13,8 @@ __default__:
     dust-reads: []
 output:
     fasta-line-width: 80
+
+
 
 
 # --join-policy: Choose according to your needs:

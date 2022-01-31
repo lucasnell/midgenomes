@@ -15,8 +15,9 @@ export CONDA_PREFIX=$PWD/mamba3
 
 # Install snakemake environment
 # (`seqtk` is to convert FASTQ to FASTA and to narrow FASTA files below)
+# (`numpy` and `pandas` are for `fire-gusu.py` script below)
 mamba create -q -y -c bioconda -c conda-forge -n snake-env \
-    snakemake=6.13.1 seqtk=1.3
+    snakemake=6.13.1 seqtk=1.3 numpy pandas
 
 # Environment for busco, too:
 mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.2.2
@@ -93,11 +94,11 @@ cp /staging/lnell/${SUMMARY} ./
 # Filtering for average quality of >= 10 and length of >= 10 kb, then randomly
 # choosing reads to get the desired coverage:
 ./fire-gusu.py -s ${SUMMARY} -c ${COVERAGE} -g 100 -q 10.0 -l 10000 \
-    -o ${READS/.fasta/.fastq/} --seed 668561223 ${ALL_READS}
+    -o ${READS/.fasta/.fastq} --seed 668561223 ${ALL_READS}
 rm ${ALL_READS} ${SUMMARY}
 # Convert to 80-char-wide FASTA
-seqtk seq -l 80 -A ${READS/.fasta/.fastq/} > ${READS}
-rm ${READS/.fasta/.fastq/}
+seqtk seq -l 80 -A ${READS/.fasta/.fastq} > ${READS}
+rm ${READS/.fasta/.fastq}
 
 
 
@@ -177,7 +178,7 @@ conda deactivate
 # mv ${OUT_DIR}.tar.gz /staging/lnell/
 # tar -czf ${BUSCO_OUT}.tar.gz ${BUSCO_OUT}
 # mv ${BUSCO_OUT}.tar.gz /staging/lnell/
-rm -r ${TMPDIR} mamba3 ${OUT_DIR} summ_scaffs ${BUSCO_OUT} ${OUT_FASTA}
+rm -rf ${TMPDIR} mamba3 ${OUT_DIR} summ_scaffs ${BUSCO_OUT} ${OUT_FASTA}
 
 
 
