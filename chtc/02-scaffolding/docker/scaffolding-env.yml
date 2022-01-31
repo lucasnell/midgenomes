@@ -5,7 +5,6 @@ channels:
   - defaults
 dependencies:
   - python=3.9.9
-  - longstitch=1.0.1
   - hisat2=2.2.1
   - minimap2=2.24
   - samtools=1.14

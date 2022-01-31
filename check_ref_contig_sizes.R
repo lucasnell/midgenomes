@@ -78,60 +78,64 @@ report_stats(polish2)
 #'
 
 
-# Results from SHASTA > PEPPER > purge_dups
-hap <- read_fasta("~/_data/haploid_purge_dups/seqs/polished_hap1.purged.fa")
-report_stats(hap)
+# # Results from SHASTA > PEPPER > purge_dups
+# hap <- read_fasta("~/_data/haploid_purge_dups/seqs/polished_hap1.purged.fa")
+# report_stats(hap)
+#
+# # Results from SHASTA > PEPPER > purge_dups > LongStitch
+# scaffs_ls <- read_fasta(paste0("~/_data/longstitch-then-rna/scaffold_longstitch/",
+#                             "scaffold_longstitch.fasta"))
+# report_stats(scaffs_ls)
+#
+# # Results from SHASTA > PEPPER > purge_dups > LongStitch > BESST_RNA
+# scaffs_ls_besst <- read_fasta(paste0("~/_data/longstitch-then-rna/",
+#                                    "scaffold_besst/pass1/Scaffolds-pass1.fa"))
+# report_stats(scaffs_ls_besst)
+#
+#
+# # Results from SHASTA > PEPPER > purge_dups > BESST_RNA
+# scaffs_besst <- read_fasta(paste0("~/_data/scaffolds_besst.fasta.gz"))
+# report_stats(scaffs_besst)
+#
+# # Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder
+# scaffs_p_rna <- read_fasta("~/_data/scaffolds_p_rna/P_RNA_scaffold.fasta")
+# report_stats(scaffs_p_rna)
+#
+#
+# # Results from SHASTA > PEPPER > purge_dups > BESST_RNA > LongStitch
+# scaffs_besst_ls <- read_fasta(paste0("~/_data/scaffold_longstitch_besst/",
+#                                      "scaffold_longstitch_besst.fasta"))
+# report_stats(scaffs_besst_ls)
+#
+#
+# # Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder > LongStitch
+# scaffs_p_rna_ls <- read_fasta("~/_data/scaffolds_longstitch_p_rna.fasta.gz")
+# report_stats(scaffs_p_rna_ls)
+#
+#
+# # Results from SHASTA > PEPPER > purge_dups > BESST_RNA > LongStitch > dentist
+# # scaffs_dent_besst_ls <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch_besst.fasta.gz")
+# report_stats(scaffs_dent_besst_ls)
+# scaffs_dent_besst_ls2 <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch_besst.fasta")
+# report_stats(scaffs_dent_besst_ls2)
+# # Results from SHASTA > PEPPER > purge_dups > LongStitch > dentist
+# # scaffs_dent_ls <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch.fasta.gz")
+# report_stats(scaffs_dent_ls)
+# scaffs_dent_ls2 <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch.fasta")
+# report_stats(scaffs_dent_ls2)
+# # Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder > dentist
+# # scaffs_dent_p_rna <- read_fasta("~/_data/filled_dentist__scaffolds_p_rna.fasta.gz")
+# report_stats(scaffs_dent_p_rna)
+# scaffs_dent_p_rna2 <- read_fasta("~/_data/filled_dentist__scaffolds_p_rna.fasta")
+# report_stats(scaffs_dent_p_rna2)
 
-# Results from SHASTA > PEPPER > purge_dups > LongStitch
-scaffs_ls <- read_fasta(paste0("~/_data/longstitch-then-rna/scaffold_longstitch/",
-                            "scaffold_longstitch.fasta"))
-report_stats(scaffs_ls)
 
-# Results from SHASTA > PEPPER > purge_dups > LongStitch > BESST_RNA
-scaffs_ls_besst <- read_fasta(paste0("~/_data/longstitch-then-rna/",
-                                   "scaffold_besst/pass1/Scaffolds-pass1.fa"))
-report_stats(scaffs_ls_besst)
-
-
-# Results from SHASTA > PEPPER > purge_dups > BESST_RNA
-scaffs_besst <- read_fasta(paste0("~/_data/scaffolds_besst.fasta.gz"))
-report_stats(scaffs_besst)
 
 # Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder
-scaffs_p_rna <- read_fasta("~/_data/scaffolds_p_rna/P_RNA_scaffold.fasta")
-report_stats(scaffs_p_rna)
+scaffs_prna <- read_fasta("~/_data/scaffolds_prna.fasta.gz")
+report_stats(scaffs_prna)
 
-
-# Results from SHASTA > PEPPER > purge_dups > BESST_RNA > LongStitch
-scaffs_besst_ls <- read_fasta(paste0("~/_data/scaffold_longstitch_besst/",
-                                     "scaffold_longstitch_besst.fasta"))
-report_stats(scaffs_besst_ls)
-
-
-# Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder > LongStitch
-scaffs_p_rna_ls <- read_fasta("~/_data/scaffolds_longstitch_p_rna.fasta.gz")
-report_stats(scaffs_p_rna_ls)
-
-
-# Results from SHASTA > PEPPER > purge_dups > BESST_RNA > LongStitch > dentist
-# scaffs_dent_besst_ls <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch_besst.fasta.gz")
-report_stats(scaffs_dent_besst_ls)
-scaffs_dent_besst_ls2 <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch_besst.fasta")
-report_stats(scaffs_dent_besst_ls2)
-# Results from SHASTA > PEPPER > purge_dups > LongStitch > dentist
-# scaffs_dent_ls <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch.fasta.gz")
-report_stats(scaffs_dent_ls)
-scaffs_dent_ls2 <- read_fasta("~/_data/filled_dentist__scaffolds_longstitch.fasta")
-report_stats(scaffs_dent_ls2)
-# Results from SHASTA > PEPPER > purge_dups > P_RNA_Scaffolder > dentist
-# scaffs_dent_p_rna <- read_fasta("~/_data/filled_dentist__scaffolds_p_rna.fasta.gz")
-report_stats(scaffs_dent_p_rna)
-scaffs_dent_p_rna2 <- read_fasta("~/_data/filled_dentist__scaffolds_p_rna.fasta")
-report_stats(scaffs_dent_p_rna2)
-
-
-
-letts <- str_split(scaffs_besst, "") %>%
+letts <- str_split(scaffs_prna, "") %>%
     map(unique) %>%
     do.call(what = c) %>%
     unique()
