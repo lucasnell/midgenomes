@@ -8,6 +8,9 @@ MAINTAINER Lucas Nell <lucas@lucasnell.com>
 WORKDIR /app
 ENV HOME /app
 
+ARG UID=21659
+ARG GID=21659
+
 # Environment configuration files:
 COPY main-env.yml .
 COPY annotate-env.yml .
@@ -17,13 +20,24 @@ COPY summ-scaffs.py .
 
 SHELL ["/bin/bash", "--login", "-c"]
 
+RUN groupadd -g $GID --non-unique tanies && \
+    useradd --create-home --shell /bin/bash --uid $UID --gid $GID \
+        --non-unique tany && \
+    echo "tany:tany" | chpasswd && \
+    usermod -aG sudo tany
+
+
 # --------------------------------
 # Making everything accessible on the cluster where they make you non-root
 # --------------------------------
-# I want to always be able to access and edit these:
-RUN chmod -R 777 /opt/conda && \
-    chmod -R 777 /app && \
-    chmod -R 777 /home
+# I want to always be able to access and edit these.
+# I'm doing this early in the build so that it doesn't make the image massive.
+# I'm also adding `/opt/conda/pkgs` now bc otherwise its permissions don't
+# share those of `/opt/conda`
+RUN mkdir /opt/conda/pkgs && \
+    chown -R tany:tanies /opt/conda && \
+    mkdir /app/.conda && \
+    chown -R tany:tanies /app
 
 
 # Basic requirements (~360 sec)
@@ -42,6 +56,8 @@ ENV LC_ALL en_US.UTF-8
 # simple python script to summarize scaffold sequences:
 RUN chmod +x summ-scaffs.py && \
     mv summ-scaffs.py /usr/local/bin/
+
+USER tany
 
 # Make primary conda environment (~300 sec)
 RUN mamba env create -q -f main-env.yml && \
@@ -98,6 +114,15 @@ RUN wget https://github.com/ksahlin/BESST_RNA/archive/9cc039b5db080e98361a9b54dd
     cd .. && \
     rm -rf BESST_RNA-9cc039b5db080e98361a9b54dd333a7bb8b35223 && \
     mv src BESST_RNA && \
-    chmod +x -R BESST_RNA && \
-    chmod +w -R BESST_RNA
+    chown -R tany:tanies BESST_RNA
+
+
+# This allows non-root user to create new environments and install new packages:
+##RUN chown -R tany:tanies /opt/conda/pkgs/urls.txt
+
+
+
+
+# /opt/conda/pkgs/urls.txt
+
 
