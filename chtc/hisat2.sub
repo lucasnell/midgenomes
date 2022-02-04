@@ -3,7 +3,7 @@
 # Align adult midge RNA reads to the Tanytarsus gracilentus assembly
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0
+docker_image = lucasnell/tany_genomics:v0.2
 
 log = hisat2/hisat2_$(fasta).log
 error = hisat2/hisat2_$(fasta).err

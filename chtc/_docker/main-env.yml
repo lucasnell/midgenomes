@@ -9,11 +9,14 @@ dependencies:
   - gatk=3.8
   - hisat2=2.2.1
   - htslib=1.14
+  - kat=2.0.8
   - mapdamage2=2.2.1
+  - matplotlib=3.5.1
   - minimap2=2.24
   - numpy=1.22.1
   - pandas=1.4.0
   - picard=2.26.10
+  - purge_dups=1.2.5
   - python=3.9.9
   - samtools=1.14
   - seqtk=1.3

@@ -4,7 +4,7 @@
 # using RNA-seq reads
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0
+docker_image = lucasnell/tany_genomics:v0.2
 
 log = prna/$(fasta)_prna.log
 error = prna/$(fasta)_prna.err

@@ -4,7 +4,7 @@
 
 universe = vanilla
 ##universe = docker
-##docker_image = lucasnell/tany_genomics:v0
+##docker_image = lucasnell/tany_genomics:v0.2
 
 log = dentist/$(fasta)_dentist.log
 error = dentist/$(fasta)_dentist.err

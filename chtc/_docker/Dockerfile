@@ -6,7 +6,6 @@
 FROM condaforge/mambaforge:4.11.0-0
 MAINTAINER Lucas Nell <lucas@lucasnell.com>
 WORKDIR /app
-ENV HOME /app
 
 # Environment configuration files:
 COPY main-env.yml .
@@ -20,7 +19,7 @@ SHELL ["/bin/bash", "--login", "-c"]
 # --------------------------------
 # Making everything accessible on the cluster where they make you non-root
 # --------------------------------
-# I want to always be able to access and edit these:
+# I want to always be able to access these:
 RUN chmod -R 777 /opt/conda && \
     chmod -R 777 /app
 
@@ -65,7 +64,8 @@ RUN mamba env create -q -f annotate-env.yml && \
     rm annotate-env.yml && \
     conda clean --all -y
 
-RUN conda init bash
+RUN export HOME=/app && \
+    conda init bash
 
 # --------------------------------
 # Manually install MAPGD inside main-env environment:
@@ -73,7 +73,7 @@ RUN conda init bash
 RUN wget https://github.com/LynchLab/MAPGD/archive/refs/tags/v0.4.26.zip && \
     unzip -q v0.4.26.zip && \
     rm -f v0.4.26.zip && \
-    . ~/.bashrc && \
+    . /app/.bashrc && \
     conda activate main-env && \
     cd ./MAPGD-0.4.26 && \
     ./configure --prefix="/opt/conda/envs/main-env" && \
