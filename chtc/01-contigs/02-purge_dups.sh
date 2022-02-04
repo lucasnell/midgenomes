@@ -1,77 +1,88 @@
 #!/bin/bash
 
+. /app/.bashrc
+conda activate main-env
 
-# have job exit if any command returns with non-zero exit status (aka failure)
-set -e
+export THREADS=16
+
+export LONGREADS=basecalls_guppy-5.0.11.fastq
+export REF=contigs_shasta_pepper-hap1.fasta
+
+export OUT_DIR=contigs_shasta_pepper_purgedups
+export OUT_FASTA=${OUT_DIR}.fasta
+
+mkdir ${OUT_DIR}
+cd ${OUT_DIR}
+
+cp /staging/lnell/${LONGREADS}.gz ./ && gunzip ${LONGREADS}.gz
+cp /staging/lnell/${REF}.gz ./ && gunzip ${REF}.gz
 
 
-export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
-export REF=polished_hap1.fasta.gz
+export ALIGN=ont_align_mm2.paf.gz
+
+minimap2 -x map-ont -t $((THREADS - 2)) -K 1G -2 \
+    ${REF} ${LONGREADS} | \
+    gzip -c - > ${ALIGN}
+
+rm ${LONGREADS}
 
 
-cp /staging/lnell/${LONGREADS} ./
-cp /staging/lnell/${REF} ./
+#  (produces PB.base.cov and PB.stat files)
+pbcstat ${ALIGN}
+# calculate cutoffs, setting upper limit manually
+# purge_dups creators say highly heterozygous genomes can have too-high
+# upper limit, and based on histogram from hist_plot.py, 380 seems like a
+# good one here.
+calcuts -l 5 -m 181 -u 380 PB.stat > cutoffs 2> calcuts.log
+# originally:
+# 5	91	151	181	302	543
+# now:
+# 5	180	180	181	181	380
+
+# Split an assembly and do a self-self alignment:
+split_fa ${REF} > ${REF}.split
+minimap2 -x asm5 -DP ${REF}.split ${REF}.split \
+    -t $((THREADS - 2)) -K 1G -2 | \
+    gzip -c - > ${REF}.split.self.paf.gz
+
+# Purge haplotigs and overlaps:
+purge_dups -2 -T cutoffs -c PB.base.cov \
+    -a 93 \
+    ${REF}.split.self.paf.gz > \
+    dups.bed 2> purge_dups.log
+
+# Get purged primary and haplotig sequences from draft assembly:
+get_seqs -e dups.bed ${REF}
+
+rm ${REF}
+
+# Rename and move just the scaffolds to the staging directory:
+mv purged.fa ${OUT_FASTA}
+# Keep the uncompressed version for summaries below
+gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
+mv ${OUT_FASTA}.gz /staging/lnell/
 
 
-# purge_dups (version 1.2.5)
-# runner (commit 73a4d1136bee4477713c11606d16afebc8d0f805)
-# minimap2 (version 2.21)
 
-tar -xzf purge_progs.tar.gz
-rm purge_progs.tar.gz
+# This outputs basics about scaffold (or contigs in this case) sizes:
+summ-scaffs.py ${OUT_FASTA}
 
-cd purge_progs
-mv minimap2-2.21 purge_dups runner ../
+# This outputs BUSCO scores:
+conda activate busco-env
+busco \
+    -m genome \
+    -l diptera_odb10 \
+    -i ${OUT_FASTA} \
+    -o busco \
+    --cpu ${THREADS}
+conda deactivate
+
+
 cd ..
-rm -r purge_progs
 
-export PATH=$PATH:$(pwd)/minimap2-2.21/
-export PATH=$PATH:$(pwd)/purge_dups/bin
-
-cd runner && python3 setup.py install --user && cd ..
-
-
-
-# ================================================
-# Using `purge_dups/scripts/run_purge_dups.py` to run pipeline
-# ================================================
-
-
-echo $(pwd)/$LONGREADS > nano.fofn
-
-# Do not adjust! This is automatically set by `pd_config.py`.
-OUTDIR=${REF/.fasta/}
-OUTDIR=${OUTDIR/.fa/}
-OUTDIR=${OUTDIR/.gz/}
-export OUTDIR
-
-./purge_dups/scripts/pd_config.py \
-    -l pd_inputs \
-    -n config-tany.json \
-    --skipB \
-    $REF nano.fofn
-
-
-python3 ./purge_dups/scripts/run_purge_dups.py \
-    -p bash \
-    config-tany.json \
-    ./purge_dups/bin \
-    tany
-
-
-cp ./${OUTDIR}/seqs/${OUTDIR}.purged.fa ./
-mv ${OUTDIR}.purged.fa haploid_purge_dups.fasta
-gzip haploid_purge_dups.fasta
-mv haploid_purge_dups.fasta.gz /staging/lnell/
-
-mv ${OUTDIR} haploid_purge_dups
-export OUTDIR=haploid_purge_dups
-tar -czf ${OUTDIR}.tar.gz ${OUTDIR}
-mv ${OUTDIR}.tar.gz /staging/lnell/
-
-
-rm -rf minimap2-2.21 purge_dups runner ${REF} ${LONGREADS} \
-    ${OUTDIR} config-tany.json nano.fofn pd_inputs
-
+# Now save the whole directory
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
+rm -r ${OUT_DIR}
 
 
