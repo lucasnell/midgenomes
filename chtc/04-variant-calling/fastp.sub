@@ -3,7 +3,7 @@
 # Align Pool-seq DNA reads to the Tanytarsus gracilentus assembly
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0
+docker_image = lucasnell/tany_genomics:v0.2
 
 log = fastp/fastp_$(readbase).log
 error = fastp/fastp_$(readbase).err
