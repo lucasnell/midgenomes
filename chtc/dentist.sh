@@ -59,10 +59,9 @@ export OUT_FASTA=${OUT_DIR}.fasta
 
 
 mkdir ${OUT_DIR}
-## chmod +w -R ${OUT_DIR}
 
 # Move all files from submit node to OUT_DIR:
-mv dentist.v3.0.0.x86_64.tar.gz dentist.yml snakemake.yml fire-gusu.py ./${OUT_DIR}/
+mv dentist.v3.0.0.x86_64.tar.gz dentist.yml snakemake.yml fire-gusu.py summ_scaffs ./${OUT_DIR}/
 cd ${OUT_DIR}
 # Adjust the snakemake.yml file for the input FASTA:
 sed -i "s/INPUT_SCAFFOLDS_FILE/${GENOME}/" snakemake.yml
@@ -142,9 +141,6 @@ if [ ! -f gap-closed.fasta ]; then
     exit 1
 fi
 
-cp gap-closed.fasta ../
-
-cd ..
 
 mv gap-closed.fasta ${OUT_FASTA}
 # Keep the uncompressed version for summaries below
@@ -155,8 +151,7 @@ mv ${OUT_FASTA}.gz /staging/lnell/
 # This outputs basics about scaffold sizes:
 ./summ_scaffs ${OUT_FASTA}
 
-export BUSCO_OUT=busco_${OUT_DIR}
-
+rm summ_scaffs
 
 # This outputs BUSCO scores:
 conda activate busco-env
@@ -164,21 +159,17 @@ busco \
     -m genome \
     -l diptera_odb10 \
     -i ${OUT_FASTA} \
-    -o ${BUSCO_OUT} \
+    -o busco \
     --cpu ${THREADS}
 conda deactivate
 
 
-# ~~~~~~~~~~~~~
-# For now, we'll just delete the main and BUSCO directories.
-# Change this when you finalize the pipeline.
-# ~~~~~~~~~~~~~
-# # Now the whole directories
-# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-# mv ${OUT_DIR}.tar.gz /staging/lnell/
-# tar -czf ${BUSCO_OUT}.tar.gz ${BUSCO_OUT}
-# mv ${BUSCO_OUT}.tar.gz /staging/lnell/
-rm -rf ${TMPDIR} mamba3 ${OUT_DIR} summ_scaffs ${BUSCO_OUT} ${OUT_FASTA}
+# Now the whole directory
+cd ..
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
+
+rm -rf ${TMPDIR} mamba3 ${OUT_DIR}
 
 
 
