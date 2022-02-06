@@ -1,18 +1,18 @@
-# fastp.sub
+# fastp-rna.sub
 
 # Align adult midge RNA reads to the Tanytarsus gracilentus assembly
 
 universe = docker
 docker_image = lucasnell/tany_genomics:v0.2
 
-log = fastp/fastp_$(readbase).log
-error = fastp/fastp_$(readbase).err
-output = fastp/fastp_$(readbase).out
+log = fastp-rna/fastp-rna_$(readbase).log
+error = fastp-rna/fastp-rna_$(readbase).err
+output = fastp-rna/fastp-rna_$(readbase).out
 
-executable = fastp/fastp.sh
+executable = fastp-rna/fastp-rna.sh
 arguments = $(readbase)
 
-batch_name = "fastp"
+batch_name = "fastp-rna"
 
 ## Specify that HTCondor should transfer files to and from the
 ##  computer where each job runs.
@@ -29,5 +29,5 @@ request_memory = 16GB
 request_disk = 60GB
 
 
-# Run one instance of this job per line in `fastp/readbases.txt`
-queue readbase from fastp/readbases.txt
+# Run one instance of this job per line in `fastp-rna/readbases.txt`
+queue readbase from fastp-rna/readbases.txt

@@ -14,8 +14,9 @@ Output can be made reproducible by setting the `seed` argument.
 
 
 usage:
-    ./fire-gusu.py -s <summary file> -c <coverage> -g <genome size (Mb)> \
-        -o <output FASTQ> <input FASTQ>
+    ./fire-gusu.py -s [summary file] -c [coverage] -g [genome size (Mb)] \
+        -q [min. read average quality] -l [min. read length] \
+        -o [output FASTQ] [input FASTQ]
 
 """
 
@@ -308,12 +309,14 @@ if __name__ == "__main__":
                                               seq_needed, scores, lengths)
     
     # Randomly sample from ql_filter to get desired coverage:
-    if args.seed:
-        rng = np.random.default_rng(args.seed)
-    else:
-        rng = np.random.default_rng()
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("randomly filtering for coverage (" + time_str + ")")
+    if args.seed:
+        rng = np.random.default_rng(args.seed)
+        print("  - seed used: " + str(args.seed))
+    else:
+        rng = np.random.default_rng()
+        print("  - no seed provided to RNG")
     rnd_ql_filter = rnd_filter(lengths, ql_filter, seq_needed, rng)
 
     # Do the filtering and output new FASTQ file:

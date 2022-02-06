@@ -51,7 +51,7 @@ mv ${FASTQ}.fastq.gz ${FASTQ}.fq.gz
 # BUSCO scores.
 longstitch tigmint-ntLink-arks \
     draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000 \
-    k_ntLink=32 w=500
+    k_ntLink=24 w=250
 
 rm -rf ${GENOME}.fa ${FASTQ}.fq.gz
 
