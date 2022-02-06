@@ -6,6 +6,7 @@
 FROM condaforge/mambaforge:4.11.0-0
 MAINTAINER Lucas Nell <lucas@lucasnell.com>
 WORKDIR /app
+ENV HOME /app
 
 # Environment configuration files:
 COPY main-env.yml .
@@ -13,6 +14,10 @@ COPY annotate-env.yml .
 COPY besst-env.yml .
 # Simple summary of scaffolds:
 COPY summ-scaffs.py .
+# To get GeneMark to work for BRAKER2:
+COPY gm_key_64.gz .
+COPY gmes_linux_64_4.tar.gz .
+
 
 SHELL ["/bin/bash", "--login", "-c"]
 
@@ -64,8 +69,7 @@ RUN mamba env create -q -f annotate-env.yml && \
     rm annotate-env.yml && \
     conda clean --all -y
 
-RUN export HOME=/app && \
-    conda init bash
+RUN conda init bash
 
 # --------------------------------
 # Manually install MAPGD inside main-env environment:
@@ -99,3 +103,18 @@ RUN wget https://github.com/ksahlin/BESST_RNA/archive/9cc039b5db080e98361a9b54dd
     mv src BESST_RNA && \
     chmod -R 777 BESST_RNA
 
+# ---------------------------------
+# Adjusting to allow BRAKER2 to work
+# ---------------------------------
+# For GeneMark:
+RUN gunzip gm_key_64.gz && \
+    mv gm_key_64 .gm_key && \
+    tar -xzf gmes_linux_64_4.tar.gz && \
+    rm gmes_linux_64_4.tar.gz && \
+    cd gmes_linux_64_4 && \
+    perl change_path_in_perl_scripts.pl "/usr/bin/env perl" && \
+    cd .. && \
+    mv gmes_linux_64_4 GeneMark-EX
+ENV GENEMARK_PATH=/app/GeneMark-EX
+# For AUGUSTUS:
+RUN chmod -R 777 /opt/conda/envs/annotate-env/config
