@@ -1,7 +1,7 @@
 dentist_env: "envs/dentist_v3.yml"
 dentist_config:         dentist.yml
 inputs:
-    reference:          INPUT_SCAFFOLDS_FILE
+    reference:          __INPUT_SCAFFOLDS_FILE__
     reads:              basecalls_guppy.fasta
     reads_type:         OXFORD_NANOPORE
 outputs:

@@ -43,28 +43,41 @@ if [ ! -f /staging/lnell/${GENOME}.gz ]; then
     exit 1
 fi
 
+# I'll use the first input to produce the RNG seed for reproducibility
+# with `fire-gusu.py` script.
+# This means that I'll use the same reads each time I process the same file.
+# The only time I'll be processing the same file will be for testing, so this
+# behavior is desirable.
+export SEED=$(python -c "import hashlib; print(int(hashlib.sha512(\"${1}\".encode('utf-8')).hexdigest(), base = 16))")
 
-# The input file dictates the output name:
+
+# The input file dictates the output name and join policy:
+
 export OUT_SUFFIX=dentist
-
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
+    JOIN=contigs
 else
     OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
+    JOIN=scaffolds
 fi
 export OUT_DIR
+export JOIN
 
 export OUT_FASTA=${OUT_DIR}.fasta
 
+# Adjust dentist.yml for join policy:
+sed -i "s/__JOIN_POLICY__/${JOIN}/g" dentist.yml
 
 mkdir ${OUT_DIR}
 
 # Move all files from submit node to OUT_DIR:
-mv dentist.v3.0.0.x86_64.tar.gz dentist.yml snakemake.yml fire-gusu.py summ_scaffs ./${OUT_DIR}/
+mv dentist.v3.0.0.x86_64.tar.gz dentist.yml snakemake.yml fire-gusu.py \
+    summ_scaffs ./${OUT_DIR}/
 cd ${OUT_DIR}
 # Adjust the snakemake.yml file for the input FASTA:
-sed -i "s/INPUT_SCAFFOLDS_FILE/${GENOME}/" snakemake.yml
+sed -i "s/__INPUT_SCAFFOLDS_FILE__/${GENOME}/" snakemake.yml
 
 # Move and adjust the genome FASTA file:
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
@@ -93,7 +106,7 @@ cp /staging/lnell/${SUMMARY} ./
 # Filtering for average quality of >= 10 and length of >= 10 kb, then randomly
 # choosing reads to get the desired coverage:
 ./fire-gusu.py -s ${SUMMARY} -c ${COVERAGE} -g 100 -q 10.0 -l 10000 \
-    -o ${READS/.fasta/.fastq} --seed 668561223 ${ALL_READS}
+    -o ${READS/.fasta/.fastq} --seed ${SEED} ${ALL_READS}
 rm ${ALL_READS} ${SUMMARY}
 # Convert to 80-char-wide FASTA
 seqtk seq -l 80 -A ${READS/.fasta/.fastq} > ${READS}

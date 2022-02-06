@@ -2,7 +2,7 @@ __default__:
     read-coverage: 50.0
     ploidy: 2
     verbose: 2
-    join-policy: scaffolds
+    join-policy: __JOIN_POLICY__
     daccord: []
     daligner-consensus: []
     daligner-reads-vs-reads: []
