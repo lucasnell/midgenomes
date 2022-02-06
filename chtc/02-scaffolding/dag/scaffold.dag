@@ -1,0 +1,72 @@
+
+# ================================================================
+# Define jobs and variables for each
+# ================================================================
+
+# --------------
+# Step 1: initial scaffold on contigs file:
+JOB L longstitch.sub
+JOB B besst.sub
+JOB D dentist.sub
+
+# define input files:
+VARS L fasta="contigs_shasta_pepper_purgedups"
+VARS B fasta="contigs_shasta_pepper_purgedups"
+VARS D fasta="contigs_shasta_pepper_purgedups"
+
+
+# --------------
+# Step 2: gap-fill first scaffolding attempt
+# (no use doing this when using dentist to scaffold)
+JOB LD dentist.sub
+JOB BD dentist.sub
+
+# define input files:
+VARS LD fasta="scaffolds_longstitch"
+VARS BD fasta="scaffolds_besst"
+
+# --------------
+# Step 3: second round of scaffolding
+JOB LDL longstitch.sub
+JOB LDB besst.sub
+JOB BDL longstitch.sub
+JOB DL longstitch.sub
+
+# define input files:
+VARS LDL fasta="scaffolds_longstitch_dentist"
+VARS LDB fasta="scaffolds_longstitch_dentist"
+VARS BDL fasta="scaffolds_besst_dentist"
+VARS DL fasta="scaffolds_dentist"
+
+
+# --------------
+# Step 4: second round of gap-filling
+JOB LDLD dentist.sub
+JOB LDBD dentist.sub
+JOB BDLD dentist.sub
+JOB DLD dentist.sub
+
+# define input files:
+VARS LDLD fasta="scaffolds_longstitch_dentist_longstitch"
+VARS LDBD fasta="scaffolds_longstitch_dentist_besst"
+VARS BDLD fasta="scaffolds_besst_dentist_longstitch"
+VARS DLD fasta="scaffolds_dentist_longstitch"
+
+
+
+# ================================================================
+# Define child and parent processes
+# ================================================================
+
+PARENT L CHILD LD
+PARENT B CHILD BD
+PARENT D CHILD DL
+
+PARENT LD CHILD LDL LDB
+PARENT BD CHILD BDL
+
+PARENT LDL CHILD LDLD
+PARENT LDB CHILD LDBD
+PARENT BDL CHILD BDLD
+PARENT DL CHILD DLD
+
