@@ -1,15 +1,15 @@
-# fastp.sub
+# fastp-dna.sub
 
-# Align Pool-seq DNA reads to the Tanytarsus gracilentus assembly
+# trim Pool-seq DNA reads
 
 universe = docker
 docker_image = lucasnell/tany_genomics:v0.2
 
-log = fastp/fastp_$(readbase).log
-error = fastp/fastp_$(readbase).err
-output = fastp/fastp_$(readbase).out
+log = fastp-dna/fastp-dna_$(readbase).log
+error = fastp-dna/fastp-dna_$(readbase).err
+output = fastp-dna/fastp-dna_$(readbase).out
 
-executable = fastp/fastp.sh
+executable = fastp-dna/fastp-dna.sh
 arguments = $(readbase)
 
 batch_name = "fastp-dna"
@@ -29,5 +29,5 @@ request_memory = 16GB
 request_disk = 60GB
 
 
-# Run one instance of this job per line in `fastp/readbases.txt`
-queue readbase from fastp/readbases.txt
+# Run one instance of this job per line in `fastp-dna/readbases.txt`
+queue readbase from fastp-dna/readbases.txt
