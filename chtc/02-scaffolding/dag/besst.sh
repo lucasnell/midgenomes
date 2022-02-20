@@ -3,7 +3,7 @@
 # Use HISAT2 to align RNAseq reads to assembly.
 # Then use BESST_RNA to scaffold assembly.
 
-# Extra threads are for HISAT2 and BUSCO only
+# Extra threads are for HISAT2 only
 export THREADS=32
 
 . /app/.bashrc
@@ -29,12 +29,14 @@ export OUT_DIR
 
 export OUT_FASTA=${OUT_DIR}.fasta
 
+
 # If the output FASTA already exists, this job stops with exit code 0
 if [ -f /staging/lnell/${OUT_FASTA}.gz ]; then
     echo -e "\n\nMESSAGE: /staging/lnell/${OUT_FASTA}.gz already exists."
     echo -e "Exiting...\n"
     exit 0
 fi
+
 
 mkdir ${OUT_DIR}
 
@@ -43,10 +45,6 @@ cd ${OUT_DIR}
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 
 
-if [ -f /staging/lnell/rna/${RNA1}.gz ]; then
-    echo -e "\n\nERROR: /staging/lnell/rna/${RNA1}.gz does not exist."
-    echo -e "Exiting...\n"
-fi
 
 # ============================================================================
 # ============================================================================
@@ -84,8 +82,6 @@ samtools index ${BAM} ${BAM}.bai
 # (`tany_hisat_idx*` are index files from `hisat2-build`)
 rm ${RNA1} ${RNA2} tany_hisat_idx*
 
-conda deactivate
-
 
 
 # ============================================================================
@@ -105,7 +101,7 @@ cp -rp /app/BESST_RNA ./
 cd BESST_RNA
 
 # -z 10000 effectively turns repeat detection off (this was recommended)
-# -k 100 includes small contigs
+# -k 100 includes contigs >= 100 bp
 
 python Main.py 1 \
     -c ../${GENOME} \
@@ -123,9 +119,7 @@ rm -r BESST_RNA ${GENOME}
 
 if [ ! -f ./pass1/Scaffolds-pass1.fa ]; then
     echo -e "\n\nERROR: BESST_RNA failed to produce output." 1>&2
-    echo "  Saving BAM files to staging and quitting." 1>&2
     echo -e "Exiting...\n" 1>&2
-    mv ${BAM} ${BAM}.bai /staging/lnell/
     cd ..
     rm -r ${OUT_DIR} *Statistics.txt
     exit 1
@@ -142,7 +136,7 @@ sed -i -e '/^[^>]/s/n/N/g' ./pass1/Scaffolds-pass1.fa
 # Move just the scaffolds to the staging directory:
 cp ./pass1/Scaffolds-pass1.fa ./
 mv Scaffolds-pass1.fa ${OUT_FASTA}
-# Keep the uncompressed version for summaries below
+# Keep the uncompressed version for output directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
@@ -156,15 +150,12 @@ fi
 cd ${OUT_DIR}
 
 
-# General summary of scaffolds and BUSCO scores:
-export OUT_CSV=${OUT_DIR}.csv
-./summarize.sh ${THREADS} ${OUT_FASTA} ${OUT_DIR} ${OUT_CSV}
-# Copy resulting CSV to staging directory to look at directly:
-cp ${OUT_CSV} /staging/lnell/
-
-
-# Now save the whole directory
+# We're removing instead of saving the output directory bc it takes up
+# too much space. We'll look at them later once I finalize the pipeline.
 cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+
+# # To save the whole directory:
+# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+# mv ${OUT_DIR}.tar.gz /staging/lnell/
+
 rm -r ${OUT_DIR}

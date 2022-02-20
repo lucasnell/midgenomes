@@ -7,7 +7,6 @@ executable =                besst.sh
 arguments =                 $(fasta)
 should_transfer_files =     YES
 when_to_transfer_output =   ON_EXIT
-transfer_input_files =      summarize.sh
 requirements =              (Target.HasCHTCStaging == true)
 request_cpus =              32
 request_memory =            16GB

@@ -37,7 +37,6 @@ if [ -f /staging/lnell/${OUT_FASTA}.gz ]; then
 fi
 
 
-
 mkdir ${OUT_DIR}
 
 cd ${OUT_DIR}
@@ -76,22 +75,17 @@ fi
 # Gets filename of final scaffolds FASTA file
 export LS_FASTA=$(basename -- $(readlink -f *-arks.longstitch-scaffolds.fa))
 cp $LS_FASTA ${OUT_FASTA}
-# Keep the uncompressed version for summaries and for output in main directory
+# Keep the uncompressed version for output in main directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
-
-# General summary of scaffolds and BUSCO scores:
-export OUT_CSV=${OUT_DIR}.csv
-./summarize.sh ${THREADS} ${OUT_FASTA} ${OUT_DIR} ${OUT_CSV}
-# Copy resulting CSV to staging directory to look at directly:
-cp ${OUT_CSV} /staging/lnell/
-
-
-
-# Now save the whole directory
+# We're removing instead of saving the output directory bc it takes up
+# too much space. We'll look at them later once I finalize the pipeline.
 cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+# # To save the whole directory:
+# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+# mv ${OUT_DIR}.tar.gz /staging/lnell/
+
 rm -r ${OUT_DIR}
+
 

@@ -1,14 +1,14 @@
 universe =                  docker
 docker_image =              lucasnell/tany_genomics:v0.3
-log =                       longstitch/$(fasta)_longstitch.log
-error =                     longstitch/$(fasta)_longstitch.err
-output =                    longstitch/$(fasta)_longstitch.out
-executable =                longstitch.sh
+log =                       summarize/$(fasta)_summarize.log
+error =                     summarize/$(fasta)_summarize.err
+output =                    summarize/$(fasta)_summarize.out
+executable =                summarize.sh
 arguments =                 $(fasta)
 should_transfer_files =     YES
 when_to_transfer_output =   ON_EXIT
 requirements =              (Target.HasCHTCStaging == true)
-request_cpus =              16
+request_cpus =              24
 request_memory =            24GB
 request_disk =              50GB
 queue 1

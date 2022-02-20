@@ -2,38 +2,6 @@
 
 export THREADS=24
 
-# installation steps for Mambaforge
-cp /staging/lnell/Mambaforge-Linux-x86_64.sh ./
-# wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
-export HOME=$PWD
-export PATH
-sh Mambaforge-Linux-x86_64.sh -b -p $PWD/mamba3
-export PATH=$PWD/mamba3/bin:$PATH
-rm Mambaforge-Linux-x86_64.sh
-
-export CONDA_PREFIX=$PWD/mamba3
-
-# Install snakemake environment
-# (`seqtk` is to convert FASTQ to FASTA and to narrow FASTA files below)
-# (`numpy` and `pandas` are for `fire-gusu.py` script below)
-mamba create -q -y -c bioconda -c conda-forge -n main-env \
-    snakemake=6.13.1 seqtk=1.3 numpy pandas
-
-# Environment for busco, too:
-mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.2.2
-
-conda init
-. ~/.bashrc
-
-conda activate main-env
-
-# # example ------------------------------
-# wget https://github.com/a-ludi/dentist/releases/download/v3.0.0/dentist-example.tar.gz
-# tar -xzf dentist-example.tar.gz
-# cd dentist-example
-# snakemake --configfile=snakemake.yml --use-conda --cores=1
-# md5sum -c checksum.md5
-# # --------------------------------------
 
 
 # The input FASTA is given by the submit file:
@@ -44,21 +12,7 @@ if [ ! -f /staging/lnell/${GENOME}.gz ]; then
     exit 1
 fi
 
-# I'll use the first input to produce the RNG seed for reproducibility
-# with `fire-gusu.py` script.
-# This means that I'll use the same reads each time I process the same file.
-# The only time I'll be processing the same file will be for testing, so this
-# behavior is desirable.
-export SEED=$(python << EOF
-import hashlib
-print(int(hashlib.sha512("${1}".encode('utf-8')).hexdigest(), base = 16))
-EOF
-)
-
-
-
 # The input file dictates the output name and join policy:
-
 export OUT_SUFFIX=dentist
 if  [[ $GENOME == contigs* ]]
 then
@@ -77,9 +31,55 @@ export OUT_FASTA=${OUT_DIR}.fasta
 if [ -f /staging/lnell/${OUT_FASTA}.gz ]; then
     echo -e "\n\nMESSAGE: /staging/lnell/${OUT_FASTA}.gz already exists."
     echo -e "Exiting...\n"
-    rm -r ${CONDA_PREFIX}
     exit 0
 fi
+
+
+
+# installation steps for Mambaforge
+cp /staging/lnell/Mambaforge-Linux-x86_64.sh ./
+# wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+export HOME=$PWD
+export PATH
+sh Mambaforge-Linux-x86_64.sh -b -p $PWD/mamba3
+export PATH=$PWD/mamba3/bin:$PATH
+rm Mambaforge-Linux-x86_64.sh
+
+export CONDA_PREFIX=$PWD/mamba3
+
+# Install snakemake environment
+# (`seqtk` is to convert FASTQ to FASTA and to narrow FASTA files below)
+# (`numpy` and `pandas` are for `fire-gusu.py` script below)
+mamba create -q -y -c bioconda -c conda-forge -n main-env \
+    snakemake=6.13.1 seqtk=1.3 numpy pandas
+
+conda init
+. ~/.bashrc
+
+conda activate main-env
+
+# # example ------------------------------
+# wget https://github.com/a-ludi/dentist/releases/download/v3.0.0/dentist-example.tar.gz
+# tar -xzf dentist-example.tar.gz
+# cd dentist-example
+# snakemake --configfile=snakemake.yml --use-conda --cores=1
+# md5sum -c checksum.md5
+# # --------------------------------------
+
+
+
+# I'll use the first input to produce the RNG seed for reproducibility
+# with `fire-gusu.py` script.
+# This means that I'll use the same reads each time I process the same file.
+# The only time I'll be processing the same file will be for testing, so this
+# behavior is desirable.
+export SEED=$(python << EOF
+import hashlib
+print(int(hashlib.sha512("${1}".encode('utf-8')).hexdigest(), base = 16))
+EOF
+)
+
+
 
 mkdir ${OUT_DIR}
 
@@ -91,6 +91,7 @@ cd ${OUT_DIR}
 # Expand tar file from submit server
 # (this includes `dentist.v3.0.0.x86_64` folder):
 tar -xzf dentist_files.tar.gz
+rm dentist_files.tar.gz
 
 # Adjust dentist.yml for join policy:
 sed -i "s/__JOIN_POLICY__/${JOIN}/g" dentist.yml
@@ -118,7 +119,7 @@ cp /staging/lnell/${ALL_READS} ./
 export COVERAGE=$(grep "read-coverage:" dentist.yml | \
                   sed -e 's/[[:space:]]*$//' | \
                   sed 's/.* //')
-# info on the reads in the FASTQ file:
+# info on the reads in the FASTQ file (used for faster filtering):
 export SUMMARY=basecalls_guppy-5.0.11--sequencing_summary.txt.gz
 cp /staging/lnell/${SUMMARY} ./
 
@@ -143,8 +144,7 @@ cp -r -t . \
     dentist.v3.0.0.x86_64/scripts
 
 
-snakemake --configfile=snakemake.yml --use-conda \
-    --conda-prefix ${CONDA_PREFIX} --cores=${THREADS}
+snakemake --configfile=snakemake.yml --use-conda --cores=${THREADS}
 
 
 rm -rf dentist.v3.0.0.x86_64 ${READS} ${GENOME}
@@ -153,34 +153,28 @@ if [ ! -f gap-closed.fasta ]; then
     echo -e "\n\nERROR: dentist failed to produce output." 1>&2
     echo -e "Exiting...\n" 1>&2
     cd ..
-    rm -rf ${TMPDIR} mamba3 ${OUT_DIR}
+    rm -rf ${TMPDIR} ${CONDA_PREFIX} ${OUT_DIR}
     exit 1
 fi
 
 
 
 
-mv gap-closed.fasta ${OUT_FASTA}
-# Keep the uncompressed version for summaries below
+cp gap-closed.fasta ${OUT_FASTA}
+# Keep the uncompressed version for output directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
 
-# General summary of scaffolds and BUSCO scores:
-export OUT_CSV=${OUT_DIR}.csv
-./summarize.sh ${THREADS} ${OUT_FASTA} ${OUT_DIR} ${OUT_CSV}
-# Copy resulting CSV to staging directory to look at directly:
-cp ${OUT_CSV} /staging/lnell/
-rm summ-scaffs.py
-
-
-
-# Now save whole directory
+# We're removing instead of saving the output directory bc it takes up
+# too much space. We'll look at them later once I finalize the pipeline.
 cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
 
-rm -rf ${TMPDIR} mamba3 ${OUT_DIR}
+# # To save whole directory:
+# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+# mv ${OUT_DIR}.tar.gz /staging/lnell/
+
+rm -rf ${TMPDIR} ${CONDA_PREFIX} ${OUT_DIR}
 
 
 
