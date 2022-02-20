@@ -62,6 +62,7 @@ cp /staging/lnell/${READS2} ./
 
 fastp --in1 ${READS1} --in2 ${READS2} \
     --out1 ${TRIM_READS1} --out2 ${TRIM_READS2} \
+    --thread ${THREADS} \
     --trim_poly_x \
     --correction \
     --disable_quality_filtering \
