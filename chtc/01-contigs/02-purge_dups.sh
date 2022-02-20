@@ -45,9 +45,10 @@ minimap2 -x asm5 -DP ${REF}.split ${REF}.split \
     -t $((THREADS - 2)) -K 1G -2 | \
     gzip -c - > ${REF}.split.self.paf.gz
 
-# Purge haplotigs and overlaps:
+# Purge haplotigs and overlaps.
+# Based on testing, `-f 0.3` option helps prevent overpurging
 purge_dups -2 -T cutoffs -c PB.base.cov \
-    -a 93 \
+    -f 0.3 \
     ${REF}.split.self.paf.gz > \
     dups.bed 2> purge_dups.log
 
@@ -65,7 +66,8 @@ mv ${OUT_FASTA}.gz /staging/lnell/
 
 
 # This outputs basics about scaffold (or contigs in this case) sizes:
-summ-scaffs.py ${OUT_FASTA}
+summ-scaffs.py ${OUT_FASTA} | \
+    tee scaff_summary.out
 
 # This outputs BUSCO scores:
 conda activate busco-env
@@ -74,7 +76,8 @@ busco \
     -l diptera_odb10 \
     -i ${OUT_FASTA} \
     -o busco \
-    --cpu ${THREADS}
+    --cpu ${THREADS} |
+    tee busco.out
 conda deactivate
 
 
