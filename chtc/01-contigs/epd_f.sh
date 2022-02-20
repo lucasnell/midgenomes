@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Explore options for purge_dups
-# usage: ./epd.sh [VALUE FOR `purge_dups -a` ARG]
+# Explore options for purge_dups -f argument
+# usage: ./epd.sh [VALUE FOR `purge_dups -f` ARG]
 
 
 . /app/.bashrc
@@ -10,9 +10,9 @@ conda activate main-env
 export REF=contigs_shasta_pepper-hap1.fasta
 export THREADS=12
 
-export A_ARG_VAL=$1
+export F_ARG_VAL=$1
 
-export OUT_PREFIX=purgedups_a${A_ARG_VAL}
+export OUT_PREFIX=purgedups_f${F_ARG_VAL}
 export OUT_DIR=${OUT_PREFIX}
 export OUT_FASTA=${OUT_PREFIX}.fasta
 export OUT_CSV=${OUT_PREFIX}.csv
@@ -67,7 +67,7 @@ minimap2 -x asm5 -DP ${REF}.split ${REF}.split \
 
 # Purge haplotigs and overlaps:
 purge_dups -2 -T cutoffs -c PB.base.cov \
-    -a ${A_ARG_VAL} \
+    -f ${F_ARG_VAL} \
     ${REF}.split.self.paf.gz > \
     dups.bed 2> purge_dups.log
 
