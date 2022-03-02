@@ -20,20 +20,28 @@ fi
 # If we've already summarized this in the main CSV file,
 # this job stops with exit code 0
 export GREP_EXIT=$(gunzip -c /staging/lnell/scaffolds_all.csv.gz | \
-                   grep -q "^${PREFIX}"; \
+                   grep -q "^${PREFIX},"; \
                    echo $?)
+
 case ${GREP_EXIT} in
+
   0)
     echo -e "\n\nMESSAGE: Output already found in /staging/lnell/scaffolds_all.csv.gz."
     echo -e "Exiting...\n"
     exit 0
+    ;;
+
   1)
     echo -e "\n\nMESSAGE: Output not found. Continuing with script...\n"
+    ;;
+
   *)
     echo -e "\n\nERROR: Error occurred when searching /staging/lnell/scaffolds_all.csv.gz."
     echo -e "Exiting...\n"
     exit 1
+    ;;
 esac
+
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}

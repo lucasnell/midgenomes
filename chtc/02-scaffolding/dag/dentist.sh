@@ -20,7 +20,9 @@ then
     JOIN=contigs
 else
     OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
-    JOIN=scaffolds
+    # Only for testing round3-2.dag
+    # JOIN=scaffolds
+    JOIN=scaffoldGaps
 fi
 export OUT_DIR
 export JOIN

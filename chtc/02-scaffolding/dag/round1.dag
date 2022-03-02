@@ -3,6 +3,10 @@
 # Define jobs and variables for each
 # ================================================================
 
+# To send this and all other files to cluster:
+# cd ~/GitHub/Wisconsin/midge_archive/chtc/02-scaffolding/dag
+# scp *.sh *.sub *.dag lnell@submit-1.chtc.wisc.edu:/home/lnell/scaff-explore/
+
 # --------------
 # Step 1: initial scaffold on contigs file:
 JOB L longstitch.sub
