@@ -6,7 +6,7 @@ export THREADS=24
 
 export PREFIX=$1
 export IN_FASTA=${PREFIX}.fasta
-export OUT_DIR=${PREFIX}_summ
+export OUT_DIR=${PREFIX}_S
 export OUT_CSV=${PREFIX}.csv
 
 
@@ -19,14 +19,14 @@ fi
 
 # If we've already summarized this in the main CSV file,
 # this job stops with exit code 0
-export GREP_EXIT=$(gunzip -c /staging/lnell/scaffolds_all.csv.gz | \
+export GREP_EXIT=$(gunzip -c /staging/lnell/scaff_summaries.csv.gz | \
                    grep -q "^${PREFIX},"; \
                    echo $?)
 
 case ${GREP_EXIT} in
 
   0)
-    echo -e "\n\nMESSAGE: Output already found in /staging/lnell/scaffolds_all.csv.gz."
+    echo -e "\n\nMESSAGE: Output already found in /staging/lnell/scaff_summaries.csv.gz."
     echo -e "Exiting...\n"
     exit 0
     ;;
@@ -36,7 +36,7 @@ case ${GREP_EXIT} in
     ;;
 
   *)
-    echo -e "\n\nERROR: Error occurred when searching /staging/lnell/scaffolds_all.csv.gz."
+    echo -e "\n\nERROR: Error occurred when searching /staging/lnell/scaff_summaries.csv.gz."
     echo -e "Exiting...\n"
     exit 1
     ;;
@@ -103,15 +103,14 @@ echo -n $(BVS="(F)" && busco_var), >> ${OUT_CSV}
 echo -n $(BVS="(M)" && busco_var), >> ${OUT_CSV}
 echo $(BVS="Total BUSCO" && busco_var) >> ${OUT_CSV}
 
-tail -n 1 ${OUT_CSV} | gzip >> /staging/lnell/scaffolds_all.csv.gz
+tail -n 1 ${OUT_CSV} | gzip >> /staging/lnell/scaff_summaries.csv.gz
 
 cat ${OUT_CSV}
 
 cd ..
 
-# uncomment these lines if you want to save this directory:
-# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-# mv ${OUT_DIR}.tar.gz /staging/lnell/
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
 
 
 rm -r ${OUT_DIR}

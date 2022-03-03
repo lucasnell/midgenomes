@@ -1,8 +1,8 @@
 universe =                  docker
 docker_image =              lucasnell/tany_genomics:v0.3
-log =                       summarize/$(fasta)_summarize.log
-error =                     summarize/$(fasta)_summarize.err
-output =                    summarize/$(fasta)_summarize.out
+log =                       summarize/$(fasta)_S.log
+error =                     summarize/$(fasta)_S.err
+output =                    summarize/$(fasta)_S.out
 executable =                summarize.sh
 arguments =                 $(fasta)
 should_transfer_files =     YES

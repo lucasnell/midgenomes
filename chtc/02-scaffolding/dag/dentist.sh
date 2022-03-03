@@ -6,26 +6,30 @@ export THREADS=24
 
 # The input FASTA is given by the submit file:
 export GENOME=$1.fasta
+
+# The join policy, coverage, and seed (for use in `fire-gusu.py`) are
+# also input:
+export JOIN=$2
+export COVERAGE=$3
+
+
+
 if [ ! -f /staging/lnell/${GENOME}.gz ]; then
     echo -e "\n\nERROR: /staging/lnell/${GENOME}.gz does not exist." 1>&2
     echo -e "Exiting...\n" 1>&2
     exit 1
 fi
 
-# The input file dictates the output name and join policy:
-export OUT_SUFFIX=dentist
+# The input file dictates the output name:
+export OUT_SUFFIX=D
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
-    JOIN=contigs
 else
-    OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
-    # Only for testing round3-2.dag
-    # JOIN=scaffolds
-    JOIN=scaffoldGaps
+    OUT_DIR=${GENOME/.fasta/}${OUT_SUFFIX}
 fi
 export OUT_DIR
-export JOIN
+
 
 export OUT_FASTA=${OUT_DIR}.fasta
 
@@ -69,33 +73,23 @@ conda activate main-env
 # # --------------------------------------
 
 
-
-# I'll use the first input to produce the RNG seed for reproducibility
-# with `fire-gusu.py` script.
-# This means that I'll use the same reads each time I process the same file.
-# The only time I'll be processing the same file will be for testing, so this
-# behavior is desirable.
-export SEED=$(python << EOF
-import hashlib
-print(int(hashlib.sha512("${1}".encode('utf-8')).hexdigest(), base = 16))
-EOF
-)
-
-
-
 mkdir ${OUT_DIR}
 
-# Move tar file from submit node to OUT_DIR:
-mv dentist_files.tar.gz ./${OUT_DIR}/
 
 cd ${OUT_DIR}
 
-# Expand tar file from submit server
-# (this includes `dentist.v3.0.0.x86_64` folder):
+# Copy tar file from staging:
+cp /staging/lnell/dentist_files.tar.gz ./
 tar -xzf dentist_files.tar.gz
 rm dentist_files.tar.gz
+cd dentist_files
+mv * ../
+cd ..
+rm -r dentist_files
 
-# Adjust dentist.yml for join policy:
+
+# Adjust dentist.yml for coverage and join policy:
+sed -i "s/__COVERAGE__/${COVERAGE}/g" dentist.yml
 sed -i "s/__JOIN_POLICY__/${JOIN}/g" dentist.yml
 
 # Adjust snakemake.yml for the input FASTA:
@@ -117,18 +111,14 @@ export READS=basecalls_guppy.fasta
 # and convert to FASTA with 80-char lines
 export ALL_READS=basecalls_guppy-5.0.11.fastq.gz
 cp /staging/lnell/${ALL_READS} ./
-# requested coverage:
-export COVERAGE=$(grep "read-coverage:" dentist.yml | \
-                  sed -e 's/[[:space:]]*$//' | \
-                  sed 's/.* //')
 # info on the reads in the FASTQ file (used for faster filtering):
 export SUMMARY=basecalls_guppy-5.0.11--sequencing_summary.txt.gz
 cp /staging/lnell/${SUMMARY} ./
 
-# Filtering for average quality of >= 10 and length of >= 10 kb, then randomly
-# choosing reads to get the desired coverage:
+# Filtering for average quality of >= 10 and length of >= 10 kb,
+# with both thresholds iterated up by 1% until desired coverage reached:
 ./fire-gusu.py -s ${SUMMARY} -c ${COVERAGE} -g 100 -q 10.0 -l 10000 \
-    -o ${READS/.fasta/.fastq} --seed ${SEED} ${ALL_READS}
+    -o ${READS/.fasta/.fastq} ${ALL_READS}
 rm ${ALL_READS} ${SUMMARY}
 # Convert to 80-char-wide FASTA
 seqtk seq -l 80 -A ${READS/.fasta/.fastq} > ${READS}
@@ -168,13 +158,9 @@ gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
 
-# We're removing instead of saving the output directory bc it takes up
-# too much space. We'll look at them later once I finalize the pipeline.
 cd ..
-
-# # To save whole directory:
-# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-# mv ${OUT_DIR}.tar.gz /staging/lnell/
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
 
 rm -rf ${TMPDIR} ${CONDA_PREFIX} ${OUT_DIR}
 

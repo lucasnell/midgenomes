@@ -1,5 +1,5 @@
 __default__:
-    read-coverage: 25.0
+    read-coverage: __COVERAGE__
     ploidy: 2
     verbose: 2
     join-policy: __JOIN_POLICY__

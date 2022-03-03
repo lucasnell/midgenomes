@@ -17,13 +17,13 @@ fi
 
 
 # The input file dictates the output name:
-export OUT_SUFFIX=longstitch
+export OUT_SUFFIX=L
 
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
 else
-    OUT_DIR=${GENOME}_${OUT_SUFFIX}
+    OUT_DIR=${GENOME}${OUT_SUFFIX}
 fi
 export OUT_DIR
 
@@ -79,12 +79,10 @@ cp $LS_FASTA ${OUT_FASTA}
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz /staging/lnell/
 
-# We're removing instead of saving the output directory bc it takes up
-# too much space. We'll look at them later once I finalize the pipeline.
 cd ..
-# # To save the whole directory:
-# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-# mv ${OUT_DIR}.tar.gz /staging/lnell/
+
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
 
 rm -r ${OUT_DIR}
 

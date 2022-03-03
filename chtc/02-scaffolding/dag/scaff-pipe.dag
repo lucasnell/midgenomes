@@ -1,0 +1,86 @@
+
+# ================================================================
+# Define jobs and variables for each
+# ================================================================
+
+# To send this and all other files to cluster:
+# cd ~/GitHub/Wisconsin/midge_archive/chtc/02-scaffolding/dag
+# scp *.sh *.sub *.dag lnell@submit-1.chtc.wisc.edu:/home/lnell/scaff/
+# scp dentist_files.tar.gz lnell@transfer.chtc.wisc.edu:/staging/lnell/
+
+# --------------
+JOB B besst.sub
+JOB B_S summarize.sub
+# ----- define input files:
+VARS B fasta="contigs_shasta_pepper_purgedups"
+VARS B_S fasta="scaffolds_B"
+
+# --------------
+JOB BD dentist.sub
+JOB BD_S summarize.sub
+# ----- define input files:
+VARS BD fasta="scaffolds_B"
+VARS BD join="scaffolds"
+VARS BD coverage="25.0"
+VARS BD_S fasta="scaffolds_BD"
+
+# --------------
+JOB BDL longstitch.sub
+JOB BDL_S summarize.sub
+# ----- define input files:
+VARS BDL fasta="scaffolds_BD"
+VARS BDL_S fasta="scaffolds_BDL"
+
+# --------------
+JOB BDLD dentist.sub
+JOB BDLD_S summarize.sub
+# ----- define input files:
+VARS BDLD fasta="scaffolds_BDL"
+VARS BDLD join="scaffolds"
+VARS BDLD coverage="25.0"
+VARS BDLD_S fasta="scaffolds_BDLD"
+
+# --------------
+JOB BDLDB besst.sub
+JOB BDLDB_S summarize.sub
+# ----- define input files:
+VARS BDLDB fasta="scaffolds_BDLD"
+VARS BDLDB_S fasta="scaffolds_BDLDB"
+
+# --------------
+JOB BDLDBD dentist.sub
+JOB BDLDBD_S summarize.sub
+# ----- define input files:
+VARS BDLDBD fasta="scaffolds_BDLDB"
+VARS BDLDBD join="scaffolds"
+VARS BDLDBD coverage="25.0"
+VARS BDLDBD_S fasta="scaffolds_BDLDBD"
+
+# --------------
+JOB BDLDBDD dentist.sub
+JOB BDLDBDD_S summarize.sub
+# ----- define input files:
+VARS BDLDBDD fasta="scaffolds_BDLDBD"
+VARS BDLDBDD join="scaffoldGaps"
+VARS BDLDBDD coverage="50.0"
+VARS BDLDBDD_S fasta="scaffolds_BDLDBDD"
+
+
+# ================================================================
+# Define child and parent processes
+# ================================================================
+
+PARENT B CHILD BD B_S
+
+PARENT BD CHILD BDL BD_S
+
+PARENT BDL CHILD BDLD BDL_S
+
+PARENT BDLD CHILD BDLDB BDLD_S
+
+PARENT BDLDB CHILD BDLDBD BDLDB_S
+
+PARENT BDLDBD CHILD BDLDBDD BDLDBD_S
+
+PARENT BDLDBDD CHILD BDLDBDD_S
+

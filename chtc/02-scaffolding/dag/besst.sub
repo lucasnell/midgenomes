@@ -1,8 +1,8 @@
 universe =                  docker
 docker_image =              lucasnell/tany_genomics:v0.3
-log =                       besst/$(fasta)_besst.log
-error =                     besst/$(fasta)_besst.err
-output =                    besst/$(fasta)_besst.out
+log =                       besst/$(fasta)B.log
+error =                     besst/$(fasta)B.err
+output =                    besst/$(fasta)B.out
 executable =                besst.sh
 arguments =                 $(fasta)
 should_transfer_files =     YES

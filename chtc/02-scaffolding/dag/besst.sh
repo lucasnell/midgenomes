@@ -17,13 +17,13 @@ if [ ! -f /staging/lnell/${GENOME}.gz ]; then
 fi
 
 # The input file dictates the output name:
-export OUT_SUFFIX=besst
+export OUT_SUFFIX=B
 
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
 else
-    OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
+    OUT_DIR=${GENOME/.fasta/}${OUT_SUFFIX}
 fi
 export OUT_DIR
 
@@ -149,13 +149,8 @@ if [ -f *Statistics.txt ]; then
 fi
 cd ${OUT_DIR}
 
-
-# We're removing instead of saving the output directory bc it takes up
-# too much space. We'll look at them later once I finalize the pipeline.
 cd ..
-
-# # To save the whole directory:
-# tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-# mv ${OUT_DIR}.tar.gz /staging/lnell/
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/
 
 rm -r ${OUT_DIR}
