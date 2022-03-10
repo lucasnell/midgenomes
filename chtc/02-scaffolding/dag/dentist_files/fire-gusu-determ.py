@@ -5,13 +5,11 @@ FIlter REads using GUppy SUmmary file (fire-gusu)
 This script filters reads from a FASTQ file to achieve a given coverage
 of a genome.
 Filtering is based on a summary information file like the one output from guppy.
-This script filters based on inputs, then randomly chooses reads to achieve
-the given coverage.
 If the filters are too strict, it will loosen them until they can produce the
 desired coverage.
-It does this in increments of 10% for both read quality and length.
-Output can be made reproducible by setting the `seed` argument.
-
+If the filters are not strict enough, it will strenghten them until they 
+produce the desired coverage.
+It does this in increments of 1% for both read quality and length.
 
 usage:
     ./fire-gusu.py -s [summary file] -c [coverage] -g [genome size (Mb)] \
@@ -94,76 +92,45 @@ def sort_summary_file(summ_fn, fastq_fn):
 def qual_len_filter(min_q, min_l, seq_needed, scores, lengths):
     """
     Return a vector of indices for reads that pass quality and length filters.
-    No randomly choosing reads yet.
     """
     
     if lengths.sum() < seq_needed:
         sys.stderr.write("No filter needed for this depth of coverage.\n")
         sys.exit(1)
+
+    # Reduce filtering if it's too strict, or increase filtering if it'll
+    # result in too many reads:
+    incr_q = min_q * 0.01
+    incr_l = min_l * 0.01
+    f_reads = lengths[(scores >= min_q) & (lengths >= min_l)].sum()
+    if f_reads < seq_needed:
+        while f_reads < seq_needed:
+            min_q -= incr_q
+            min_l -= incr_l
+            if min_q <= 0:
+                break
+            f_reads = lengths[(scores >= min_q) & (lengths >= min_l)].sum()
+    elif f_reads > seq_needed:
+        while f_reads > seq_needed:
+            min_q += incr_q
+            min_l += incr_l
+            f_reads = lengths[(scores >= min_q) & (lengths >= min_l)].sum()
+        # We'll err on the side of too many reads, so iterate up if needed:
+        if f_reads < seq_needed:
+            min_q -= incr_q
+            min_l -= incr_l
     
-    # Reduce filtering if it's too strict:
-    incr_q = min_q * 0.1
-    incr_l = min_l * 0.1
-    while lengths[(scores >= min_q) & (lengths >= min_l)].sum() < seq_needed:
-        min_q -= incr_q
-        min_l -= incr_l
-        if min_q <= 0:
-            break
+    # This can suffer from rounding issues:
+    min_q = round(min_q, 8)
     
     print("minimum average Q score: " + str(min_q))
     print("minimum length: " + str(min_l))
-    
+
     ql_filter = np.where((lengths >= min_l) & (scores >= min_q))
     # not sure why, but `np.where` wraps output in tuple
     ql_filter = ql_filter[0]
     
     return min_q, min_l, ql_filter
-
-
-
-def rnd_filter(lengths, ql_filter, seq_needed, rng):
-    """
-    Randomly choose reads until we get the desired coverage.
-    """
-    
-    # no longer considering lengths not in filter:
-    lengths = lengths[ql_filter]
-    # Max allowed total sequencing output:
-    max_seq_needed = seq_needed + np.mean(lengths)
-    # No reason to continue if we're already within our range:
-    if lengths.sum() <= max_seq_needed:
-        return ql_filter
-    
-    # Shuffle indices, then remove samples until you have only the
-    # sequencing needed:
-    rnd_inds = np.arange(len(ql_filter))
-    rng.shuffle(rnd_inds)
-    # bp of sequencing in final output:
-    out_seq = lengths[rnd_inds].sum()
-    # number of reads in final output:
-    out_nreads = len(rnd_inds)
-    while out_seq > max_seq_needed:
-        out_nreads -= 1
-        if out_nreads <= 0:
-            out_nreads = 1
-            break
-        # not subtracting one from index here bc we already have above:
-        out_seq -= lengths[rnd_inds[out_nreads]]
-    
-    print("exact sequencing output: " + str(out_seq))
-    
-    if out_nreads < len(rnd_inds):
-        rnd_inds = rnd_inds[:out_nreads] # first `out_nreads` reads
-    
-    # sort so ordering is still the same as in FASTQ
-    rnd_inds.sort()
-    
-    rnd_ql_filter = ql_filter[rnd_inds.tolist()]
-    
-    return rnd_ql_filter
-
-
-
 
 
 
@@ -221,7 +188,14 @@ def write_filtered_fastq(in_fastq_fn, out_fastq_fn, ql_filter):
 
 
 
-
+# For testing:
+# summary="basecalls_guppy-5.0.11--sequencing_summary.txt.gz"
+# in_fastq="basecalls_guppy-5.0.11.fastq.gz"
+# coverage=25.0
+# genome_size=100
+# quality=10.0
+# length=10000
+# out_fastq="test.fastq.gz"
 
 
 
@@ -244,9 +218,6 @@ if __name__ == "__main__":
                         help = "minimum average read quality")
     parser.add_argument("-l", "--length", required = True, type=float,
                         help = "minimum read length")
-    parser.add_argument("--seed", required = False, type=int,
-                        help = "set seed for random number generator for " + 
-                        "reproducible output")
     parser.add_argument("-o", "--out_fastq", required = False,
                         help = "output file name (defaults to "+
                         "filtered_<input name>)")
@@ -300,29 +271,15 @@ if __name__ == "__main__":
     seq_needed = args.genome_size * 1e6 * args.coverage
     
     # filter for mean quality and length.
-    # function also uses the min quality and length actually used, since 
-    # too-strict filters are softened here so that we always have the 
-    # coverage we want
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("filtering by quality and length (" + time_str + ")")
     min_q, min_l, ql_filter = qual_len_filter(args.quality, args.length, 
                                               seq_needed, scores, lengths)
-    
-    # Randomly sample from ql_filter to get desired coverage:
-    time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print("randomly filtering for coverage (" + time_str + ")")
-    if args.seed:
-        rng = np.random.default_rng(args.seed)
-        print("  - seed used: " + str(args.seed))
-    else:
-        rng = np.random.default_rng()
-        print("  - no seed provided to RNG")
-    rnd_ql_filter = rnd_filter(lengths, ql_filter, seq_needed, rng)
 
     # Do the filtering and output new FASTQ file:
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("writing output file (" + time_str + ")")
-    write_filtered_fastq(args.in_fastq, out_fastq, rnd_ql_filter)
+    write_filtered_fastq(args.in_fastq, out_fastq, ql_filter)
 
     time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print("finished (" + time_str + ")")
