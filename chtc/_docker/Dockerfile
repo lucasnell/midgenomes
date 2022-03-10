@@ -33,7 +33,7 @@ RUN chmod -R 777 /opt/conda && \
 RUN apt-get clean && \
     apt-get update -y && \
     apt-get install -y build-essential && \
-    apt-get install -y locales wget rsync unzip nano sudo && \
+    apt-get install -y locales wget rsync unzip nano sudo ocaml-nox && \
     rm -rf /var/lib/apt/lists/*
 
 # Set locale
@@ -72,19 +72,14 @@ RUN mamba env create -q -f annotate-env.yml && \
 RUN conda init bash
 
 # --------------------------------
-# Manually install MAPGD inside main-env environment:
+# Manually install SNAPE-pooled:
 # --------------------------------
-RUN wget https://github.com/LynchLab/MAPGD/archive/refs/tags/v0.4.26.zip && \
-    unzip -q v0.4.26.zip && \
-    rm -f v0.4.26.zip && \
-    . /app/.bashrc && \
-    conda activate main-env && \
-    cd ./MAPGD-0.4.26 && \
-    ./configure --prefix="/opt/conda/envs/main-env" && \
-    make && \
-    make install DESTDIR=/opt/conda/envs/main-env/bin && \
-    cd .. && \
-    rm -r ./MAPGD-0.4.26
+RUN cd /opt && \
+    git clone https://github.com/EmanueleRaineri/snape-pooled.git && \
+    cd snape-pooled && \
+    make snape-pooled
+ENV PATH="/opt/snape-pooled:${PATH}"
+
 
 
 # --------------------------------
@@ -114,7 +109,8 @@ RUN gunzip gm_key_64.gz && \
     cd gmes_linux_64_4 && \
     perl change_path_in_perl_scripts.pl "/usr/bin/env perl" && \
     cd .. && \
-    mv gmes_linux_64_4 GeneMark-EX
-ENV GENEMARK_PATH=/app/GeneMark-EX
+    mv gmes_linux_64_4 GeneMark-EX && \
+    mv GeneMark-EX /opt/
+ENV GENEMARK_PATH=/opt/GeneMark-EX
 # For AUGUSTUS:
 RUN chmod -R 777 /opt/conda/envs/annotate-env/config

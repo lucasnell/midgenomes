@@ -14,8 +14,24 @@
     `RealignerTargetCreator` in
     [`GATK`](https://bioconda.github.io/recipes/gatk/README.html)
 - use `samtools mpileup` to generate pileup file
-- estimate allele frequencies using `mapgd pool` 
-    from [MAPGD](https://github.com/LynchLab/MAPGD)
+- estimate allele frequencies using SNAPE-pool
+    - [This paper](https://doi.org/10.1111/1755-0998.13343) 
+      indicates it works really well
+    - [This paper](https://doi.org/10.1093/molbev/msab259)
+      created a bunch of tools to deal with output
+    - See...
+        - https://github.com/EmanueleRaineri/snape-pooled
+        - https://github.com/DEST-bio/DEST_freeze1/blob/main/mappingPipeline/scripts/Mpileup2Snape.sh
+        - https://github.com/DEST-bio/DEST_freeze1/blob/main/mappingPipeline/scripts/SNAPE2SYNC.py
+        - https://github.com/DEST-bio/DEST_freeze1/blob/main/mappingPipeline/scripts/MaskSYNC_snape.py
+        - https://github.com/DEST-bio/DEST_freeze1/blob/main/mappingPipeline/scripts/Snape_to_VCF.py
+
+
+
+
+
+
+
 - damage profiling using
     [`DamageProfiler`](https://bioconda.github.io/recipes/damageprofiler/README.html)
 - for population genomics analyses:
