@@ -3,13 +3,13 @@
 # trim Pool-seq DNA reads
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.2
+docker_image = lucasnell/tany_genomics:v0.4
 
-log = fastp-dna/fastp-dna_$(readbase).log
-error = fastp-dna/fastp-dna_$(readbase).err
-output = fastp-dna/fastp-dna_$(readbase).out
+log = fastp-dna_$(readbase).log
+error = fastp-dna_$(readbase).err
+output = fastp-dna_$(readbase).out
 
-executable = fastp-dna/fastp-dna.sh
+executable = fastp-dna.sh
 arguments = $(readbase)
 
 batch_name = "fastp-dna"
@@ -29,5 +29,5 @@ request_memory = 16GB
 request_disk = 60GB
 
 
-# Run one instance of this job per line in `fastp-dna/readbases.txt`
-queue readbase from fastp-dna/readbases.txt
+# Run one instance of this job per line in `readbases.txt`
+queue readbase from readbases.txt

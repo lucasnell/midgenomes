@@ -6,9 +6,8 @@
         https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-13-S8-S8
 - map reads to genome using 
     [`bwa mem`](https://bioconda.github.io/recipes/bwa/README.html)
-- filter reads (Q >= 20, no secondary alignment) using `samtools`
-- duplicates marked using `MarkDuplicates` from
-    [`picard`](https://bioconda.github.io/recipes/picard/README.html)
+- duplicates marked using `samtools markdup`
+- filter reads (Q >= 20, no secondary alignment) using `samtools view`
 - add group information using `AddOrReplaceReadGroups` in `picard`
 - re-align sequences in the proximity of indels with `IndelRealigner` and
     `RealignerTargetCreator` in

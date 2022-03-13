@@ -59,15 +59,15 @@ fastp --in1 ${READS1} --in2 ${READS2} \
     --disable_quality_filtering
 
 
-mv ${TRIM_READS1} /staging/lnell/dna/
-mv ${TRIM_READS2} /staging/lnell/dna/
+mv ${TRIM_READS1} /staging/lnell/dna/trimmed/
+mv ${TRIM_READS2} /staging/lnell/dna/trimmed/
 
 rm ${READS1} ${READS2}
 
 cd ..
 
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/dna/
+mv ${OUT_DIR}.tar.gz /staging/lnell/dna/trimmed/
 
 rm -r ${OUT_DIR}
 

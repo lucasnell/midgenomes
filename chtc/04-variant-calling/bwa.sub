@@ -1,0 +1,25 @@
+# bwa.sub
+
+# align Pool-seq DNA reads
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.3
+
+log = bwa_$(readbase).log
+error = bwa_$(readbase).err
+output = bwa_$(readbase).out
+
+executable = bwa.sh
+arguments = $(readbase)
+
+batch_name = "bwa"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 8
+request_memory = 16GB
+request_disk = 50GB
+
+queue readbase from readbases.txt
