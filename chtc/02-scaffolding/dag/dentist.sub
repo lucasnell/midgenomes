@@ -3,7 +3,7 @@ log =                       dentist/$(fasta)D.log
 error =                     dentist/$(fasta)D.err
 output =                    dentist/$(fasta)D.out
 executable =                dentist.sh
-arguments =                 $(fasta) $(join) $(coverage)
+arguments =                 $(fasta) $(join) $(coverage) $(seed)
 should_transfer_files =     YES
 when_to_transfer_output =   ON_EXIT
 requirements =              (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)

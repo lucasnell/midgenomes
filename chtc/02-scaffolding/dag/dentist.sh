@@ -11,6 +11,24 @@ export GENOME=$1.fasta
 # also input:
 export JOIN=$2
 export COVERAGE=$3
+export SEED=$4
+
+
+#'
+#' I used to use the input file name to set the seed, but I stopped doing this
+#' bc it's less reproducible.
+#' I left it a commented version in case you want to reproduce old code.
+#'
+# export FILE_NAME=tany_scaffolds.fasta
+# echo $(python << EOF
+# import hashlib
+# print(int(hashlib.sha512("${FILE_NAME}".encode('utf-8')).hexdigest(), base = 16))
+# EOF
+# )
+
+
+
+
 
 
 
@@ -83,7 +101,7 @@ cp /staging/lnell/dentist_files.tar.gz ./
 tar -xzf dentist_files.tar.gz
 rm dentist_files.tar.gz
 cd dentist_files
-mv * ../
+mv dentist.yml fire-gusu.py snakemake.yml dentist.v3.0.0.x86_64 ../
 cd ..
 rm -r dentist_files
 
@@ -116,9 +134,9 @@ export SUMMARY=basecalls_guppy-5.0.11--sequencing_summary.txt.gz
 cp /staging/lnell/${SUMMARY} ./
 
 # Filtering for average quality of >= 10 and length of >= 10 kb,
-# with both thresholds iterated up by 1% until desired coverage reached:
+# then randomly sample so that desired coverage is reached:
 ./fire-gusu.py -s ${SUMMARY} -c ${COVERAGE} -g 100 -q 10.0 -l 10000 \
-    -o ${READS/.fasta/.fastq} ${ALL_READS}
+    -o ${READS/.fasta/.fastq} --seed ${SEED} ${ALL_READS}
 rm ${ALL_READS} ${SUMMARY}
 # Convert to 80-char-wide FASTA
 seqtk seq -l 80 -A ${READS/.fasta/.fastq} > ${READS}
