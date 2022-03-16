@@ -14,6 +14,8 @@ COPY annotate-env.yml .
 COPY besst-env.yml .
 # Simple summary of scaffolds:
 COPY summ-scaffs.py .
+# Sliding window of coverage based on mpileup
+COPY window-mpileup.py .
 # To get GeneMark to work for BRAKER2:
 COPY gm_key_64.gz .
 COPY gmes_linux_64_4.tar.gz .
@@ -45,6 +47,10 @@ ENV LC_ALL en_US.UTF-8
 # simple python script to summarize scaffold sequences:
 RUN chmod +x summ-scaffs.py && \
     mv summ-scaffs.py /usr/local/bin/
+
+# simple python script for sliding window of coverage based on mpileup:
+RUN chmod +x window-mpileup.py && \
+    mv window-mpileup.py /usr/local/bin/
 
 # Make primary conda environment (~300 sec)
 RUN mamba env create -q -f main-env.yml && \
