@@ -52,7 +52,7 @@ RUN chmod +x summ-scaffs.py && \
 RUN chmod +x window-mpileup.py && \
     mv window-mpileup.py /usr/local/bin/
 
-# Make primary conda environment (~300 sec)
+# Make primary conda environment
 RUN mamba env create -q -f main-env.yml && \
     rm main-env.yml && \
     conda clean --all -y

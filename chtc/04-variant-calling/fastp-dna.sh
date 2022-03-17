@@ -8,7 +8,18 @@ export THREADS=8
 . /app/.bashrc
 conda activate main-env
 
-
+check_exit_status () {
+  if [ ! "$2" -eq "0" ]; then
+    echo "Step $1 failed with exit status $2"
+    rm ${READS1} ${READS2}
+    cd ..
+    tar -czf ERROR_${OUT_DIR}.tar.gz ${OUT_DIR}
+    mv ERROR_${OUT_DIR}.tar.gz /staging/lnell/dna/trimmed/
+    rm -r ${OUT_DIR}
+    exit $2
+  fi
+  echo "Checked step $1"
+}
 
 # Argument from submit file gives you the base of the read FASTQ file name.
 # Here, I assume that FASTQ file names are of the form
@@ -58,11 +69,16 @@ fastp --in1 ${READS1} --in2 ${READS2} \
     --correction \
     --disable_quality_filtering
 
+check_exit_status "fastp" $?
+
+rm ${READS1} ${READS2}
+
+mkdir ${READ_BASE}_fastqc
+
+fastqc ${TRIM_READS1} ${TRIM_READS2} -o ${READ_BASE}_fastqc
 
 mv ${TRIM_READS1} /staging/lnell/dna/trimmed/
 mv ${TRIM_READS2} /staging/lnell/dna/trimmed/
-
-rm ${READS1} ${READS2}
 
 cd ..
 
