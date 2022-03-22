@@ -33,12 +33,12 @@ export TRIM_READS2=trimmed_${READS2}
 export OUT_DIR=trimmed_${READ_BASE}
 
 
-if [ ! -f /staging/lnell/${READS1} ]; then
-    echo "/staging/lnell/${READS1} does not exist!" 1>&2
+if [ ! -f /staging/lnell/rna/${READS1} ]; then
+    echo "/staging/lnell/rna/${READS1} does not exist!" 1>&2
     exit 111
 fi
-if [ ! -f /staging/lnell/${READS2} ]; then
-    echo "/staging/lnell/${READS2} does not exist!" 1>&2
+if [ ! -f /staging/lnell/rna/${READS2} ]; then
+    echo "/staging/lnell/rna/${READS2} does not exist!" 1>&2
     exit 222
 fi
 
@@ -46,8 +46,8 @@ fi
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
-cp /staging/lnell/${READS1} ./
-cp /staging/lnell/${READS2} ./
+cp /staging/lnell/rna/${READS1} ./
+cp /staging/lnell/rna/${READS2} ./
 
 
 # The main things happening here are...
@@ -69,8 +69,13 @@ fastp --in1 ${READS1} --in2 ${READS2} \
     --length_required=50
 
 
-mv ${TRIM_READS1} /staging/lnell/
-mv ${TRIM_READS2} /staging/lnell/
+mkdir ${READ_BASE}_fastqc
+
+fastqc ${TRIM_READS1} ${TRIM_READS2} -o ${READ_BASE}_fastqc
+
+
+mv ${TRIM_READS1} /staging/lnell/rna/
+mv ${TRIM_READS2} /staging/lnell/rna/
 
 rm ${READS1} ${READS2}
 
@@ -79,7 +84,7 @@ cd ..
 
 
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+mv ${OUT_DIR}.tar.gz /staging/lnell/rna/
 
 rm -r ${OUT_DIR}
 
