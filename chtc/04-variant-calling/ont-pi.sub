@@ -1,0 +1,24 @@
+# ont-pi.sub
+
+# calculating nucleotide diversity and heterozygosity from nanopore reads
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.4
+
+log = ont-pi.log
+error = ont-pi.err
+output = ont-pi.out
+
+executable = ont-pi.sh
+
+batch_name = "ont-pi"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 24
+request_memory = 24GB
+request_disk = 100GB
+
+queue 1
