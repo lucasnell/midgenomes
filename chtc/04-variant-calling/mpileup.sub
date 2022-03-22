@@ -1,6 +1,6 @@
 # mpileup.sub
 
-# align Pool-seq DNA reads
+# prep aligned Pool-seq DNA reads and call `samtools mpileup`
 
 universe = docker
 docker_image = lucasnell/tany_genomics:v0.4
@@ -19,7 +19,7 @@ when_to_transfer_output = ON_EXIT
 requirements = (Target.HasCHTCStaging == true)
 
 request_cpus = 4
-request_memory = 16GB
-request_disk = 80GB
+request_memory = 8GB
+request_disk = 50GB
 
 queue readbase from readbases.txt

@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-Summarize coverage from mpileup using a sliding window
+Summarize coverage from mpileup using a sliding window.
+
+The mpileup file can optionally only contain 3 columns: sequence name, 
+position, and coverage. This can be a useful format for reducing file sizes.
+This script will detect which format applies based on the first line.
 
 usage:
-    ./window-mpileup.py \
+./window-mpileup.py \
     -r <reference assembly> \
     -s <step size (default 50)> \
     -w <window size (default 100)> \
     <input mpileup as *.txt or *.txt.gz>
 
 """
+
 
 
 import sys
@@ -21,6 +26,54 @@ import math
 import statistics as stats
 from datetime import datetime
 
+
+
+def make_error(err_msg):
+    sys.stderr.write("ERROR: " + err_msg + "\n")
+    sys.exit(1)
+
+
+
+# read first line of mpileup file to see if it's an okay format 
+# and whether it has 3 or >= 5 columns
+# returns whether it has 3 columns
+def test_mpileup(in_mpileup):
+    
+    if in_mpileup.endswith(".gz"):
+        with gzip.open(in_mpileup,"rt") as mp_file:
+            first_line = mp_file.readline().rstrip().split("\t")
+    else:
+        with open(in_mpileup, "r") as mp_file:
+            first_line = mp_file.readline().rstrip().split("\t")
+    
+    if len(first_line) != 3 and len(first_line) >= 5:
+        make_error("mpileup file must have 3 or >= 5 columns")
+    
+    try:
+        tmp = int(first_line[1])
+    except ValueError:
+        make_error("the mpileup file's 2nd col must be an integer")
+    except:
+        make_error("Something else went wrong")
+    
+    three_cols = len(first_line) == 3
+    
+    if three_cols:
+        try:
+            tmp = int(first_line[2])
+        except ValueError:
+            make_error("For 3-column mpileup file, 3rd col must be an integer")
+        except:
+            make_error("Something else went wrong")
+    else:
+        try:
+            tmp = int(first_line[3])
+        except ValueError:
+            make_error("For mpileup file with > 3 cols, 4th col must be an integer")
+        except:
+            make_error("Something else went wrong")
+    
+    return three_cols
 
 
 
@@ -44,8 +97,7 @@ def summarize_ref(reference):
             i += 1
         else:
             if len(sizes) == 0:
-                sys.stderr.write("FASTA doesn't start with header. Exiting.\n")
-                sys.exit(1)
+                make_error("FASTA doesn't start with header. Exiting.\n")
             # we don't want to include newline at the end in our counts:
             llen = len(line) - 1
             sizes[i] += llen
@@ -71,11 +123,10 @@ def one_summarize(out_file, cov_ij, seq_i, win_j, starts, ends, names):
     
     size_ij = np.int64(ends[seq_i][win_j] - starts[seq_i][win_j] + 1)
     if len(cov_ij) > size_ij:
-        sys.stderr.write("ERROR: For window " + str(win_j+1) + 
-                         " in sequence '" + names[seq_i] + 
-                         "', the number of coverage values exceeds " +
-                         "the window size!\n")
-        sys.exit(1)
+        make_error("For window " + str(win_j+1) + 
+                   " in sequence '" + names[seq_i] + 
+                   "', the number of coverage values exceeds " +
+                   "the window size!\n")
     
     n_zeros = size_ij - np.int64(len(cov_ij))
     for i in range(n_zeros):
@@ -115,6 +166,9 @@ if __name__ == "__main__":
                         help = "sliding window step size (default = 50)")
     parser.add_argument("-w", "--window", type=int, default=100,
                         help = "max coverage before binning (default = 100)")
+    parser.add_argument("-o", "--out_fn", required = False,
+                        help = "output file name (defaults to "+
+                        "${INPUT_NAME/.txt/_window.txt})")
     parser.add_argument("in_mpileup", help="input mpileup file name")
     
     args = parser.parse_args()
@@ -122,26 +176,32 @@ if __name__ == "__main__":
     reference = args.reference
     step = args.step
     window = args.window
-    
+
     
     # ---------------
     # Check files:
     # ---------------
     if not os.path.exists(in_mpileup):
-        sys.stderr.write(in_mpileup + " not found\n")
-        sys.exit(1)
+        make_error(in_mpileup + " not found\n")
     mp_suffs = (".txt.gz", ".txt")
     if not in_mpileup.endswith(mp_suffs):
-        sys.stderr.write("Only *.txt or *.txt.gz extension allowed. Exiting.\n")
-        sys.exit(1)
+        make_error("Only *.txt or *.txt.gz extension allowed. Exiting.\n")
     fasta_suffs = (".fasta.gz", ".fasta", ".fa.gz", ".fa")
     if not reference.endswith(fasta_suffs):
-        sys.stderr.write("Strange suffix to input FASTA file. Exiting.\n")
-        sys.exit(1)
-    out_fn = in_mpileup.replace(".txt", "_window.txt")
+        make_error("Strange suffix to input FASTA file. Exiting.\n")
+    if args.out_fn:
+        if not args.out_fn.endswith((".txt", ".txt.gz")):
+            make_error("Strange suffix to output file name. Exiting.")
+        out_dir_file = os.path.split(args.out_fn)
+        if out_dir_file[0] != "" and not os.path.exists(out_dir_file[0]):
+            make_error("output dir (" + out_dir_file[0] + ") not found")
+        out_fn = args.out_fn
+    else:
+        out_fn = in_mpileup.replace(".txt", "_window.txt")
     if os.path.exists(out_fn):
-        sys.stderr.write(out_fn + " already exists. Overwriting not allowed.\n")
-        sys.exit(1)
+        make_error(out_fn + " already exists. Overwriting not allowed.\n")
+    
+    three_cols = test_mpileup(in_mpileup)
     
     
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
@@ -163,6 +223,8 @@ if __name__ == "__main__":
     # starting and ending points (inclusive) for each window:
     starts = [np.arange(0, ss-window+1, step) for ss in sizes]
     ends = [np.append(np.arange(window-1, ss-step, step), ss-1) for ss in sizes]
+
+    
     
     if in_mpileup.endswith(".gz"):
         mp_file = gzip.open(in_mpileup,"rt")
@@ -189,7 +251,13 @@ if __name__ == "__main__":
     
     for line in mp_file:
         
-        scaff, pos, ref, cov, read_base, qual = line.split("\t")
+        if three_cols:
+            scaff, pos, cov = line.split("\t")
+        else:
+            split_line = line.split("\t")
+            scaff = split_line[0]
+            pos = split_line[1]
+            cov = split_line[3]
         pos = np.int64(pos)
         # mpileup uses 1-based indices
         pos -= 1
@@ -213,9 +281,8 @@ if __name__ == "__main__":
                 seq_i += 1
                 win_j = np.int64(0)
                 if seq_i >= len(names):
-                    sys.stderr.write("ERROR: assembly and mpileup sequence names " +
-                                     "do not match or are not in the same order!")
-                    sys.exit(1)
+                    make_error("assembly and mpileup sequence names " +
+                               "do not match or are not in the same order!")
         
         if pos > ends[seq_i][win_j]:
             """
@@ -230,11 +297,10 @@ if __name__ == "__main__":
                                   names)
                 win_j += 1
                 if win_j >= len(ends[seq_i]):
-                    sys.stderr.write("ERROR: position " + str(pos) + 
-                                     " exceeds highest possible index for " + 
-                                     "sequence '" + names[seq_i] + "' (" + 
-                                     str(sizes[seq_i]-1)  + ")\n")
-                    sys.exit(1)
+                    make_error("position " + str(pos) + 
+                               " exceeds highest possible index for " + 
+                               "sequence '" + names[seq_i] + "' (" + 
+                               str(sizes[seq_i]-1)  + ")\n")
         
         # Once you're at the sequence and window you need, then append this
         # coverage to `cov_ij`
@@ -262,4 +328,8 @@ if __name__ == "__main__":
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
     
     sys.exit(0)
+
+
+
+
 

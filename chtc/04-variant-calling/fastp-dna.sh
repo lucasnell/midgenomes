@@ -10,8 +10,7 @@ conda activate main-env
 
 check_exit_status () {
   if [ ! "$2" -eq "0" ]; then
-    echo "Step $1 failed with exit status $2"
-    rm ${READS1} ${READS2}
+    echo "Step $1 failed with exit status $2" 1>&2
     cd ..
     tar -czf ERROR_${OUT_DIR}.tar.gz ${OUT_DIR}
     mv ERROR_${OUT_DIR}.tar.gz /staging/lnell/dna/trimmed/
@@ -38,12 +37,12 @@ export TRIM_READS2=trimmed_${READS2}
 export OUT_DIR=trimmed_${READ_BASE}
 
 
-if [ ! -f /staging/lnell/dna/${READS1} ]; then
-    echo "/staging/lnell/dna/${READS1} does not exist!" 1>&2
+if [ ! -f /staging/lnell/dna/raw_fq/${READS1} ]; then
+    echo "/staging/lnell/dna/raw_fq/${READS1} does not exist!" 1>&2
     exit 111
 fi
-if [ ! -f /staging/lnell/dna/${READS2} ]; then
-    echo "/staging/lnell/dna/${READS2} does not exist!" 1>&2
+if [ ! -f /staging/lnell/dna/raw_fq/${READS2} ]; then
+    echo "/staging/lnell/dna/raw_fq/${READS2} does not exist!" 1>&2
     exit 222
 fi
 
@@ -51,8 +50,8 @@ fi
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
-cp /staging/lnell/dna/${READS1} ./
-cp /staging/lnell/dna/${READS2} ./
+cp /staging/lnell/dna/raw_fq/${READS1} ./
+cp /staging/lnell/dna/raw_fq/${READS2} ./
 
 # The main things happening here are...
 # Automatic adapter trimming (on by default)

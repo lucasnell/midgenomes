@@ -20,6 +20,6 @@ requirements = (Target.HasCHTCStaging == true)
 
 request_cpus = 8
 request_memory = 16GB
-request_disk = 80GB
+request_disk = 120GB
 
 queue readbase from readbases.txt
