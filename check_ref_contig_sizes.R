@@ -1,6 +1,8 @@
 
 library(tidyverse)
+library(parallel)
 
+options(mc.cores = max(parallel::detectCores()-2L, 1L))
 
 
 
@@ -16,11 +18,17 @@ read_fasta <- function(fn) {
                      function(start, end) str_c(fasta[start:end],
                                                 collapse = ""))
 
-    nms <- map_chr(splits$start - 1, ~ fasta[.x])
+    nms <- map_chr(splits$start - 1, ~ fasta[.x]) %>%
+        str_remove("^>")
 
     names(seqs) <- nms
+    class(seqs) <- "fasta"
 
     return(seqs)
+}
+
+print.fasta <- function(x, ...) {
+    cat(sprintf("fasta file with %i sequences", length(x)))
 }
 
 len_str <- function(len, .digits) {
