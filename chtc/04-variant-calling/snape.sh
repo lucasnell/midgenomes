@@ -245,8 +245,8 @@ python3 ./snape-files/MaskSYNC_snape.py \
 
 check_exit_status "MaskSYNC_snape" $?
 
-# Add the following to the call above if you have a *.gff of TEs:
-#     --te ${TE}.gff \
+# Add the following to the call above if you have a *.gff/*.gff3 of TEs:
+#     --te ${TE}.gff or ${TE}.gff3 \
 
 # This removes redundant _masked ending to this file:
 mv ${MASK_FILES_PREFIX}_masked.sync.gz ${MASK_FILES_PREFIX}.sync.gz

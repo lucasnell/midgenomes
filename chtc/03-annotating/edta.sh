@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Use EDTA to annotate repeats in Tanytarsus gracilentus genome
-# then use the custom repeat library to softmask the assembly.
-
-
+# Use EDTA to create a repeat library for the Tanytarsus gracilentus genome
+# and to annotate the genome based on this library.
 
 
 export THREADS=24
@@ -12,27 +10,42 @@ export THREADS=24
 . /app/.bashrc
 conda activate annotate-env
 
-# From here: https://github.com/oushujun/EDTA/issues/250
-export PERL5LIB=/
+# # From here: https://github.com/oushujun/EDTA/issues/250
+# export PERL5LIB=/
 
 export OUT_DIR=tany_repeats
+# Annotation of assembly for repeats:
+export OUT_ANNO=tany_repeat_anno.gff3
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 
-export GENOME=
+export GENOME=tany_scaffolds.fasta
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 
 
-# EDTA docs recommend simplifying sequence names:
-# I'll do this by removing everything after the first comma or the first
-# space in the seq names:
-sed -i -r 's/\,.+//' ${GENOME}
-sed -i -r 's/\ .+//' ${GENOME}
+# >> Names are already simplified
+# # EDTA docs recommend simplifying sequence names:
+# # I'll do this by removing everything after the first comma or the first
+# # space in the seq names:
+# sed -i -r 's/\,.+//' ${GENOME}
+# sed -i -r 's/\ .+//' ${GENOME}
 
 
-perl EDTA.pl --genome ${GENOME} --threads ${THREADS} --anno 1 --sensitive 1 \
+EDTA.pl --genome ${GENOME} --threads ${THREADS} --anno 1 --sensitive 1 \
     --evaluate 1
+status=$?
+
+if [ ! "$status" -eq "0" ]; then
+    echo "EDTA failed with exit status $status" 1>&2
+    cd ..
+    tar -czf ERROR_${OUT_DIR}.tar.gz ${OUT_DIR}
+    mv ERROR_${OUT_DIR}.tar.gz /staging/lnell/
+    rm -r ${OUT_DIR}
+    exit $status
+fi
+
+rm ${GENOME}
 
 # perl EDTA.pl [options]
 #   --genome	[File]	The genome FASTA
@@ -75,6 +88,11 @@ perl EDTA.pl --genome ${GENOME} --threads ${THREADS} --anno 1 --sensitive 1 \
 
 
 # Saving output:
+
+cp *.mod.EDTA.TEanno.gff3 ${OUT_ANNO}
+gzip ${OUT_ANNO}
+mv ${OUT_ANNO}.gz /staging/lnell/
+
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz /staging/lnell/

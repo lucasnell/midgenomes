@@ -1,0 +1,31 @@
+# edta.sub
+
+# Create de novo repeat library for the Tanytarsus gracilentus assembly
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.4
+
+log = edta.log
+error = edta.err
+output = edta.out
+
+executable = edta.sh
+
+batch_name = "edta"
+
+## Specify that HTCondor should transfer files to and from the
+##  computer where each job runs.
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+## IMPORTANT! Require execute servers that have access to staging
+requirements = (Target.HasCHTCStaging == true)
+
+## Tell HTCondor what amount of compute resources
+##  each job will need on the computer where it runs.
+request_cpus = 24
+request_memory = 48GB
+request_disk = 100GB
+
+
+queue 1
