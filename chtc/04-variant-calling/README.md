@@ -1,4 +1,44 @@
 
+# bwa.sh
+
+- Merge overlapping paired reads using `bbmerge.sh`
+- Separately align merged and unmerged reads using `bwa mem`
+- Combine alignments using `picard MergeSamFiles`
+
+
+# mpileup.sh
+
+- Mark and remove duplicates using `picard MarkDuplicates`
+- Re-align sequences in the proximity of indels with `IndelRealigner` and
+  `RealignerTargetCreator` in `GATK`
+- Produce pileup text files from BAMs using `samtools mpileup`
+
+
+# snape.sh
+
+- Estimate allele frequencies using `snape-pooled`
+- Produce gSYNC files from the snape output
+- Filter gSYNC files based on coverage, indels, and repetitive elements
+
+
+From Kapun et al. (2021):
+"Sites were filtered from gSYNC files if they had: 
+1) minimum read depth <10; 
+2) maximum read depth >the 95% coverage percentile of a given chromosomal 
+   arm and sample; 
+3) located within repetitive elements as defined by RepeatMasker;
+4) within 5-bp distance up-and downstream of indel polymorphisms identified 
+   by the GATK IndelRealigner."
+
+
+
+
+
+
+
+
+# OLD DESCRIPTION:
+
 
 - trim and filter reads using
     [`fastp`](https://bioconda.github.io/recipes/fastp/README.html)

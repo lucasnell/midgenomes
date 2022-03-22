@@ -1,0 +1,25 @@
+# snape.sub
+
+# calculate allele frequencies for Pool-seq DNA reads
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.4
+
+log = snape_$(readbase).log
+error = snape_$(readbase).err
+output = snape_$(readbase).out
+
+executable = snape.sh
+arguments = $(readbase) $(n_adults)
+
+batch_name = "snape"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 2
+request_memory = 8GB
+request_disk = 80GB
+
+queue readbase,n_adults from readbases.txt
