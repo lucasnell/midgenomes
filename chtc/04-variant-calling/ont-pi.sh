@@ -25,8 +25,8 @@ conda activate main-env
 # Outputs
 export OUT_DIR=ont-pi
 export BAM=ont_align.bam
-export VCF=ont_variants.vcf.gz
-export VCFTOOLS_PREFIX=ont_variants_stats
+export BCF=ont_variants.bcf
+export PI_FILE=ont_variants.windowed.pi
 # Where to send everything:
 export TARGET=/staging/lnell/dna/ont-pi
 
@@ -64,56 +64,68 @@ samtools faidx --length 80 ${GENOME}
 #
 # rm ${ONT_FASTQ}
 #
-# bamtools stats -in ${BAM/.bam/_unfiltered.bam} | \
-#     tee ${BAM/.bam/_unfiltered.stats}
+# bamtools stats -in ${BAM/.bam/_unfiltered.bam}
 # check_exit_status "bamtools stats (unfiltered)" $?
-
-cp ${TARGET}/${BAM/.bam/_unfiltered.bam} ./
-
-samtools view -bh -q 20 -F 0x100 --threads 2 \
-    ${BAM/.bam/_unfiltered.bam} > \
-    ${BAM}
-check_exit_status "samtools view (filter)" $?
-
-rm ${BAM/.bam/_unfiltered.bam}
-
-bamtools stats -in ${BAM} | \
-    tee ${BAM/.bam/.stats}
-check_exit_status "bamtools stats (filtered)" $?
+#
+# samtools view -bh -q 20 -F 0x100 --threads 2 \
+#     ${BAM/.bam/_unfiltered.bam} > \
+#     ${BAM}
+# check_exit_status "samtools view (filter)" $?
+#
+# rm ${BAM/.bam/_unfiltered.bam}
+#
+# bamtools stats -in ${BAM}
+# check_exit_status "bamtools stats (filtered)" $?
 
 
-bcftools mpileup -f ${GENOME} --threads 2 -Ou ${BAM} | \
-    bcftools call -vm --threads 2 -Oz > \
-    ${VCF}
+# Takes about an hour
+bcftools mpileup -Ou --config ont -f ${GENOME} ${BAM} | \
+    bcftools call -P 0.01 -mv --threads 2 -Ob -o ${BCF}
 check_exit_status "bamtools mpileup | call" $?
 
-rm ${GENOME}*
+rm ${GENOME}* ${BAM}*
 
 
-#' Calculate nucleotide diversity and heterozygosity.
-#' This step creates the following files:
-#' - ${VCFTOOLS_PREFIX}.windowed.pi
-#' - ${VCFTOOLS_PREFIX}.het
-vcftools --gzvcf ${VCF} --out ${VCFTOOLS_PREFIX} \
+#' Calculate nucleotide diversity in windows
+#' This step creates the file ${PI_FILE}
+
+vcftools --bcf ${BCF} --out ${PI_FILE/.windowed.pi/} \
     --remove-indels \
-    --window-pi 500 \
-    --window-pi-step 250 \
-    --het
+    --max-alleles 2 \
+    --window-pi 1000 \
+    --window-pi-step 1000
 check_exit_status "vcftools" $?
 
+rm *.log
+
+#'
+#' This returns the mean nucleotide diversity (pi) among all sites.
+#' Watterson's estimator of theta is the number of segregating sites divided
+#' by the (n-1)th harmonic number (i.e., sum(1/i) for i in 1:(n-1)),
+#' where n is the number of haploid samples.
+#' Because this is one diploid individual, Watterson's estimator is the
+#' same as pi here.
+#'
+#' The output from this was "0.008237687486796706".
+#' I'll use 0.008 for my prior for SNAPE-pool.
+#'
+echo $(python3 << EOF
+import pandas as pd
+win_pi = pd.read_csv("${PI_FILE}", sep="\t")
+print(win_pi["PI"].mean())
+EOF
+)
 
 
+gzip ${PI_FILE}
 
 
 # ------------------------------
 # Handle output
 # ------------------------------
 
-mv ${VCFTOOLS_PREFIX}* ${TARGET}/
+mv ${PI_FILE}.gz ${BCF} ${TARGET}/
 
 cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz ${TARGET}/
-
 rm -r ${OUT_DIR}
 

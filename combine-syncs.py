@@ -76,8 +76,12 @@ if __name__ == "__main__":
     
     for line in it.zip_longest(*files, fillvalue=""):
         zline = line[0].rstrip().split("\t")[:4]
-        for x in line[1:]:
-            zline.append(x.split("\t")[3].rstrip())
+        for i in range(1, len(line)):
+            l_split = line[i].split("\t")
+            if len(l_split) < 4:
+                make_error("only " + str(len(l_split)) + " columns in file " +
+                           inputs[i])
+            zline.append(l_split[3].rstrip())
         new_line = "\t".join(zline) + "\n"
         b = out_file.write(new_line)
     

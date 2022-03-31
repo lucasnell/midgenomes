@@ -1,0 +1,25 @@
+# combine-syncs.sub
+
+# combine gSYNC files into three:
+# one for all samples, one for time series samples,
+# and another for spatial samples
+
+universe = vanilla
+
+log = combine-syncs.log
+error = combine-syncs.err
+output = combine-syncs.out
+
+executable = combine-syncs.sh
+
+batch_name = "combine-syncs"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 2
+request_memory = 4GB
+request_disk = 80GB
+
+queue 1
