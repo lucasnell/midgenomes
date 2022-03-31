@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# export READ_BASE=KS-1-11_S45
+
 
 #' Align Pool-seq reads to genome assembly using `bwa mem`.
 #'
@@ -22,10 +24,16 @@ check_exit_status () {
   echo "Checked step $1"
 }
 
-# Print filename (used after `bamtools stats`)
-stats_suffix () {
-    echo -e "FILE:" $1 "\n**********************************************"
+# Check on BAM file with `bamtools stats`, check status of this call,
+# then output the file name
+call_bam_stats () {
+    local B=$1
+    local S=${B/.bam/.stats}
+    bamtools stats -in $B | tee $S
+    check_exit_status "bamtools stats $2" $?
+    echo -e "FILE:" $B "\n**********************************************"
 }
+
 
 
 export THREADS=8
@@ -76,20 +84,21 @@ export TARGET=/staging/lnell/dna/bwa
 # Final files / directories
 export OUT_DIR=${READ_BASE}_bwa
 export OUT_BAM=${READ_BASE}_bwa.bam
+export UNMAPPED_BAM=${READ_BASE}_unmapped.bam
 # Intermediates:
 export MERGED_READS=merged_trimmed_${READ_BASE}.fastq
 export UN_READS1=unmerged_${IN_READS1}
 export UN_READS2=unmerged_${IN_READS2}
 export MERGED_BAM=${OUT_BAM/.bam/_merged.bam}
+export UNMAPPED_MERGED_BAM=${UNMAPPED_BAM/.bam/_merged.bam}
 export UN_BAM=${OUT_BAM/.bam/_unmerged.bam}
+export UNMAPPED_UN_BAM=${UNMAPPED_BAM/.bam/_unmerged.bam}
+
 
 
 #' ========================================================================
-#' Do the things
-#' ========================================================================
-
-#' ----------------------------------------------------
 #' Prep for downstream steps.
+#' ========================================================================
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
@@ -104,8 +113,10 @@ check_exit_status "bwa-index" $?
 # For use later in creating read group info:
 export READ_ID=$(head -n 1 ${IN_READS1} | grep -Eo "[ATGCN]+$")
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Merge paired-end reads.
+#' ========================================================================
+#'
 #' Creating 3 FASTQ files here, for merged reads, unmerged reads # 1,
 #' and unmerged reads # 2
 bbmerge.sh in1=${IN_READS1} in2=${IN_READS2} out=${MERGED_READS} \
@@ -115,58 +126,94 @@ check_exit_status "bbmerge" $?
 rm ${IN_READS1} ${IN_READS2}
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Map unmerged reads.
+#' ========================================================================
 bwa mem -v 1  -M -t ${THREADS} \
     -R "@RG\tID:${READ_BASE}\tSM:${READ_BASE}_${READ_ID}\tPL:illumina\tLB:lib1" \
     ${GENOME} ${UN_READS1} ${UN_READS2} | \
-    samtools view -@ ${THREADS} -bh -q 20 -F 0x100 - > \
-    ${UN_BAM}
+    samtools view -@ ${THREADS} -bh - > \
+    all_${UN_BAM}
 check_exit_status "bwa mem (unmerged)" $?
-
-bamtools stats -in ${UN_BAM} | tee ${UN_BAM/.bam/.stats}
-check_exit_status "bamtools stats (unmerged)" $?
-stats_suffix ${UN_BAM} | tee ${UN_BAM/.bam/.stats}
+call_bam_stats all_${UN_BAM} "(unmerged, unfiltered)"
 
 rm ${UN_READS1} ${UN_READS2}
 
+samtools view -@ ${THREADS} -bh -f 0x4 all_${UN_BAM} > ${UNMAPPED_UN_BAM}
+check_exit_status "samtools view (unmerged, unmapped)" $?
+call_bam_stats ${UNMAPPED_UN_BAM} "(unmerged, unmapped)"
 
-#' ----------------------------------------------------
+samtools view -@ ${THREADS} -bh -q 20 -F 0x100 all_${UN_BAM} > ${UN_BAM}
+check_exit_status "samtools view (unmerged, filtered)" $?
+call_bam_stats ${UN_BAM} "(unmerged, filtered)"
+
+rm all_${UN_BAM}
+
+
+#' ========================================================================
 #' Map merged reads.
-bwa mem -v 1  -M -t ${THREADS} \
+#' ========================================================================
+bwa mem -v 1 -M -t ${THREADS} \
     -R "@RG\tID:${READ_BASE}\tSM:${READ_BASE}_${READ_ID}\tPL:illumina\tLB:lib1" \
     ${GENOME} ${MERGED_READS} | \
-    samtools view -@ ${THREADS} -bh -q 20 -F 0x100 - > \
-    ${MERGED_BAM}
+    samtools view -@ ${THREADS} -bh - > \
+    all_${MERGED_BAM}
 check_exit_status "bwa mem (merged)" $?
-
-bamtools stats -in ${MERGED_BAM} | tee ${MERGED_BAM/.bam/.stats}
-check_exit_status "bamtools stats (merged)" $?
-stats_suffix ${MERGED_BAM} | tee ${MERGED_BAM/.bam/.stats}
+call_bam_stats all_${MERGED_BAM} "(merged, unfiltered)"
 
 rm ${MERGED_READS}
 rm ${GENOME}*
 
+samtools view -@ ${THREADS} -bh -f 0x4 all_${MERGED_BAM} > \
+    ${UNMAPPED_MERGED_BAM}
+check_exit_status "samtools view (merged, unmapped)" $?
+call_bam_stats ${UNMAPPED_MERGED_BAM} "(merged, unmapped)"
 
-#' ----------------------------------------------------
+samtools view -@ ${THREADS} -bh -q 20 -F 0x100 all_${MERGED_BAM} > ${MERGED_BAM}
+check_exit_status "samtools view (merged, filtered)" $?
+call_bam_stats ${MERGED_BAM} "(merged, filtered)"
+
+rm all_${MERGED_BAM}
+
+
+
+
+
+#' ========================================================================
 #' Combine BAM files from mappings of merged and unmerged reads.
+#' ========================================================================
 picard MergeSamFiles \
     I=${MERGED_BAM} \
     I=${UN_BAM} \
     SO=coordinate \
     USE_THREADING=true \
-    O=${OUT_BAM}
+    O=${OUT_BAM} \
+    VERBOSITY=WARNING
 check_exit_status "Picard_MergeSamFiles" $?
 
-bamtools stats -in ${OUT_BAM} | tee ${OUT_BAM/.bam/.stats}
-check_exit_status "bamtools stats (final)" $?
-stats_suffix ${OUT_BAM} | tee ${OUT_BAM/.bam/.stats}
+call_bam_stats ${OUT_BAM} "(final)"
 
 rm ${MERGED_BAM} ${UN_BAM}
 
 
-#' ----------------------------------------------------
+picard MergeSamFiles \
+    I=${UNMAPPED_MERGED_BAM} \
+    I=${UNMAPPED_UN_BAM} \
+    SO=coordinate \
+    USE_THREADING=true \
+    O=${UNMAPPED_BAM} \
+    VERBOSITY=WARNING
+check_exit_status "Picard_MergeSamFiles (unmapped)" $?
+
+call_bam_stats ${UNMAPPED_BAM} "(final, unmapped)"
+
+rm ${UNMAPPED_MERGED_BAM} ${UNMAPPED_UN_BAM}
+
+
+
+#' ========================================================================
 #' Handle output files
+#' ========================================================================
 
 mv ${OUT_BAM} ${TARGET}/
 

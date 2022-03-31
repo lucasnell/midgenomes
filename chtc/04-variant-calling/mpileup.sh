@@ -21,10 +21,16 @@ check_exit_status () {
   echo "Checked step $1"
 }
 
-# Print filename (used after `bamtools stats`)
-stats_suffix () {
-    echo -e "FILE:" $1 "\n**********************************************"
+# Check on BAM file with `bamtools stats`, check status of this call,
+# then output the file name
+call_bam_stats () {
+    local B=$1
+    local S=${B/.bam/.stats}
+    bamtools stats -in $B | tee $S
+    check_exit_status "bamtools stats $2" $?
+    echo -e "FILE:" $B "\n**********************************************"
 }
+
 
 
 export THREADS=4
@@ -74,12 +80,10 @@ export MARKDUP_OUT=${IN_BAM/.bam/_nodups.bam}
 export REALIGNED_OUT=${MARKDUP_OUT/.bam/_realigned.bam}
 
 
-#' ========================================================================
-#' Do the things
-#' ========================================================================
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Prep for downstream steps.
+#' ========================================================================
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
@@ -92,28 +96,29 @@ samtools faidx --length 80 ${GENOME}
 picard CreateSequenceDictionary R=${GENOME}
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Mark and remove duplicates
+#' ========================================================================
 picard MarkDuplicates \
     REMOVE_DUPLICATES=true \
     I=${IN_BAM} \
     O=${MARKDUP_OUT} \
     M=${MARKDUP_OUT/.bam/_report.txt} \
-    VALIDATION_STRINGENCY=SILENT
+    VALIDATION_STRINGENCY=SILENT \
+    VERBOSITY=WARNING
 check_exit_status "Picard_MarkDuplicates" $?
 
 rm ${IN_BAM}
 
-bamtools stats -in ${MARKDUP_OUT} | tee ${MARKDUP_OUT/.bam/.stats}
-check_exit_status "bamtools stats (nodups)" $?
-stats_suffix ${MARKDUP_OUT} | tee ${MARKDUP_OUT/.bam/.stats}
+call_bam_stats ${MARKDUP_OUT} "(nodups)"
 
 samtools index -@ $(($THREADS - 1)) ${MARKDUP_OUT}
 check_exit_status "samtools index (nodups)" $?
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Realign around indels
+#' ========================================================================
 
 GenomeAnalysisTK \
     -T RealignerTargetCreator \
@@ -135,14 +140,12 @@ check_exit_status "IndelRealigner" $?
 
 rm ${MARKDUP_OUT}*
 
-bamtools stats -in ${REALIGNED_OUT} | tee ${REALIGNED_OUT/.bam/.stats}
-check_exit_status "bamtools stats (realigned)" $?
-stats_suffix ${REALIGNED_OUT} | tee ${REALIGNED_OUT/.bam/.stats}
+call_bam_stats ${REALIGNED_OUT} "(realigned)"
 
 
-
-#' ----------------------------------------------------
+#' ========================================================================
 #' mpileup
+#' ========================================================================
 samtools mpileup -B -f ${GENOME} ${REALIGNED_OUT} > ${OUT_FILE/.gz/}
 check_exit_status "samtools mpileup" $?
 
@@ -160,11 +163,12 @@ rm ${GENOME/.fasta/}*
 
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Handle output files
+#' ========================================================================
 
 
-mv ${OUT_FILE}.gz ${TARGET}/
+mv ${OUT_FILE} ${TARGET}/
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
