@@ -3,7 +3,7 @@
 # prep aligned Pool-seq DNA reads and call `samtools mpileup`
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.4
+docker_image = lucasnell/tany_genomics:v0.5
 
 log = mpileup_$(readbase).log
 error = mpileup_$(readbase).err

@@ -3,7 +3,7 @@
 # Create de novo repeat library for the Tanytarsus gracilentus assembly
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.4
+docker_image = lucasnell/tany_genomics:v0.5
 
 log = edta.log
 error = edta.err

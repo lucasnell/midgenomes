@@ -3,7 +3,7 @@
 # calculating nucleotide diversity and heterozygosity from nanopore reads
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.4
+docker_image = lucasnell/tany_genomics:v0.5
 
 log = ont-pi.log
 error = ont-pi.err

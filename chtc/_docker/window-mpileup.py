@@ -46,7 +46,7 @@ def test_mpileup(in_mpileup):
         with open(in_mpileup, "r") as mp_file:
             first_line = mp_file.readline().rstrip().split("\t")
     
-    if len(first_line) != 3 and len(first_line) >= 5:
+    if len(first_line) != 3 and len(first_line) < 5:
         make_error("mpileup file must have 3 or >= 5 columns")
     
     try:

@@ -3,7 +3,7 @@
 # align Pool-seq DNA reads
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.4
+docker_image = lucasnell/tany_genomics:v0.5
 
 log = bwa_$(readbase).log
 error = bwa_$(readbase).err
