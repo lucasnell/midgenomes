@@ -2,7 +2,7 @@
 """
 From 
 https://github.com/DEST-bio/DEST_freeze1/blob/main/mappingPipeline/scripts/MaskSYNC_snape_complete.py
-with edits by Lucas A. Nell
+with edits by Lucas A. Nell (lines 127 and 135, plus comments above each)
 """
 
 import sys
@@ -40,7 +40,7 @@ parser.add_option("--coverage", dest="cov", help="Python Object file with the co
 parser.add_option("--maxcov", dest="maxcov", help="The maximum coverage threshold percentile, e.g. 0.9 ")
 parser.add_option("--mincov", dest="mincov", help="The minimum coverage threshold: e.g. 10")
 parser.add_option("--SNAPE", action="store_true", default=False, dest="snape", help="Parsing SNAPE sync file")
-parser.add_option("--maxsnape", dest="maxsnape", help="e.g. 10", type="float")
+parser.add_option("--maxsnape", dest="maxsnape", help="e.g. 0.9", type="float")
 
 
 parser.add_option_group(group)
@@ -121,9 +121,18 @@ SO=gzip.open(options.out+"_masked.sync.gz","wt")
 if options.snape:
     for l in load_data(options.sync):
         C,P,R,S,I=l.split()
-        info = float(I.split(":")[4])
+        # From SNAPE-pooled docs, `p_n0` is 
+        # "$1 - p (0)$ where $p (f)$ is the probability distribution function 
+        # for the minor allele freqeuncy"
+        p_n0 = float(I.split(":")[4])
         COV=len(sync2string(S))
-        if int(P) in exclude[C] or COV < int(options.mincov) or COV > maximumcov[C] or (info <= float(options.maxsnape) and info >= float(1 - float(options.maxsnape))):
+        """
+        I changed the following line bc it was originally returning mostly
+        monomorphic SNPs.
+        The paper this filtering was based on did it the way I did below (see 
+        https://github.com/GonzalezLab/SNP_caller_benchmarking/blob/ccfe4135b79b2d24bde48de46189bd790cd15ddb/simulations/snape2_simulations.sh#L83).
+        """
+        if int(P) in exclude[C] or COV < int(options.mincov) or COV > maximumcov[C] or p_n0 < float(options.maxsnape):
             SO.write("\t".join([C,P,R,".:.:.:.:.:."])+"\n")
             if Start=="":
                 Start=int(P)
