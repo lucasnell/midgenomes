@@ -2,6 +2,24 @@
 
 # Use BRAKER2 to annotate Tanytarsus gracilentus genome
 
+#' THIS IF FROM EDTA OUTPUT:
+#' ```
+#' Low-threshold TE masking for MAKER gene annotation (masked: 3.68%): tany_scaffolds.fasta.mod.MAKER.masked
+#' ```
+#'
+#' So use tany_scaffolds.fasta.mod.MAKER.masked for this annotation!
+#' Maybe run this on it first, so that it isn't too wide:
+#'
+#' ```
+#' seqtk seq -l 80 -A tany_scaffolds.fasta.mod.MAKER.masked > \
+#'     tany_scaffolds_MAKER_masked.fasta
+#' ```
+#'
+
+
+
+
+
 export THREADS=16
 
 . /app/.bashrc
