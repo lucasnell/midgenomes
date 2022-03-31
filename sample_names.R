@@ -4,21 +4,28 @@ library(tidyverse)
 library(readxl)
 
 # Excel sheet provided by biotech center
-all_names <- read_excel("~/_data/biotech-files/DNA/coverage.xlsx") %>%
+all_names <- read_excel("~/Box Sync/midges/fastq-stats.xlsx", "trimmed") %>%
+    filter(to_use == 1) %>%
     .[["Sample Name"]] %>%
-    str_remove_all("_L002_R1_001|_L002_R2_001") %>%
+    str_remove_all("trimmed_|_L002_R1_001|_L002_R2_001") %>%
     unique()
 
-# All spatial samples:
+# Spatial samples:
 spat_filt <- ! Reduce(`|`, lapply(c("^SN-", "^KS-", "^H-"), grepl, x = all_names))
 spat_samples <- all_names[spat_filt]
 paste0(spat_samples, "*", collapse = " ")
-# Spatial samples started to be processed:
-proc_rn <- c("Blik-19_S6", "Lys-19_S14", "MyBR-19_S17", "MyKS-19-B_S18", "MySN-19_S19")
-paste0(proc_rn, "*", collapse = " ")
-# Spatial samples not yet processed:
-spat_nop_filt <- spat_filt & ! all_names %in% proc_rn
-paste0(all_names[spat_nop_filt], "*", collapse = " ")
+paste0(spat_samples, collapse = " ")
+# Temporal samples:
+temp_samples <- all_names[!spat_filt]
+paste0(temp_samples, "*", collapse = " ")
+paste0(temp_samples, collapse = " ")
 
+
+# To get sample names and # adults for use in SNAPE-pooled
+read_csv("~/Box Sync/midges/full-DNA-info.csv") %>%
+    distinct(biotech_id, n_adults) %>%
+    format_delim(", ") %>%
+    str_replace_all(",", ", ") %>%
+    cat()
 
 

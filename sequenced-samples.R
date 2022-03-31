@@ -59,10 +59,11 @@ iceland_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
 # -------------`
 # This is for all sequenced samples (archived and spatial)
 samp_df <- read_csv("~/Box Sync/midges/full-DNA-info.csv",
-                    col_types = "cfcdddiDccldd") %>%
+                    col_types = "cfcddidcccddidiDccldd") %>%
+    filter(to_use == 1) %>%
     group_by(biotech_id, date, lake, site, n_adults, lat, lon) %>%
-    summarize(gb_seq = sum(mill_seqs) * 1e6 * 150 * 1e-9,
-              coverage = sum(mill_seqs) * 1e6 * 150 / 100e6,
+    summarize(gb_seq = sum(final_seq) * 1e-9,
+              coverage = sum(final_seq) / 91.5e6,
               .groups = "drop") %>%
     # Convert to more accurate site names:
     mutate(site = case_when(site == "SN" ~ "Syðri Neslönd",
@@ -175,6 +176,7 @@ archive_map_p <- myvatn_df %>%
     theme(axis.title = element_blank(),
           axis.text = element_blank(),
           axis.ticks = element_blank(),
+          legend.title = element_blank(),
           legend.position = c(0.5, 1),
           legend.justification = c(0.5, 0),
           panel.grid = element_blank()) +

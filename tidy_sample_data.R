@@ -1,12 +1,11 @@
 
-
 library(tidyverse)
 library(readxl)
 
 # Excel sheet provided by biotech center
-all_names <- read_excel("~/_data/biotech-files/DNA/coverage.xlsx") %>%
+all_names <- read_excel("~/Box Sync/midges/fastq-stats.xlsx", "trimmed") %>%
     .[["Sample Name"]] %>%
-    str_remove_all("_L002_R1_001|_L002_R2_001") %>%
+    str_remove_all("trimmed_|_L002_R1_001|_L002_R2_001") %>%
     unique()
 
 # Easy lookup from simpler names to full ones (e.g., "MyBR-19" to "MyBR-19_S17")
@@ -98,10 +97,15 @@ dd_other_info <- bind_rows(dd_ts, dd_spat) %>%
     mutate(n_adults = as.integer(n_adults))
 
 
-dd_seq_info <- read_excel("~/_data/biotech-files/DNA/coverage.xlsx") %>%
+dd_seq_info <- read_excel("~/Box Sync/midges/fastq-stats.xlsx",
+                          sheet = "trimmed") %>%
     rename(sample_name = `Sample Name`, perc_dups = `% Dups`,
-           perc_gc = `% GC`, mill_seqs = `M Seqs`) %>%
-    mutate(biotech_id = str_remove_all(sample_name, "_L002_R1_001|_L002_R2_001"),
+           perc_gc = `% GC`, mill_seqs = `M Seqs`,
+           read_length = `Read Length`) %>%
+    mutate(biotech_id = str_remove_all(sample_name,
+                                       "trimmed_|_L002_R1_001|_L002_R2_001"),
+           read_length = str_remove_all(read_length, " bp") %>%
+               as.integer(),
            read = str_split(sample_name, "_R") %>%
                map_chr(~ .x[[2]]) %>%
                str_remove_all("_001") %>% as.integer()) %>%
