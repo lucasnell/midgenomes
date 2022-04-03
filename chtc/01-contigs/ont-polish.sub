@@ -1,0 +1,26 @@
+# ont-polish.sub
+
+# Polish assembly using ONT reads and programs Racon and medaka
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.1
+
+log = ont-polish_$(assembly).log
+error = ont-polish_$(assembly).err
+output = ont-polish_$(assembly).out
+
+executable = ont-polish.sh
+arguments = $(assembly)
+
+batch_name = "ont-polish"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 32GB
+request_disk = 150GB
+
+queue assembly from assemblies.txt

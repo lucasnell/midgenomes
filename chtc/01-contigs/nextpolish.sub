@@ -1,0 +1,26 @@
+# nextpolish.sub
+
+# Polish assembly using Illumina reads via NextPolish
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.1
+
+log = nextpolish_$(assembly).log
+error = nextpolish_$(assembly).err
+output = nextpolish_$(assembly).out
+
+executable = nextpolish.sh
+arguments = $(assembly)
+
+batch_name = "nextpolish"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 32GB
+request_disk = 150GB
+
+queue assembly from assemblies.txt
