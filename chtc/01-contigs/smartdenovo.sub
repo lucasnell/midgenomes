@@ -1,0 +1,25 @@
+# smartdenovo.sub
+
+# Assemble Tanytarsus gracilentus genome using SMARTdenovo
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.1
+
+log = smartdenovo.log
+error = smartdenovo.err
+output = smartdenovo.out
+
+executable = smartdenovo.sh
+
+batch_name = "smartdenovo"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 24GB
+request_disk = 150GB
+
+queue 1

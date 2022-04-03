@@ -1,0 +1,25 @@
+# nextdenovo.sub
+
+# Assemble Tanytarsus gracilentus genome using NextDenovo
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.1
+
+log = nextdenovo.log
+error = nextdenovo.err
+output = nextdenovo.out
+
+executable = nextdenovo.sh
+
+batch_name = "nextdenovo"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 80GB
+request_disk = 300GB
+
+queue 1

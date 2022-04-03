@@ -1,0 +1,25 @@
+# necat.sub
+
+# Assemble Tanytarsus gracilentus genome using NECAT
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.1
+
+log = necat.log
+error = necat.err
+output = necat.out
+
+executable = necat.sh
+
+batch_name = "necat"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 65GB
+request_disk = 150GB
+
+queue 1
