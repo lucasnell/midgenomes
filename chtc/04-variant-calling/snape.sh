@@ -178,8 +178,16 @@ rm ${IN_MP}
 # I'm using `SCAFF_NAMES` so that the combined file is in the same order
 # as the reference.
 for scaff in ${SCAFF_NAMES[@]}; do
+    # If this scaffold isn't present, we add a filler line to the snape
+    # output file to make sure that all of our eventual gSYNC files have the
+    # same number of rows.
     if [ ! -f ${scaff}_mp.txt ]; then
-        echo "mpileup output for scaffold '${scaff}' not found. Skipping..."
+        echo "mpileup output for scaffold '${scaff}' not found. " \
+            "Adding filler and skipping..."
+        NT=$(grep -A1 "^>${scaff}$" ${GENOME} | tail -n 1 | head -c 1)
+        echo -e "${scaff}\t1\t${NT}\t1\t0\t1\t1\t${NT}\t0.0\t0.0\t0.0" | \
+            gzip \
+            >> ${SNAPE_FILE}
         continue
     fi
     ERR_FILE=${scaff}-${SNAPE_FILE/.txt.gz/.err}
@@ -203,6 +211,8 @@ for scaff in ${SCAFF_NAMES[@]}; do
         rm ${ERR_FILE}
     fi
 done
+
+
 
 
 
