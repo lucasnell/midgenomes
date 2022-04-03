@@ -12,6 +12,7 @@ ENV HOME /app
 COPY main-env.yml .
 COPY annotate-env.yml .
 COPY besst-env.yml .
+COPY assembly-env.yml .
 # Simple summary of scaffolds:
 COPY summ-scaffs.py .
 # Sliding window of coverage based on mpileup
@@ -35,7 +36,8 @@ RUN chmod -R 777 /opt/conda && \
 RUN apt-get clean && \
     apt-get update -y && \
     apt-get install -y build-essential && \
-    apt-get install -y locales wget rsync unzip nano sudo ocaml-nox && \
+    apt-get install -y locales wget rsync unzip nano sudo ocaml-nox \
+        zlib1g-dev libbz2-dev liblzma-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Set locale
@@ -59,42 +61,49 @@ RUN mamba env create -q -f main-env.yml && \
 
 # new environments for other programs that need separate environments:
 
-# for BESST_RNA scaffolder (~150 sec)
+# for BESST_RNA scaffolder
 RUN mamba env create -q -f besst-env.yml && \
     rm besst-env.yml && \
     conda clean --all -y
-# for BUSCO (~400 sec)
-RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.2.2 && \
+# for BUSCO
+RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.3.1 && \
     conda clean --all -y
-# for LongStitch scaffolder (~150 sec)
+# for LongStitch scaffolder
 RUN mamba create -q -y -c bioconda -c conda-forge -n longstitch-env \
     longstitch=1.0.1 && \
     conda clean --all -y
-# for genome annotating using BRAKER2 and RepeatModeler (~400 sec)
+# for genome annotating using BRAKER2 and RepeatModeler
 RUN mamba env create -q -f annotate-env.yml && \
     rm annotate-env.yml && \
+    conda clean --all -y
+# genome assembly:
+RUN mamba env create -q -f assembly-env.yml && \
+    rm assembly-env.yml && \
+    conda clean --all -y
+# homopolish
+RUN mamba create -q -y -c bioconda -c conda-forge -n homopolish-env \
+    homopolish=0.3.3  && \
     conda clean --all -y
 
 RUN conda init bash
 
 # --------------------------------
-# Manually install SNAPE-pooled:
+# Manually install SNAPE-pooled
 # --------------------------------
 RUN cd /opt && \
     git clone https://github.com/EmanueleRaineri/snape-pooled.git && \
     cd snape-pooled && \
     make snape-pooled
-ENV PATH="/opt/snape-pooled:${PATH}"
-
+ENV PATH="${PATH}:/opt/snape-pooled"
 
 
 # --------------------------------
-# Add scripts for BESST_RNA:
+# Add scripts for BESST_RNA
 # --------------------------------
 # Only the `src` folder needed from GitHub repo.
 # I'm using the newest commit as of 29 Jan 2022.
 # (It hasn't been updated in 6 years, but just in case...)
-RUN wget https://github.com/ksahlin/BESST_RNA/archive/9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
+RUN wget -q https://github.com/ksahlin/BESST_RNA/archive/9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
     unzip 9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
     rm 9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
     cd BESST_RNA-9cc039b5db080e98361a9b54dd333a7bb8b35223 && \
@@ -120,3 +129,20 @@ RUN gunzip gm_key_64.gz && \
 ENV GENEMARK_PATH=/opt/GeneMark-EX
 # For AUGUSTUS:
 RUN chmod -R 777 /opt/conda/envs/annotate-env/config
+
+
+# --------------------------------
+# Manually install NextPolish and NextDenovo
+# --------------------------------
+RUN pip install paralleltask && \
+    cd /opt && \
+    wget -q https://github.com/Nextomics/NextPolish/releases/download/v1.4.0/NextPolish.tgz && \
+    tar -xzf NextPolish.tgz && \
+    rm NextPolish.tgz && \
+    cd NextPolish && \
+    make && \
+    cd .. && \
+    wget -q https://github.com/Nextomics/NextDenovo/releases/download/v2.5.0/NextDenovo.tgz && \
+    tar -xzf NextDenovo.tgz && \
+    rm NextDenovo.tgz
+ENV PATH="${PATH}:/opt/NextPolish:/opt/NextDenovo"

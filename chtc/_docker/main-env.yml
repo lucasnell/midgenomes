@@ -20,7 +20,6 @@ dependencies:
   - numpy=1.22.1
   - pandas=1.4.0
   - picard=2.26.10
-  - purge_dups=1.2.5
   - python=3.9.9
   - samtools=1.14
   - seqtk=1.3
