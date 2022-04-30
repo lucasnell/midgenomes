@@ -10,23 +10,9 @@
 #' to the final file names for input to this argument.
 
 
-# Check previous command's exit status.
-# If != 0, then archive working dir and exit.
-check_exit_status () {
-  if [ ! "$2" -eq "0" ]; then
-    echo "Step $1 failed with exit status $2" 1>&2
-    cd ..
-    tar -czf ERROR_${OUT_DIR}.tar.gz ${OUT_DIR}
-    mv ERROR_${OUT_DIR}.tar.gz /staging/lnell/dna/snape/
-    rm -r ${OUT_DIR}
-    exit $2
-  fi
-  echo "Checked step $1"
-}
-
-
 . /app/.bashrc
 conda activate main-env
+source /staging/lnell/helpers.sh
 
 
 # Argument from submit file gives you the base of the read FASTQ file name.
@@ -53,18 +39,6 @@ export N_ADULTS=$2
 export IN_MP=${READ_BASE}_mpileup.txt
 export GENOME=tany_scaffolds.fasta
 export REPEATS=tany_repeat_anno.gff3
-if [ ! -f /staging/lnell/dna/mpileup/${IN_MP}.gz ]; then
-    echo "/staging/lnell/dna/mpileup/${IN_MP}.gz does not exist!" 1>&2
-    exit 111
-fi
-if [ ! -f /staging/lnell/${GENOME}.gz ]; then
-    echo "/staging/lnell/${GENOME}.gz does not exist!" 1>&2
-    exit 222
-fi
-if [ ! -f /staging/lnell/${REPEATS}.gz ]; then
-    echo "/staging/lnell/${REPEATS}.gz does not exist!" 1>&2
-    exit 222
-fi
 
 
 
@@ -79,26 +53,30 @@ export OUT_DIR=${READ_BASE}_snape
 export SNAPE_FILE=${READ_BASE}_snape.txt.gz
 export SYNC_FILE=${READ_BASE}_snape.sync.gz
 export MASK_FILES_PREFIX=${READ_BASE}_snape_masked
+export PART_MASK_FILES_PREFIX=${READ_BASE}_snape_part_masked
 # Intermediates
 export MP_INFO_PREFIX=${IN_MP/.txt/}_info
 
 
-#' ========================================================================
-#' Do the things
-#' ========================================================================
 
-#' ----------------------------------------------------
+
+#' ========================================================================
 #' Prep for downstream steps.
+#' ========================================================================
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 cp /staging/lnell/dna/mpileup/${IN_MP}.gz ./ && gunzip ${IN_MP}.gz
+check_exit_status "cp ${IN_MP}.gz" $?
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+check_exit_status "cp ${GENOME}.gz" $?
 cp /staging/lnell/${REPEATS}.gz ./ && gunzip ${REPEATS}.gz
+check_exit_status "cp ${REPEATS}.gz" $?
 
 # Files to process SNAPE output:
 cp /staging/lnell/snape-files.tar.gz ./
+check_exit_status "cp snape-files.tar.gz" $?
 tar -xzf snape-files.tar.gz
 rm snape-files.tar.gz
 
@@ -127,7 +105,7 @@ export MIN_COV=10
 
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Summarize some mpileup file info for use later
 #' Produces the following files:
 #' - ${MP_INFO_PREFIX}.sync.gz
@@ -146,7 +124,7 @@ check_exit_status "Mpileup2Sync" $?
 
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Split mpileup file by scaffold
 mkdir tmp
 cd tmp
@@ -172,7 +150,7 @@ rm ${IN_MP}
 
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' SNAPE-pooled
 
 # I'm using `SCAFF_NAMES` so that the combined file is in the same order
@@ -221,7 +199,7 @@ rm *-${SNAPE_FILE/.gz/}
 
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Convert to gSYNC file
 python3 ./snape-files/SNAPE2SYNC.py \
     --input ${SNAPE_FILE} \
@@ -241,7 +219,7 @@ rm ${GENOME_PICKLE}
 rm ${GENOME}
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Create masked gSYNC file
 #' Creates two files:
 #' - ${MASK_FILES_PREFIX}.bed.gz
@@ -264,15 +242,57 @@ check_exit_status "MaskSYNC_snape" $?
 # This removes redundant _masked ending to this file:
 mv ${MASK_FILES_PREFIX}_masked.sync.gz ${MASK_FILES_PREFIX}.sync.gz
 
+# Create a snp file for use in npstat:
+gunzip -c ${MASK_FILES_PREFIX}.sync.gz \
+    | grep -v ".:.:.:.:.:." \
+    | cut -f 1,2 \
+    | gzip \
+    > ${MASK_FILES_PREFIX}.snp.gz
+
+
+
+#' ========================================================================
+#' Create partially masked gSYNC file for npstat
+#' Differs from above bc it doesn't include filtering based on P(polymorphic)
+#' Creates two files:
+#' - ${PART_MASK_FILES_PREFIX}.bed.gz
+#' - ${PART_MASK_FILES_PREFIX}_masked.sync.gz
+
+python3 ./snape-files/MaskSYNC_snape.py \
+    --sync ${SYNC_FILE} \
+    --output ${PART_MASK_FILES_PREFIX} \
+    --indel ${MP_INFO_PREFIX}.indel \
+    --coverage ${MP_INFO_PREFIX}.cov \
+    --te ${REPEATS} \
+    --mincov ${MIN_COV} \
+    --maxcov ${MAX_COV} \
+    --maxsnape 0 \
+    --SNAPE
+
+check_exit_status "MaskSYNC_snape (partial)" $?
+
+# This removes redundant _masked ending to this file:
+mv ${PART_MASK_FILES_PREFIX}_masked.sync.gz ${PART_MASK_FILES_PREFIX}.sync.gz
+
+
+
+
 rm ${MP_INFO_PREFIX}* ${REPEATS}
 
 rm -r snape-files
 
 
-#' ----------------------------------------------------
+#' ========================================================================
 #' Handle output files
 
 mv ${MASK_FILES_PREFIX}.sync.gz ${TARGET}/
+
+mkdir ${PART_MASK_FILES_PREFIX}
+mv ${PART_MASK_FILES_PREFIX}.sync.gz ${MASK_FILES_PREFIX}.snp.gz \
+    ./${PART_MASK_FILES_PREFIX}/
+tar -czf ${PART_MASK_FILES_PREFIX}.tar.gz ${PART_MASK_FILES_PREFIX}
+mv ${PART_MASK_FILES_PREFIX}.tar.gz ${TARGET}/
+rm -r ${PART_MASK_FILES_PREFIX}
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}

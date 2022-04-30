@@ -1,0 +1,25 @@
+# npstat.sub
+
+# calculate population-genetic parameters for Pool-seq samples
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.4
+
+log = npstat_$(readbase)_$(win_kb)kb.log
+error = npstat_$(readbase)_$(win_kb)kb.err
+output = npstat_$(readbase)_$(win_kb)kb.out
+
+executable = npstat.sh
+arguments = $(readbase) $(n_adults) $(win_kb)
+
+batch_name = "npstat"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 16GB
+request_disk = 50GB
+
+queue readbase,n_adults,win_kb from readbases.txt
