@@ -1,13 +1,12 @@
 #!/bin/bash
 
-#' This script combines all quality-passing gSYNC objects into three:
+#' This script combines SNAPE output from all quality-passing gSYNC
+#' objects into three:
 #' one for temporal samples, one for spatial samples, and one for all.
 
 
 
 source /staging/lnell/helpers.sh
-
-
 
 
 export TIME_SAMPS=(H-1-06_S42 H-1-11_S9 KS-1-11_S45 KS-1-77_S47 KS-2-09-B_S48 \
@@ -25,7 +24,7 @@ export SPACE_SAMPS=(Ash-19_S5 Blik-19_S6 Blo-19_S7 Ellid-19_S8 Hrisatjorn_S11 \
 #' Inputs
 #' ========================================================================
 
-export OUT_DIR=combine-syncs
+export OUT_DIR=combine-snapes
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
@@ -36,67 +35,64 @@ for samp in ${TIME_SAMPS[@]} ${SPACE_SAMPS[@]}; do
     check_exit_status "mv ${samp}" $?
 done
 
-cp /staging/lnell/dna/final-sync/combine-syncs.py ./
+cp /staging/lnell/dna/final-snape/combine-snapes.py ./
 
 #' ========================================================================
 #' Outputs
 #' ========================================================================
 
 # Where to send everything when done:
-export TARGET=/staging/lnell/dna/final-sync
+export TARGET=/staging/lnell/dna/final-snape
 
 # Final files / directories
-export ALL_OUT=all_sync_masked.sync.gz
+export ALL_OUT=all_snape_masked.sync.gz
 export ALL_OUT_NAMES=${ALL_OUT/.sync/.names}
 export ALL_OUT_NOBLANKS=${ALL_OUT/.sync.gz/_noblanks.sync.gz}
 
-export TIME_OUT=time_sync_masked.sync.gz
+export TIME_OUT=time_snape_masked.sync.gz
 export TIME_OUT_NAMES=${TIME_OUT/.sync/.names}
 export TIME_OUT_NOBLANKS=${TIME_OUT/.sync.gz/_noblanks.sync.gz}
 
-export SPACE_OUT=space_sync_masked.sync.gz
+export SPACE_OUT=space_snape_masked.sync.gz
 export SPACE_OUT_NAMES=${SPACE_OUT/.sync/.names}
 export SPACE_OUT_NOBLANKS=${SPACE_OUT/.sync.gz/_noblanks.sync.gz}
-
-
-
 
 
 #' ========================================================================
 #' Combine files
 #' ========================================================================
 
-./combine-syncs.py -o ${ALL_OUT} ${TIME_SAMPS[@]/%/.sync.gz} \
+./combine-snapes.py -o ${ALL_OUT} ${TIME_SAMPS[@]/%/.sync.gz} \
     ${SPACE_SAMPS[@]/%/.sync.gz}
-check_exit_status "combine-syncs.py (all)" $?
+check_exit_status "combine-snapes.py (all)" $?
 for samp in ${TIME_SAMPS[@]} ${SPACE_SAMPS[@]}; do
     echo ${samp} >> ${ALL_OUT_NAMES/.gz/}
 done
 gzip ${ALL_OUT_NAMES/.gz/}
-gunzip -c ${ALL_OUT} | grep -Fv ".:.:.:.:.:." | gzip > ${ALL_OUT_NOBLANKS}
+gunzip -c ${ALL_OUT} | grep -Fv ".:.:.:.:.:.:." | gzip > ${ALL_OUT_NOBLANKS}
 check_exit_status "make_no_blanks (all)" $?
 mv ${ALL_OUT} ${ALL_OUT_NAMES} ${ALL_OUT_NOBLANKS} ${TARGET}/
 
 
-./combine-syncs.py -o ${TIME_OUT} ${TIME_SAMPS[@]/%/.sync.gz}
-check_exit_status "combine-syncs.py (time)" $?
+./combine-snapes.py -o ${TIME_OUT} ${TIME_SAMPS[@]/%/.sync.gz}
+check_exit_status "combine-snapes.py (time)" $?
 for samp in ${TIME_SAMPS[@]}; do
     echo ${samp} >> ${TIME_OUT_NAMES/.gz/}
 done
 gzip ${TIME_OUT_NAMES/.gz/}
-gunzip -c ${TIME_OUT} | grep -Fv ".:.:.:.:.:." | gzip > ${TIME_OUT_NOBLANKS}
+gunzip -c ${TIME_OUT} | grep -Fv ".:.:.:.:.:.:." | gzip > ${TIME_OUT_NOBLANKS}
 check_exit_status "make_no_blanks (time)" $?
 mv ${TIME_OUT} ${TIME_OUT_NAMES} ${TIME_OUT_NOBLANKS} ${TARGET}/
 rm ${TIME_SAMPS[@]/%/.sync.gz}
 
 
-./combine-syncs.py -o ${SPACE_OUT} ${SPACE_SAMPS[@]/%/.sync.gz}
-check_exit_status "combine-syncs.py (space)" $?
+./combine-snapes.py -o ${SPACE_OUT} ${SPACE_SAMPS[@]/%/.sync.gz}
+check_exit_status "combine-snapes.py (space)" $?
 for samp in ${SPACE_SAMPS[@]}; do
     echo ${samp} >> ${SPACE_OUT_NAMES/.gz/}
 done
 gzip ${SPACE_OUT_NAMES/.gz/}
-gunzip -c ${SPACE_OUT} | grep -Fv ".:.:.:.:.:." | gzip > ${SPACE_OUT_NOBLANKS}
+gunzip -c ${SPACE_OUT} | grep -Fv ".:.:.:.:.:.:." | gzip > ${SPACE_OUT_NOBLANKS}
 check_exit_status "make_no_blanks (space)" $?
 mv ${SPACE_OUT} ${SPACE_OUT_NAMES} ${SPACE_OUT_NOBLANKS} ${TARGET}/
 rm ${SPACE_SAMPS[@]/%/.sync.gz}
