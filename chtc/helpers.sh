@@ -3,6 +3,9 @@
 #'
 #' This script has some helper functions used throughout.
 #'
+#' To send to cluster:
+#' scp ~/GitHub/Wisconsin/midge_archive/chtc/helpers.sh lnell@transfer.chtc.wisc.edu:/staging/lnell/
+#'
 
 
 #' Check previous command's exit status.
@@ -12,7 +15,7 @@
 #' Usage:
 #' check_exit_status "NameOfOperation" $?
 check_exit_status () {
-    if [ ! "$2" -eq "0" ]; then
+    if [ "$2" != "0" ]; then
         echo "Step $1 failed with exit status $2" 1>&2
         local wd=${PWD##*/}
         cd ..
@@ -25,11 +28,15 @@ check_exit_status () {
         rm -r ${wd}
         exit $2
     fi
-    echo "Checked step $1"
+    if [[ "$1" != "null" ]]; then
+        echo "Checked step $1"
+    fi
 }
 
 #' Check on BAM file with `bamtools stats`, check status of this call,
 #' then output the file name.
+#' NOTE: Must be run inside an environment containing `bamtools`
+#' (e.g., main-env for docker image).
 #' Usage:
 #' call_bam_stats ${BAM_FILE} "description"
 call_bam_stats () {
@@ -38,6 +45,27 @@ call_bam_stats () {
     bamtools stats -in $B | tee $S
     check_exit_status "bamtools stats $2" $?
     echo -e "FILE:" $B "\n**********************************************"
+}
+
+
+
+#' Run `busco` on a FASTA file.
+#' NOTE: Must be run inside an system containing a `busco-env` conda
+#' environment that contains `busco`.
+#' Produces directories `busco` and `busco_downloads`, plus the file `busco.out`
+#' Usage:
+#' run_busco ${OUT_FASTA} ${THREADS}
+run_busco () {
+    conda activate busco-env
+    busco \
+        -m genome \
+        -l diptera_odb10 \
+        -i $1 \
+        -o busco \
+        --cpu $2 | \
+        tee busco.out
+    check_exit_status "busco" $?
+    conda deactivate
 }
 
 #'
@@ -66,8 +94,8 @@ busco_seq_summary_csv () {
     OUT+="$(grep '|' ${2} | grep '(F)' | tr -d '|' | xargs | sed 's/ .*//'),"
     OUT+="$(grep '|' ${2} | grep '(M)' | tr -d '|' | xargs | sed 's/ .*//'),"
     OUT+="$(grep '|' ${2} | grep 'Total BUSCO' | tr -d '|' | xargs | sed 's/ .*//')\n"
-    # Use printf bc it provides actual newlines
-    printf ${OUT}
+    # Print output:
+    echo -e ${OUT}
 }
 
 
