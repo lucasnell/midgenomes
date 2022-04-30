@@ -37,7 +37,7 @@ RUN apt-get clean && \
     apt-get update -y && \
     apt-get install -y build-essential && \
     apt-get install -y locales wget rsync unzip nano sudo ocaml-nox \
-        zlib1g-dev libbz2-dev liblzma-dev && \
+        zlib1g-dev libbz2-dev liblzma-dev gsl-bin libgsl0-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Set locale
@@ -80,9 +80,9 @@ RUN mamba env create -q -f annotate-env.yml && \
 RUN mamba env create -q -f assembly-env.yml && \
     rm assembly-env.yml && \
     conda clean --all -y
-# homopolish
-RUN mamba create -q -y -c bioconda -c conda-forge -n homopolish-env \
-    homopolish=0.3.3  && \
+# for admixture graphs via OrientAGraph
+RUN mamba create -q -y -c bioconda -c conda-forge -n orientagraph-env \
+    orientagraph=1.1 && \
     conda clean --all -y
 
 RUN conda init bash
@@ -146,3 +146,22 @@ RUN pip install paralleltask && \
     tar -xzf NextDenovo.tgz && \
     rm NextDenovo.tgz
 ENV PATH="${PATH}:/opt/NextPolish:/opt/NextDenovo"
+
+
+
+# --------------------------------
+# Manually install npstat
+# --------------------------------
+RUN cd /opt && \
+    git clone https://github.com/lucaferretti/npstat.git && \
+    cd npstat && \
+    make
+ENV PATH="${PATH}:/opt/npstat"
+
+
+
+# --------------------------------
+# Allow pilon to use more memory
+# --------------------------------
+RUN PILON_FILE=$(readlink -f /opt/conda/envs/assembly-env/bin/pilon) && \
+    sed -i 's/Xmx1g/Xmx32g/g' ${PILON_FILE}
