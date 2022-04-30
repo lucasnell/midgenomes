@@ -9,3 +9,5 @@ summ_scaffs
 *.fastq.gz
 *.fasta
 *.fasta.gz
+
+*.pdf
