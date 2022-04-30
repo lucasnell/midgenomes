@@ -20,7 +20,7 @@ when_to_transfer_output = ON_EXIT
 requirements = (Target.HasCHTCStaging == true)
 
 request_cpus = 16
-request_memory = 32GB
+request_memory = 64GB
 request_disk = 150GB
 
 queue assembly from assemblies.txt

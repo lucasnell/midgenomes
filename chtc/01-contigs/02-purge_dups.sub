@@ -4,7 +4,7 @@
 # gracilentus assembly
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.3
+docker_image = lucasnell/tany_genomics:v0.5.4
 
 log = purgedups.log
 error = purgedups.err

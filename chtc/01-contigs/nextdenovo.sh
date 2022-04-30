@@ -4,6 +4,8 @@
 source /staging/lnell/helpers.sh
 
 export THREADS=32
+# In GB - should be > 48, ideally >= 64
+export MEMORY=80
 
 # Where to send files:
 export TARGET=/staging/lnell/assemblies
@@ -23,8 +25,19 @@ check_exit_status "cp guppy" $?
 
 echo ${LONGREADS} > input.fofn
 
-# Could also the code below, then adjust manually.
-# cp /opt/NextDenovo/doc/run.cfg ./tany.cfg
+# Setting some of the threading and memory options based on
+# https://nextdenovo.readthedocs.io/en/latest/FAQ.html#how-to-optimize-parallel-computing-parameters
+
+TOTAL_INPUT_BASES=23
+# Below, it can be 32-64, so I chose 48
+PJ=$(python -c "print(round(${MEMORY} / 48))")
+PC=$(python -c "print(round(${MEMORY} / (${TOTAL_INPUT_BASES} * 1.2/4)))")
+SOm=$(python -c "print(round(${TOTAL_INPUT_BASES} * 1.2/4))")
+SOt=$(python -c "print(round(${THREADS} / ${PC}))")
+CO=${SOt}
+MOR=$(python -c "print(round(${THREADS} / ${PJ}))")
+MOC=${MOR}
+
 
 cat <<EOF > tany.cfg
 [General]
@@ -33,7 +46,7 @@ job_prefix = ${OUT_NAME}
 task = all
 rewrite = yes
 deltmp = yes
-parallel_jobs = ${THREADS}
+parallel_jobs = ${PJ}
 input_type = raw
 read_type = ont
 input_fofn = input.fofn
@@ -42,20 +55,19 @@ workdir = workdir
 [correct_option]
 read_cutoff = 1k
 genome_size = 100M
-sort_options = -m 20g -t 15
-minimap2_options_raw = -t 8
-pa_correction = 6 # number of corrected tasks used to run in parallel, each corrected task requires ~TOTAL_INPUT_BASES/4 bytes of memory usage.
-correction_options = -p 15
+sort_options = -m ${SOm}G -t ${SOt}
+minimap2_options_raw = -t ${MOR}
+pa_correction = ${PC}
+correction_options = -p ${CO}
 
 [assemble_option]
-minimap2_options_cns = -t 8
+minimap2_options_cns = -t ${MOC}
 nextgraph_options = -a 1
-
-# see https://nextdenovo.readthedocs.io/en/latest/OPTION.html for a detailed introduction about all the parameters
 EOF
 
 
-nextDenovo run.cfg
+
+nextDenovo tany.cfg
 check_exit_status "nextDenovo" $?
 
 
@@ -71,21 +83,12 @@ check_exit_status "nextDenovo" $?
 #'
 
 cp workdir/03.ctg_graph/nd.asm.fasta ${OUT_FASTA}
+check_exit_status "rename FASTA" $?
 
 summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out
 check_exit_status "summ-scaffs.py" $?
 
-conda activate busco-env
-busco \
-    -m genome \
-    -l diptera_odb10 \
-    -i ${OUT_FASTA} \
-    -o busco \
-    --cpu ${THREADS} | \
-    tee busco.out
-check_exit_status "busco" $?
-conda deactivate
-
+run_busco ${OUT_FASTA} ${THREADS}
 rm -r busco_downloads
 
 busco_seq_summary_csv contigs_summary.out busco.out ${OUT_NAME} | \

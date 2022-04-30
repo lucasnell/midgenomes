@@ -3,7 +3,7 @@
 # Polish assembly using Illumina reads via NextPolish
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.5.1
+docker_image = lucasnell/tany_genomics:v0.5.4
 
 log = nextpolish_$(assembly).log
 error = nextpolish_$(assembly).err
@@ -19,8 +19,8 @@ when_to_transfer_output = ON_EXIT
 
 requirements = (Target.HasCHTCStaging == true)
 
-request_cpus = 16
+request_cpus = 32
 request_memory = 32GB
-request_disk = 150GB
+request_disk = 100GB
 
 queue assembly from assemblies.txt

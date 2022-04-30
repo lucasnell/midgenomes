@@ -1,7 +1,7 @@
 #!/bin/bash
 
 . /app/.bashrc
-conda activate main-env
+conda activate assembly-env
 
 export THREADS=16
 
