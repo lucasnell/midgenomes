@@ -11,3 +11,5 @@ summ_scaffs
 *.fasta.gz
 
 *.pdf
+
+*.rds
