@@ -1,0 +1,26 @@
+# gapless.sub
+
+# Scaffolding and gap-filling using gapless
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.7
+
+log = gapless_$(assembly).log
+error = gapless_$(assembly).err
+output = gapless_$(assembly).out
+
+executable = gapless.sh
+arguments = $(assembly).fasta
+
+batch_name = "gapless"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 80GB
+request_disk = 100GB
+
+queue assembly, n_rakon from assemblies.txt
