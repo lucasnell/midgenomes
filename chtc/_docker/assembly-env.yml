@@ -8,7 +8,6 @@ dependencies:
   - medaka=1.6.0-0
   - minimap2=2.24
   - necat=0.0.1_update20200803
-  - pilon=1.24-0
   - purge_dups=1.2.5
   - python=3.8.13
   - quickmerge=0.3

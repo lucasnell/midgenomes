@@ -14,7 +14,6 @@ COPY main-env.yml .
 COPY annotate-env.yml .
 COPY besst-env.yml .
 COPY assembly-env.yml .
-COPY gapless-env.yml .
 # Simple summary of scaffolds:
 COPY summ-scaffs.py .
 # Sliding window of coverage based on mpileup
@@ -82,9 +81,8 @@ RUN mamba env create -q -f annotate-env.yml && \
 RUN mamba env create -q -f assembly-env.yml && \
     rm assembly-env.yml && \
     conda clean --all -y
-# gapless:
-RUN mamba env create -q -f gapless-env.yml && \
-    rm gapless-env.yml && \
+# for Flye assembler:
+RUN mamba create -q -y -c bioconda -c conda-forge -n flye-env flye=2.9 && \
     conda clean --all -y
 
 RUN conda init bash
@@ -160,22 +158,3 @@ RUN cd /opt && \
     make
 ENV PATH="${PATH}:/opt/npstat"
 
-
-# --------------------------------
-# Allow pilon to use more memory
-# --------------------------------
-RUN PILON_FILE=$(readlink -f /opt/conda/envs/assembly-env/bin/pilon) && \
-    sed -i 's/Xmx1g/Xmx32g/g' ${PILON_FILE}
-
-
-
-# --------------------------------
-# Manually install gapless
-# --------------------------------
-RUN cd /opt && \
-    git clone https://github.com/schmeing/gapless.git
-ENV PATH="${PATH}:/opt/gapless"
-
-RUN apt-get update -y && \
-    apt-get install -y time && \
-    rm -rf /var/lib/apt/lists/*
