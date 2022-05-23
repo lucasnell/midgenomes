@@ -1,13 +1,15 @@
 universe =                  vanilla
-log =                       dentist/$(fasta)D.log
-error =                     dentist/$(fasta)D.err
-output =                    dentist/$(fasta)D.out
+log =                       dentist_$(fasta).log
+error =                     dentist_$(fasta).err
+output =                    dentist_$(fasta).out
 executable =                dentist.sh
 arguments =                 $(fasta) $(join) $(coverage) $(seed)
+batch_name =                "dentist"
 should_transfer_files =     YES
 when_to_transfer_output =   ON_EXIT
 requirements =              (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 request_cpus =              24
 request_memory =            16GB
 request_disk =              60GB
-queue 1
+
+queue fasta, join, coverage, seed from assemblies.txt

@@ -7,17 +7,22 @@
 export THREADS=32
 
 . /app/.bashrc
+source /staging/lnell/helpers.sh
+
+
+# Where to send and receive files from/to
+export TARGET=/staging/lnell/assemblies
 
 # The input FASTA is given by the submit file:
 export GENOME=$1.fasta
-if [ ! -f /staging/lnell/${GENOME}.gz ]; then
-    echo -e "\n\nERROR: /staging/lnell/${GENOME}.gz does not exist." 1>&2
+if [ ! -f ${TARGET}/${GENOME}.gz ]; then
+    echo -e "\n\nERROR: ${TARGET}/${GENOME}.gz does not exist." 1>&2
     echo -e "Exiting...\n" 1>&2
     exit 1
 fi
 
 # The input file dictates the output name:
-export OUT_SUFFIX=B
+export OUT_SUFFIX=besst
 
 if  [[ $GENOME == contigs* ]]
 then
@@ -29,10 +34,9 @@ export OUT_DIR
 
 export OUT_FASTA=${OUT_DIR}.fasta
 
-
 # If the output FASTA already exists, this job stops with exit code 0
-if [ -f /staging/lnell/${OUT_FASTA}.gz ]; then
-    echo -e "\n\nMESSAGE: /staging/lnell/${OUT_FASTA}.gz already exists."
+if [ -f ${TARGET}/${OUT_FASTA}.gz ]; then
+    echo -e "\n\nMESSAGE: ${TARGET}/${OUT_FASTA}.gz already exists."
     echo -e "Exiting...\n"
     exit 0
 fi
@@ -42,7 +46,7 @@ mkdir ${OUT_DIR}
 
 cd ${OUT_DIR}
 
-cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+cp ${TARGET}/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 
 
 
@@ -57,19 +61,16 @@ conda activate main-env
 export BAM=rna_hisat2.bam
 export RNA1=trimmed_TanyAdult_S1_L002_R1_001.fastq
 export RNA2=trimmed_TanyAdult_S1_L002_R2_001.fastq
-if [ ! -f /staging/lnell/rna/${RNA1}.gz ]; then
-    echo -e "\n\nERROR: /staging/lnell/rna/${RNA1}.gz does not exist." 1>&2
+if [ ! -f /staging/lnell/rna/trimmed_TanyAdult_S1.tar ]; then
+    echo -e "\n\nERROR: /staging/lnell/rna/trimmed_TanyAdult_S1.tar does not exist." 1>&2
     echo -e "Exiting...\n" 1>&2
     exit 1
 fi
-if [ ! -f /staging/lnell/rna/${RNA2}.gz ]; then
-    echo -e "\n\nERROR: /staging/lnell/rna/${RNA2}.gz does not exist." 1>&2
-    echo -e "Exiting...\n" 1>&2
-    exit 1
-fi
-cp /staging/lnell/rna/${RNA1}.gz ./ && gunzip ${RNA1}.gz
-cp /staging/lnell/rna/${RNA2}.gz ./ && gunzip ${RNA2}.gz
 
+cp /staging/lnell/rna/trimmed_TanyAdult_S1.tar ./
+tar -xf trimmed_TanyAdult_S1.tar && rm trimmed_TanyAdult_S1.tar
+
+gunzip ${RNA1}.gz && gunzip ${RNA2}.gz
 
 hisat2-build ${GENOME} tany_hisat_idx
 
@@ -138,7 +139,7 @@ cp ./pass1/Scaffolds-pass1.fa ./
 mv Scaffolds-pass1.fa ${OUT_FASTA}
 # Keep the uncompressed version for output directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
-mv ${OUT_FASTA}.gz /staging/lnell/
+mv ${OUT_FASTA}.gz ${TARGET}/
 
 # practice run shows that it can make the `${OUT_DIR}Statistics.txt` file
 # outside of the output directory,
@@ -149,8 +150,18 @@ if [ -f *Statistics.txt ]; then
 fi
 cd ${OUT_DIR}
 
+summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out
+check_exit_status "summ-scaffs.py" $?
+
+run_busco ${OUT_FASTA} ${THREADS}
+rm -r busco busco_downloads
+
+busco_seq_summary_csv contigs_summary.out busco.out ${OUT_FASTA/.fasta/} | \
+    tee ${OUT_FASTA/.fasta/}.csv
+
+
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+mv ${OUT_DIR}.tar.gz ${TARGET}/
 
 rm -r ${OUT_DIR}

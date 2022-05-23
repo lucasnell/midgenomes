@@ -4,7 +4,7 @@
 # ================================================================
 
 # To send this and all other files to cluster:
-# cd ~/GitHub/Wisconsin/midge_archive/chtc/02-scaffolding/dag
+# cd ~/GitHub/Wisconsin/midge_archive/chtc/02-scaffolding
 # scp *.sh *.sub *.dag lnell@submit-1.chtc.wisc.edu:/home/lnell/scaff/
 # scp dentist_files.tar.gz lnell@transfer.chtc.wisc.edu:/staging/lnell/
 

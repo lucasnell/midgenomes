@@ -1,5 +1,86 @@
 #!/bin/bash
 
+
+cat << EOF > summ-scaffs.py
+#!/usr/bin/env python3
+"""
+Summarize scaffolds
+
+usage:
+    ./summ-scaffs.py <input FASTA>
+
+"""
+
+import sys
+import os.path
+import gzip
+import argparse
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description = "Summarize scaffolds")
+    parser.add_argument("in_fasta", help="input FASTA file name")
+    args = parser.parse_args()
+    # ---------------
+    # Check files:
+    # ---------------
+    if not os.path.exists(args.in_fasta):
+        sys.stderr.write(args.in_fasta + " not found\n")
+        sys.exit(1)
+    fasta_suffs = (".fasta.gz", ".fasta", ".fa.gz", ".fa")
+    if not args.in_fasta.endswith(fasta_suffs):
+        sys.stderr.write("Strange suffix to input FASTA file. Exiting.\n")
+        sys.exit(1)
+    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    print("Summarize scaffolds for " + args.in_fasta + "\n")
+    if args.in_fasta.endswith(".gz"):
+        fasta_file = gzip.open(args.in_fasta,"rt")
+    else:
+        fasta_file = open(args.in_fasta, "r")
+    total_size = 0
+    total_N = 0
+    sizes = []
+    i = -1
+    for line in fasta_file:
+        if line.startswith(">"):
+            sizes.append(0)
+            i += 1
+        else:
+            if len(sizes) == 0:
+                sys.stderr.write("FASTA doesn't start with header. Exiting.\n")
+                sys.exit(1)
+            # we don't want to include newline at the end in our counts:
+            llen = len(line) - 1
+            sizes[i] += llen
+            total_size += llen
+            total_N += line.count('n')
+            total_N += line.count('N')
+    fasta_file.close()
+    sizes.sort(reverse = True)
+    n50_threshold = round(float(total_size) / 2.0)
+    cum_sum = 0;
+    i = 0;
+    while i < len(sizes):
+        cum_sum += sizes[i]
+        if cum_sum >= n50_threshold:
+            break
+        i+=1
+    n50 = sizes[i]
+    print("size = " + str(total_size))
+    print(str(len(sizes)) + " scaffolds")
+    print("N50 = " + str(n50))
+    print("min = " + str(sizes[-1]))
+    print("max = " + str(sizes[0]))
+    print("total N = " + str(total_N))
+    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+    sys.exit(0)
+EOF
+
+chmod +x summ-scaffs.py
+
+
+
 export THREADS=24
 
 
@@ -14,32 +95,23 @@ export COVERAGE=$3
 export SEED=$4
 
 
-#'
-#' I used to use the input file name to set the seed, but I stopped doing this
-#' bc it's less reproducible.
-#' I left it a commented version in case you want to reproduce old code.
-#'
-# export FILE_NAME=tany_scaffolds.fasta
-# echo $(python << EOF
-# import hashlib
-# print(int(hashlib.sha512("${FILE_NAME}".encode('utf-8')).hexdigest(), base = 16))
-# EOF
-# )
+source /staging/lnell/helpers.sh
 
 
 
+# Where to send and receive files from/to
+export TARGET=/staging/lnell/assemblies
 
 
 
-
-if [ ! -f /staging/lnell/${GENOME}.gz ]; then
-    echo -e "\n\nERROR: /staging/lnell/${GENOME}.gz does not exist." 1>&2
+if [ ! -f ${TARGET}/${GENOME}.gz ]; then
+    echo -e "\n\nERROR: ${TARGET}/${GENOME}.gz does not exist." 1>&2
     echo -e "Exiting...\n" 1>&2
     exit 1
 fi
 
 # The input file dictates the output name:
-export OUT_SUFFIX=D
+export OUT_SUFFIX=_dentist
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
@@ -52,8 +124,8 @@ export OUT_DIR
 export OUT_FASTA=${OUT_DIR}.fasta
 
 # If the output FASTA already exists, this job stops with exit code 0
-if [ -f /staging/lnell/${OUT_FASTA}.gz ]; then
-    echo -e "\n\nMESSAGE: /staging/lnell/${OUT_FASTA}.gz already exists."
+if [ -f ${TARGET}/${OUT_FASTA}.gz ]; then
+    echo -e "\n\nMESSAGE: ${TARGET}/${OUT_FASTA}.gz already exists."
     echo -e "Exiting...\n"
     exit 0
 fi
@@ -65,7 +137,8 @@ cp /staging/lnell/Mambaforge-Linux-x86_64.sh ./
 # wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
 export HOME=$PWD
 export PATH
-sh Mambaforge-Linux-x86_64.sh -b -p $PWD/mamba3
+sh Mambaforge-Linux-x86_64.sh -b -p $PWD/mamba3 \
+    1> mambaforge.log
 export PATH=$PWD/mamba3/bin:$PATH
 rm Mambaforge-Linux-x86_64.sh
 
@@ -75,7 +148,12 @@ export CONDA_PREFIX=$PWD/mamba3
 # (`seqtk` is to convert FASTQ to FASTA and to narrow FASTA files below)
 # (`numpy` and `pandas` are for `fire-gusu.py` script below)
 mamba create -q -y -c bioconda -c conda-forge -n main-env \
-    snakemake=6.13.1 seqtk=1.3 numpy pandas
+    snakemake=6.13.1 seqtk=1.3 numpy pandas \
+    1> mamba_create.log
+
+echo -e "\n\n\n" >> mamba_create.log
+mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.3.1 \
+    1>> mamba_create.log
 
 conda init
 . ~/.bashrc
@@ -114,7 +192,8 @@ sed -i "s/__JOIN_POLICY__/${JOIN}/g" dentist.yml
 sed -i "s/__INPUT_SCAFFOLDS_FILE__/${GENOME}/g" snakemake.yml
 
 # Move and adjust the genome FASTA file:
-cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+cp ${TARGET}/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+
 # Make sure the genome FASTA file isn't too wide
 mv ${GENOME} ${GENOME/.fasta/_orig.fasta}
 seqtk seq -l 80 -A ${GENOME/.fasta/_orig.fasta} > ${GENOME}
@@ -125,6 +204,7 @@ rm ${GENOME/.fasta/_orig.fasta}
 # Make sure it doesn't have any periods, because apparently the
 # fasta2DAM > DPsplit step can't handle a file with periods
 export READS=basecalls_guppy.fasta
+
 # Get all reads, filter them (dentist takes way too long with all the reads),
 # and convert to FASTA with 80-char lines
 export ALL_READS=basecalls_guppy-5.0.11.fastq.gz
@@ -154,7 +234,16 @@ cp -r -t . \
     dentist.v3.0.0.x86_64/scripts
 
 
-snakemake --configfile=snakemake.yml --use-conda --cores=${THREADS}
+snakemake --configfile=snakemake.yml --use-conda --cores=${THREADS} \
+    2> dentist.log
+
+echo -e "\n-------------------\nLast bit of dentist stderr:\n"
+tail dentist.log
+echo -e "\n-------------------\n"
+
+echo -e "\n-------------------\nAny lines in dentist stderr with 'error':\n"
+grep -i "error" dentist.log
+echo -e "\n-------------------\n"
 
 
 rm -rf dentist.v3.0.0.x86_64 ${READS} ${GENOME}
@@ -168,17 +257,26 @@ if [ ! -f gap-closed.fasta ]; then
 fi
 
 
-
-
 cp gap-closed.fasta ${OUT_FASTA}
 # Keep the uncompressed version for output directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
-mv ${OUT_FASTA}.gz /staging/lnell/
+mv ${OUT_FASTA}.gz ${TARGET}/
+
+
+./summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out
+check_exit_status "summ-scaffs.py" $?
+
+
+run_busco ${OUT_FASTA} ${THREADS}
+rm -r busco busco_downloads
+
+busco_seq_summary_csv contigs_summary.out busco.out ${OUT_FASTA/.fasta/} | \
+    tee ${OUT_FASTA/.fasta/}.csv
 
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+mv ${OUT_DIR}.tar.gz ${TARGET}/
 
 rm -rf ${TMPDIR} ${CONDA_PREFIX} ${OUT_DIR}
 
