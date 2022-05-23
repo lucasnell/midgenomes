@@ -1,0 +1,25 @@
+# orientagraph.sub
+
+# Create admixture graphs with OrientAGraph
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.4
+
+log = orientagraph_m$(n_mig).log
+error = orientagraph_m$(n_mig).err
+output = orientagraph_m$(n_mig).out
+
+executable = orientagraph.sh
+arguments = $(n_mig)
+
+batch_name = "orientagraph"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 24
+request_memory = 16GB
+request_disk = 20GB
+
+queue n_mig from n_migrations.txt
