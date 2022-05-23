@@ -1,9 +1,52 @@
+library(tidyverse)
+
+theme_set(theme_classic())
+theme_update(axis.text = element_blank(),
+             axis.title = element_blank(),
+             axis.ticks = element_blank(),
+             axis.line = element_line(size = 1.5))
+
+f <- function(.x) {
+    x_sin <- sin((.x / diff(range(.x)) - 0.5/3) * 3 * pi) + 1
+    x <- .x / 10
+    flr <- (x %/% 2) * 2
+    x <- x - flr
+    nc <- x * pi
+    z <- sin(nc)
+    z <- z + x_sin * 0.5
+    return(z)
+}
+
+# curve(f(x), 0, 100)
+
+pred_prey_df <- tibble(x = seq(0, 100, length.out = 1001),
+                       y = f(x),
+                       y2 = f(x - 5))
+bal_sel_df <- tibble(x = seq(0, 100, length.out = 1001),
+       y = f(x - 10))
+
+pred_prey_p <- pred_prey_df %>%
+    ggplot(aes(x, y)) +
+    geom_line(size = 1, color = "dodgerblue3") +
+    geom_line(aes(y = y2), size = 1, color = "gold")
+
+bal_sel_p <- bal_sel_df %>%
+    ggplot(aes(x, y)) +
+    geom_line(size = 1, color = "firebrick")
+
+ggsave("~/Desktop/pred_prey.pdf", pred_prey_p, width = 5, height = 2.5)
+ggsave("~/Desktop/bal_sel.pdf", bal_sel_p, width = 5, height = 2.5)
+
+
+
+
 
 library(tidyverse)
 library(readxl)
 library(rgdal)
 library(broom)
 library(poolfstat)
+library(vegan)
 library(rstan)
 
 options(mc.cores = max(parallel::detectCores()-2, 1))
@@ -57,6 +100,22 @@ pw_fst <- compute.pairwiseFST(pool_dat, method = "Identity",
                               nsnp.per.bjack.block = 0)
 # nsnp.per.bjack.block = pool_dat@nsnp %/% 500)
 
+max_fst <- max(pw_fst@PairwiseFSTmatrix, na.rm = TRUE)
+max_inds <- which(pw_fst@PairwiseFSTmatrix == max_fst)
+max_cols <- ceiling(max_inds / nrow(pw_fst@PairwiseFSTmatrix))
+max_rows <- max_inds %% nrow(pw_fst@PairwiseFSTmatrix)
+pw_fst@PairwiseFSTmatrix[max_rows, max_cols]
+
+# Below is missing a negative Fst, not sure why.
+# neg_inds <- which(pw_fst@PairwiseFSTmatrix < 0)
+# neg_cols <- unique(ceiling(neg_inds / nrow(pw_fst@PairwiseFSTmatrix)))
+# neg_rows <- unique(neg_inds %% nrow(pw_fst@PairwiseFSTmatrix))
+# pw_fst@PairwiseFSTmatrix[neg_rows, neg_cols]
+# sum(pw_fst@PairwiseFSTmatrix[neg_rows, neg_cols] < 0, na.rm = TRUE)
+
+
+
+
 
 dist_df <- crossing(i = 1:nrow(pw_fst@PairwiseFSTmatrix), j = i) %>%
     filter(i > 1, j < i) %>%
@@ -70,13 +129,30 @@ dist_df <- crossing(i = 1:nrow(pw_fst@PairwiseFSTmatrix), j = i) %>%
         .fst <- pw_fst@PairwiseFSTmatrix[i,j]
         .loc1 <- colnames(pw_fst@PairwiseFSTmatrix)[i]
         .loc2 <- colnames(pw_fst@PairwiseFSTmatrix)[j]
-        tibble(dist = .dist, fst = .fst, loc1 = .loc1, loc2 = .loc2)
+        tibble(dist = .dist, fst = .fst, loc1 = .loc1, loc2 = .loc2,
+               i1 = i, i2 = j)
     }) %>%
     mutate(n_adults = map2_int(loc1, loc2,
                                function(a, b) {
                                    dd <- filter(samp_df, location %in% c(a,b))
                                    min(dd$n_adults)
                                }))
+
+dist_fst <- pw_fst@PairwiseFSTmatrix
+diag(dist_fst) <- 0
+
+dist_km <- matrix(0, nrow(pw_fst@PairwiseFSTmatrix), ncol(pw_fst@PairwiseFSTmatrix))
+for (i in 2:nrow(dist_km)) {
+    for (j in 1:(i-1)) {
+        x <- filter(dist_df, i1 == i, i2 == j)[["dist"]]
+        dist_km[i,j] <- dist_km[j,i] <- x
+    }
+}
+# This tests for an effect of distance. Very obviously significant.
+km_fst_test <- mantel(dist_km, dist_fst, permutations = 2000)
+
+
+
 
 
 # int<lower=1> N;                   // # observations
