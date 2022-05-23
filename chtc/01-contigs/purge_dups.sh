@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Use purge_dups on NECAT and SMARTdenovo assemblies
+#' Use purge_dups on NECAT and SMARTdenovo assemblies.
+#' This does not come with a *.sub file because it was run interactively.
 
 . /app/.bashrc
 conda activate assembly-env
