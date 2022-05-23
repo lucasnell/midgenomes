@@ -5,8 +5,21 @@
 #' Requires argument for which assembly to polish.
 #'
 
+
 export ASSEMBLY=$1
-# export ASSEMBLY=contigs_smart_ont-polish.fasta
+
+#' Second argument (if provided) is # rounds.
+#' I wouldn't recommend more than 3: More rounds isn't necessarily better!
+if [ -z ${2+x} ]; then
+    N_ROUNDS=3
+else
+    N_ROUNDS=$2
+    if ! [[ $N_ROUNDS =~ ^[0-9]+$ ]]; then
+        echo "ERROR: Second arg is not an integer!" 1>&2
+        exit 1
+    fi
+fi
+export N_ROUNDS
 
 if [[ "${ASSEMBLY}" != *.fasta ]]; then
     echo "ERROR: Assembly files must end in *.fasta. Exiting..." 1>&2
@@ -69,11 +82,11 @@ export READS2=${TRIM_READS2}
 unset TRIM_READS1 TRIM_READS2
 
 
-# Don't increase this: More rounds isn't necessarily better!
-n_rounds=3
+
+
 input=${ASSEMBLY}
 
-for ((i=1; i<=${n_rounds}; i++)); do
+for ((i=1; i<=${N_ROUNDS}; i++)); do
 # step 1:
     # index the genome file and do alignment
     bwa index ${input}
@@ -108,7 +121,11 @@ for ((i=1; i<=${n_rounds}; i++)); do
         > genome.nextpolish.fa
     rm ${input}.* sgs.sort.bam*
     input=genome.nextpolish.fa
+    if (( i < N_ROUNDS )); then
+        cp ${input} genome.nextpolish_${i}.fa
+    fi
 done
+
 
 # Finally polished genome file: genome.nextpolish.fa
 
@@ -121,7 +138,7 @@ summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out
 check_exit_status "summ-scaffs.py" $?
 
 run_busco ${OUT_FASTA} ${THREADS}
-rm -r busco_downloads
+rm -r busco busco_downloads
 
 busco_seq_summary_csv contigs_summary.out busco.out ${OUT_NAME} | \
     tee ${OUT_NAME}.csv
@@ -135,3 +152,4 @@ tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz ${TARGET}/
 
 rm -r ${OUT_DIR}
+

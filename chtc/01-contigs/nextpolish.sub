@@ -10,7 +10,7 @@ error = nextpolish_$(assembly).err
 output = nextpolish_$(assembly).out
 
 executable = nextpolish.sh
-arguments = $(assembly)
+arguments = $(assembly).fasta
 
 batch_name = "nextpolish"
 

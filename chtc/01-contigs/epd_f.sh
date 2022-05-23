@@ -1,18 +1,40 @@
 #!/bin/bash
 
-# Explore options for purge_dups -f argument
-# usage: ./epd.sh [VALUE FOR `purge_dups -f` ARG]
+#'
+#' Explore options for purge_dups -a and -f arguments
+#' usage: ./epd.sh [REFERENCE ASSEMBLY] \
+#'                 [ALIGNMENT] \
+#'                 [VALUE FOR `purge_dups -a` ARG] \
+#'                 [VALUE FOR `purge_dups -f` ARG]
+#'
+
 
 
 . /app/.bashrc
-conda activate main-env
+conda activate assembly-env
 
-export REF=contigs_shasta_pepper-hap1.fasta
+export REF=$1
+export ALIGN=$2
+export A_ARG_VAL=$3
+export F_ARG_VAL=$4
+
+export LONGREADS=basecalls_guppy-5.0.11.fastq
 export THREADS=12
 
-export F_ARG_VAL=$1
+# Check for correct suffixes:
+if [[ ${REF} != *.fasta ]]; then
+    echo -e "\n\nERROR: ${REF} doesn't end in '.fasta'" 1>&2
+    echo -e "Exiting...\n" 1>&2
+    exit 1
+fi
+if [[ ${ALIGN} != *.paf.gz ]]; then
+    echo -e "\n\nERROR: ${ALIGN} doesn't end in '.paf.gz'" 1>&2
+    echo -e "Exiting...\n" 1>&2
+    exit 1
+fi
 
-export OUT_PREFIX=purgedups_f${F_ARG_VAL}
+export TARGET=/staging/lnell/epd
+export OUT_PREFIX=purgedups_a-${A_ARG_VAL}_f-${F_ARG_VAL}
 export OUT_DIR=${OUT_PREFIX}
 export OUT_FASTA=${OUT_PREFIX}.fasta
 export OUT_CSV=${OUT_PREFIX}.csv
@@ -23,10 +45,29 @@ export WD=work_dir
 mkdir ${WD}
 cd ${WD}
 
+# Check previous command's exit status.
+# If != 0, then archive working dir and exit.
+check_exit_status () {
+  if [ ! "$2" -eq "0" ]; then
+    echo "Step $1 failed with exit status $2" 1>&2
+    cd ..
+    mv ${WD} ERROR_${OUT_PREFIX}
+    tar -czf ERROR_${OUT_PREFIX}.tar.gz ERROR_${OUT_PREFIX}
+    mv ERROR_${OUT_PREFIX}.tar.gz ${TARGET}/
+    rm -r ERROR_${OUT_PREFIX}
+    exit $2
+  fi
+  echo "Checked step $1"
+}
+
 cp /staging/lnell/${REF}.gz ./ && gunzip ${REF}.gz
+cp /staging/lnell/${ALIGN} ./
+cp /staging/lnell/${LONGREADS}.gz ./ && gunzip ${LONGREADS}.gz
+
+
+
 
 # Initial alignment run separately using the following code:
-# export LONGREADS=basecalls_guppy-5.0.11.fastq
 # export OUT_PAF=ont_align_mm2_pepper.paf.gz
 # cp /staging/lnell/${LONGREADS}.gz ./ && gunzip ${LONGREADS}.gz
 # conda activate main-env
@@ -37,8 +78,9 @@ cp /staging/lnell/${REF}.gz ./ && gunzip ${REF}.gz
 # mv ${OUT_PAF} /staging/lnell/
 # rm ${REF} ${LONGREADS}
 
-export ALIGN=ont_align_mm2_pepper.paf.gz
-cp /staging/lnell/${ALIGN} ./
+
+
+
 
 # ======================================================================
 # ======================================================================
@@ -51,7 +93,7 @@ pbcstat ${ALIGN}
 # calculate cutoffs, setting upper limit manually
 # purge_dups creators say highly heterozygous genomes can have too-high
 # upper limit, and based on histogram from hist_plot.py, 380 seems like a
-# good one.
+# good one here.
 calcuts -l 5 -m 181 -u 380 PB.stat > cutoffs 2> calcults.log
 # originally:
 # 5	91	151	181	302	543
@@ -83,8 +125,8 @@ mv purged.fa ${OUT_FASTA}
 # ======================================================================
 
 
-summ-scaffs.py ${OUT_FASTA} > \
-    scaff_summary.out
+summ-scaffs.py ${OUT_FASTA} | \
+    tee scaff_summary.out
 
 # This outputs BUSCO scores:
 conda activate busco-env
@@ -93,8 +135,8 @@ busco \
     -l diptera_odb10 \
     -i ${OUT_FASTA} \
     -o busco \
-    --cpu ${THREADS} > \
-    busco.out
+    --cpu ${THREADS} | \
+    tee busco.out
 conda deactivate
 
 # output args identifier:
@@ -127,9 +169,7 @@ cat ${OUT_CSV}
 # ======================================================================
 
 # Align ONT reads to purged genome
-export LONGREADS=basecalls_guppy-5.0.11.fastq
 export NEW_ALIGN=ont_align_mm2_${OUT_PREFIX}.paf.gz
-cp /staging/lnell/${LONGREADS}.gz ./ && gunzip ${LONGREADS}.gz
 minimap2 -x map-ont -t $((THREADS - 2)) -K 1G -2 \
     ${OUT_FASTA} ${LONGREADS} | \
     gzip -c - > ${NEW_ALIGN}
@@ -150,7 +190,7 @@ purge_dups-1.2.5/scripts/hist_plot.py PB.stat ${OUT_PNG}
 mkdir ${OUT_DIR}
 mv ${OUT_FASTA} ${OUT_CSV} ${OUT_PNG} ./${OUT_DIR}/
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+mv ${OUT_DIR}.tar.gz ${TARGET}/
 rm -r ${OUT_DIR}
 
 cd ..

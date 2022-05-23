@@ -1,18 +1,18 @@
-# epd_f.sub
+# epd.sub
 
 # Explore options for purge_dups
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.3
+docker_image = lucasnell/tany_genomics:v0.5.1
 
-log = epd_f_$(f).log
-error = epd_f_$(f).err
-output = epd_f_$(f).out
+log = epd_a-$(a)_f-$(f).log
+error = epd_a-$(a)_f-$(f).err
+output = epd_a-$(a)_f-$(f).out
 
-executable = epd_f.sh
-arguments = $(f)
+executable = epd.sh
+arguments = contigs_shasta_pepper-hap1.fasta $(a) $(f)
 
-batch_name = "epd_f"
+batch_name = "epd"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -24,4 +24,4 @@ request_memory = 16GB
 request_disk = 80GB
 
 
-queue f from fvals.txt
+queue a,f from af_vals.txt
