@@ -33,13 +33,26 @@ cd ${OUT_DIR}
 export GENOME=
 export RNA_READS_ADULT1=trimmed_TanyAdult_S1_L002_R1_001.fastq
 export RNA_READS_ADULT2=trimmed_TanyAdult_S1_L002_R2_001.fastq
+export RNA_READS_ADULT_TAR=trimmed_TanyAdult_S1.tar
 export RNA_READS_JUVEN1=trimmed_TanyJuven_S2_L002_R1_001.fastq
 export RNA_READS_JUVEN2=trimmed_TanyJuven_S2_L002_R2_001.fastq
+export RNA_READS_JUVEN_TAR=trimmed_TanyJuven_S2.tar
+
+
+
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
-cp /staging/lnell/${RNA_READS_ADULT1}.gz ./ && gunzip ${RNA_READS_ADULT1}.gz
-cp /staging/lnell/${RNA_READS_ADULT2}.gz ./ && gunzip ${RNA_READS_ADULT2}.gz
-cp /staging/lnell/${RNA_READS_JUVEN1}.gz ./ && gunzip ${RNA_READS_JUVEN1}.gz
-cp /staging/lnell/${RNA_READS_JUVEN2}.gz ./ && gunzip ${RNA_READS_JUVEN2}.gz
+
+cp /staging/lnell/rna/${RNA_READS_ADULT_TAR} ./ \
+    && tar -xf ${RNA_READS_ADULT_TAR} \
+    && rm ${RNA_READS_ADULT_TAR}
+cp /staging/lnell/rna/${RNA_READS_JUVEN_TAR} ./ \
+    && tar -xf ${RNA_READS_JUVEN_TAR} \
+    && rm ${RNA_READS_JUVEN_TAR}
+
+gunzip ${RNA_READS_ADULT1}.gz
+gunzip ${RNA_READS_ADULT2}.gz
+gunzip ${RNA_READS_JUVEN1}.gz
+gunzip ${RNA_READS_JUVEN2}.gz
 
 export BAM_ADULT=tany_rna_adults.bam
 export BAM_JUVEN=tany_rna_juveniles.bam

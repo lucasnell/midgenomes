@@ -34,6 +34,7 @@ export READS1=${READ_BASE}_L002_R1_001.fastq.gz
 export READS2=${READ_BASE}_L002_R2_001.fastq.gz
 export TRIM_READS1=trimmed_${READS1}
 export TRIM_READS2=trimmed_${READS2}
+export TRIM_READS_TAR=trimmed_${READ_BASE}.tar
 export OUT_DIR=trimmed_${READ_BASE}
 
 
@@ -76,8 +77,12 @@ mkdir ${READ_BASE}_fastqc
 
 fastqc ${TRIM_READS1} ${TRIM_READS2} -o ${READ_BASE}_fastqc
 
-mv ${TRIM_READS1} /staging/lnell/dna/trimmed/
-mv ${TRIM_READS2} /staging/lnell/dna/trimmed/
+tar -cf ${TRIM_READS_TAR} ${TRIM_READS1} ${TRIM_READS2}
+mv ${TRIM_READS_TAR} /staging/lnell/dna/trimmed/
+
+rm ${READS1} ${READS2} ${TRIM_READS1} ${TRIM_READS2}
+
+rm -r '?' 2> /dev/null
 
 cd ..
 

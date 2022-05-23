@@ -59,15 +59,12 @@ export READ_BASE=$1
 
 export IN_READS1=trimmed_${READ_BASE}_L002_R1_001.fastq
 export IN_READS2=trimmed_${READ_BASE}_L002_R2_001.fastq
+export IN_READS_TAR=trimmed_${READ_BASE}.tar
 export GENOME=tany_scaffolds.fasta
 
-if [ ! -f /staging/lnell/dna/trimmed/${IN_READS1}.gz ]; then
-    echo "/staging/lnell/dna/trimmed/${IN_READS1}.gz does not exist!" 1>&2
+if [ ! -f /staging/lnell/dna/trimmed/${IN_READS_TAR} ]; then
+    echo "/staging/lnell/dna/trimmed/${IN_READS_TAR} does not exist!" 1>&2
     exit 111
-fi
-if [ ! -f /staging/lnell/dna/trimmed/${IN_READS2}.gz ]; then
-    echo "/staging/lnell/dna/trimmed/${IN_READS2}.gz does not exist!" 1>&2
-    exit 222
 fi
 if [ ! -f /staging/lnell/${GENOME}.gz ]; then
     echo "/staging/lnell/${GENOME}.gz does not exist!" 1>&2
@@ -103,8 +100,11 @@ export UNMAPPED_UN_BAM=${UNMAPPED_BAM/.bam/_unmerged.bam}
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
-cp /staging/lnell/dna/trimmed/${IN_READS1}.gz ./ && gunzip ${IN_READS1}.gz
-cp /staging/lnell/dna/trimmed/${IN_READS2}.gz ./ && gunzip ${IN_READS2}.gz
+cp /staging/lnell/dna/trimmed/${IN_READS_TAR} ./ \
+    && tar -xf ${IN_READS_TAR} \
+    && rm ${IN_READS_TAR}
+
+gunzip ${IN_READS1}.gz && gunzip ${IN_READS2}.gz
 cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 
 bwa index ${GENOME}

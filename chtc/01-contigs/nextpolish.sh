@@ -52,10 +52,11 @@ check_exit_status "cp genome" $?
 
 export READS1=trimmed_MyKS-19-B_S18_L002_R1_001.fastq.gz
 export READS2=trimmed_MyKS-19-B_S18_L002_R2_001.fastq.gz
-cp /staging/lnell/dna/trimmed/${READS1} ./
-check_exit_status "cp reads 1" $?
-cp /staging/lnell/dna/trimmed/${READS2} ./
-check_exit_status "cp reads 2" $?
+export READS_TAR=trimmed_MyKS-19-B_S18.tar
+cp /staging/lnell/dna/trimmed/${READS_TAR} ./ \
+    && tar -xf ${READS_TAR} \
+    && rm ${READS_TAR}
+check_exit_status "cp, tar, rm reads tar file" $?
 
 
 
