@@ -88,3 +88,68 @@ read_csv("~/Box Sync/midges/full-DNA-info.csv",
     cat()
 
 
+# And for quickmerge:
+
+# Matching others with NextDenovo assembly
+crossing(ass1 = c("contigs_necat_ont-polish_nextpolish_purgedups.fasta",
+                  "contigs_next_ont-polish_nextpolish.fasta",
+                  "contigs_smart_ont-polish_nextpolish_purgedups.fasta"),
+         ass2 = ass1,
+         # 1 for saving output, 0 for not
+         save_out = 1L) %>%
+    filter(ass1 != ass2, grepl("^contigs_next", ass1)) %>%
+    mutate(nm1 = str_remove_all(ass1, "^contigs_|_ont-polish_nextpolish|_purgedups|.fasta$"),
+           nm2 = str_remove_all(ass2, "^contigs_|_ont-polish_nextpolish|_purgedups|.fasta$"),
+           out_name = sprintf("merged_%s_%s", nm1, nm2)) %>%
+    select(ass1, ass2, out_name, save_out) %>%
+    format_delim(", ") %>%
+    str_replace_all(",", ", ") %>%
+    cat()
+
+# second round where we tried both combos of smart + smart--necat assemblies
+crossing(ass1 = c("merged_smart_necat.fasta",
+                  "contigs_smart_ont-polish_nextpolish_purgedups.fasta"),
+         ass2 = ass1,
+         # 1 for saving output, 0 for not
+         save_out = 0L) %>%
+    filter(ass1 != ass2) %>%
+    mutate(nm1 = str_remove_all(ass1, "^merged_|^contigs_|_ont-polish_nextpolish_purgedups|.fasta$"),
+           nm2 = str_remove_all(ass2, "^merged_|^contigs_|_ont-polish_nextpolish_purgedups|.fasta$"),
+           out_name = sprintf("merged_%s__%s", nm1, nm2)) %>%
+    select(-nm1, -nm2) %>%
+    select(ass1, ass2, out_name, save_out) %>%
+    format_delim(", ") %>%
+    str_replace_all(",", ", ") %>%
+    cat()
+
+
+
+
+
+# Round 2: NextDenovo and best from previous version:
+crossing(ass1 = c("merged_smart__smart_necat.fasta",
+                  "contigs_next_ont-polish_nextpolish.fasta"),
+         ass2 = ass1) %>%
+    filter(ass1 != ass2) %>%
+    mutate(nm1 = str_remove_all(ass1, "^contigs_|^merged_|_ont-polish_nextpolish|.fasta$"),
+           nm2 = str_remove_all(ass2, "^contigs_|^merged_|_ont-polish_nextpolish|.fasta$"),
+           nm = sprintf("merged_%s___%s.fasta", nm1, nm2)) %>%
+    select(-nm1, -nm2) %>%
+    mutate(save_out = 1L) %>%
+    format_delim(", ") %>%
+    str_replace_all(",", ", ") %>%
+    cat()
+
+
+
+
+# LongStitch:
+
+crossing(ass = c("scaffolds_besst_dentist"),
+         k_ntLink = c(24, 32, 40),
+         w = c(100, 250, 500),
+         save_out = 0L) %>%
+    format_delim(", ") %>%
+    str_replace_all(",", ", ") %>%
+    cat()
+

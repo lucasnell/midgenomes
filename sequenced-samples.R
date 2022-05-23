@@ -31,13 +31,13 @@ to_utm <- function(.df, .lat = "lat", .lon = "lon") {
 # -------------`
 # Mapping data
 # -------------`
-myvatn_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
+myvatn_df <- readOGR(dsn = paste0("~/Box Sync/midgenomics/location_data/",
                                   "shapefiles/myvatn"),
                   layer = "Myvatn_WSGUTM28") %>%
     tidy() %>%
     rename(lon = long)
 # Iceland outline is from GADM data (version 3.6; https://gadm.org/)
-iceland_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
+iceland_df <- readOGR(dsn = paste0("~/Box Sync/midgenomics/location_data/",
                                    "shapefiles/iceland"),
                  layer = "gadm36_ISL_0") %>%
     tidy() %>%
@@ -50,7 +50,8 @@ iceland_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
     # 1. You can filter out islands that are very far from shore:
     # filter(!piece %in% c(90, 133, 143, 157, 215, 244, 257, 258, 260, 262))
     # 2. Filter for just the mainland:
-    filter(piece == 1)
+    filter(piece == 1) %>%
+    identity()
 
 
 
@@ -58,7 +59,7 @@ iceland_df <- readOGR(dsn = paste0("~/Box Sync/midges/location_data/",
 # Sequenced sample data
 # -------------`
 # This is for all sequenced samples (archived and spatial)
-samp_df <- read_csv("~/Box Sync/midges/full-DNA-info.csv",
+samp_df <- read_csv("~/Box Sync/midgenomics/full-DNA-info.csv",
                     col_types = "cfcddidcccddidiDccldd") %>%
     filter(to_use == 1) %>%
     group_by(biotech_id, date, lake, site, n_adults, lat, lon) %>%
@@ -191,6 +192,32 @@ archive_p <- archive_map_p +
 
 # archive_p
 
+# Used just to show which samples are covered, NOT coverage:
+archive_df %>%
+    mutate(y = 0) %>%
+    # This is to make sure points above coverage plotting cap don't overlap
+    arrange(yr_gen, site) %>%
+    split(.$yr_gen) %>%
+    map_dfr(function(.d) {
+        if (nrow(.d) == 1) return(.d)
+        .d$y <- 0:(nrow(.d)-1)
+        return(.d)
+    }) %>%
+    ggplot(aes(yr_gen, y)) +
+    geom_area(data = tany_pop_df %>%
+                  mutate(y = log1p(N)),
+              fill = "gray90") +
+    geom_point(aes(color = site), size = 4, shape = 16) +
+    # facet_wrap(~ period, ncol = 1, scales = "free_x") +
+    theme_classic() +
+    scale_x_continuous("Date", breaks = seq(1978, 2014, 2)) +
+    scale_y_continuous("Midge abundance",
+                       breaks = log1p(c(0, 100, 10e3)),
+                       labels = expression(0, 10^2, 10^4)) +
+    scale_color_viridis_d("Site", begin = 0.2, end = 0.7) +
+    theme(strip.text = element_blank(),
+          legend.position = "none")
+
 
 
 
@@ -213,20 +240,21 @@ lakes_iceland_p <- iceland_df %>%
     ggplot(aes(x = lon, y = lat)) +
     geom_polygon(aes(group = group), color = "black", size = 0.1,
                  fill = "gray80") +
-    geom_point(data = lakes_df %>% filter(lake != "Mývatn"),
-               aes(color = tany_num_f), size = 3) +
-    geom_text(data = lakes_df %>%
-                  filter(n_adults < 40, lake != "Mývatn") %>%
-                  arrange(lake) %>%
-                  mutate(lon = lon + c(-12, 0, 0, -15, 0) * 1e3,
-                         lat = lat + c(12, -10, -10, 5, -10) * 1e3),
-              aes(color = tany_num_f, label = n_adults), size = 8 / 2.83465,
-              vjust = 1, hjust = 0.5) +
+    geom_point(data = lakes_df %>% filter(lake != "Mývatn"), size = 3,
+    #            aes(color = tany_num_f), color = "dodgerblue3", shape = 19) +
+               color = "dodgerblue3", fill = "dodgerblue", shape = 21) +
+    # geom_text(data = lakes_df %>%
+    #               filter(n_adults < 40, lake != "Mývatn") %>%
+    #               arrange(lake) %>%
+    #               mutate(lon = lon + c(-12, 0, 0, -15, 0) * 1e3,
+    #                      lat = lat + c(12, -10, -10, 5, -10) * 1e3),
+    #           aes(color = tany_num_f, label = n_adults), size = 8 / 2.83465,
+    #           vjust = 1, hjust = 0.5) +
     geom_rect(data = tibble(x = 403118.1 - 100, xe = 411932.0 + 100,
                             y = 7271491 - 100, ye = 7282704 + 100),
               aes(xmin = x, xmax = xe, ymin = y, ymax = ye),
               inherit.aes = FALSE, size = 0.75, fill = NA, color = "black") +
-    scale_color_manual(values = c("firebrick1", "dodgerblue"), guide = "none") +
+    # scale_color_manual(values = c("firebrick1", "dodgerblue"), guide = "none") +
     coord_equal() +
     theme_minimal() +
     theme(axis.title = element_blank(),
@@ -234,6 +262,41 @@ lakes_iceland_p <- iceland_df %>%
           axis.ticks = element_blank(),
           panel.grid = element_blank()) +
     NULL
+
+
+# cairo_pdf("~/Desktop/iceland_map.pdf", width = 4, height = 3, bg = NA)
+# lakes_iceland_p
+# dev.off()
+
+
+# Plot just of Myvatn, Miklavatn, and Vikingavatn - for talk
+p <- iceland_df %>%
+    ggplot(aes(x = lon, y = lat)) +
+    geom_polygon(aes(group = group), color = "black", size = 0.1,
+                 fill = "gray80") +
+    # geom_point(data = lakes_df %>%
+    #                filter(lake %in% c("Mývatn", "Miklavatn", "Víkingavatn")) %>%
+    #                group_by(lake) %>%
+    #                summarize(lat = mean(lat), lon = mean(lon)),
+    #            size = 3,
+    #            color = "dodgerblue3", fill = "dodgerblue", shape = 21) +
+    geom_rect(data = tibble(x = 403118.1 - 100, xe = 411932.0 + 100,
+                            y = 7271491 - 100, ye = 7282704 + 100),
+              aes(xmin = x, xmax = xe, ymin = y, ymax = ye),
+              inherit.aes = FALSE, size = 0.75, fill = NA, color = "black") +
+    coord_equal() +
+    theme_minimal() +
+    theme(axis.title = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          panel.grid = element_blank()) +
+    NULL
+# cairo_pdf("~/Desktop/iceland_map2.pdf", width = 4, height = 3, bg = NA)
+# p
+# dev.off()
+
+
+
 
 
 lakes_myvatn_p <- myvatn_df %>%
@@ -244,7 +307,7 @@ lakes_myvatn_p <- myvatn_df %>%
               inherit.aes = FALSE, size = 0.75, fill = "white", color = "black") +
     geom_polygon(aes(group = group, fill = hole), color = "black", size = 0.1) +
     geom_point(data = lakes_df %>% filter(grepl("Mývatn", lake)),
-               size = 4, color = "dodgerblue3") +
+               size = 4, color = "dodgerblue3", fill = "dodgerblue", shape = 21) +
     geom_segment(data = tibble(lone = 405e3, lon = lone - 1e3, lat = 7280e3),
                  aes(xend = lone, yend = lat), size = 1) +
     geom_text(data = tibble(lat = 7280e3 + 200,  lon = 405e3-500),
@@ -260,6 +323,9 @@ lakes_myvatn_p <- myvatn_df %>%
     NULL
 
 
+# cairo_pdf("~/Desktop/myvatn_map.pdf", width = 2, height = 2.5, bg = NA)
+# lakes_myvatn_p
+# dev.off()
 
 
 
