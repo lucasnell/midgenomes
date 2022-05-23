@@ -1,0 +1,26 @@
+# quickmerge.sub
+
+# Combine assemblies using quickmerge.
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.4
+
+log = quickmerge_$(out_name).log
+error = quickmerge_$(out_name).err
+output = quickmerge_$(out_name).out
+
+executable = quickmerge.sh
+arguments = $(ass1) $(ass2) $(out_name).fasta $(save_out)
+
+batch_name = "quickmerge"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 8GB
+request_disk = 20GB
+
+queue ass1, ass2, out_name, save_out from assemblies.txt

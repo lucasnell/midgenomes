@@ -9,32 +9,51 @@
 #' first assembly provided.
 #'
 
+
+# export ASSEMBLY1=contigs_next_ont-polish_nextpolish.fasta
+# export ASSEMBLY2=contigs_smart_ont-polish_nextpolish_purgedups.fasta
+# export OUT_NAME=contigs_merged_next_smart.fasta
+# export SAVE_OUT=1
+
+
 export ASSEMBLY1=$1
 export ASSEMBLY2=$2
 export OUT_NAME=$3
+# 1 for saving output, 0 for not
+export SAVE_OUT=$4
+
 
 if [[ "${ASSEMBLY1}" != *.fasta ]]; then
-    echo "ERROR: Assembly files must end in *.fasta. Exiting..." 1>&2
+    echo "ERROR: Input assembly files must end in *.fasta." 1>&2
     exit 1
 fi
 if [[ "${ASSEMBLY2}" != *.fasta ]]; then
-    echo "ERROR: Assembly files must end in *.fasta. Exiting..." 1>&2
+    echo "ERROR: Input assembly files must end in *.fasta." 1>&2
     exit 1
 fi
+if [[ "${OUT_NAME}" != *.fasta ]]; then
+    echo "ERROR: Output assembly file must end in *.fasta." 1>&2
+    exit 1
+fi
+if ! [[ "${SAVE_OUT}" == "0" ]] && ! [[ "${SAVE_OUT}" == "1" ]]; then
+   echo "ERROR: The 6th input should be 0 or 1. Yours is '${SAVE_OUT}'." 1>&2
+   exit 1
+fi
+
 
 
 . /app/.bashrc
 conda activate assembly-env
 source /staging/lnell/helpers.sh
 
-export THREADS=16
+export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 # Where to send files:
 export TARGET=/staging/lnell/assemblies
 
 # Output names:
-export OUT_DIR=${OUT_NAME}
-export OUT_FASTA=${OUT_NAME}.fasta
+export OUT_DIR=${OUT_NAME/.fasta/}
+export OUT_FASTA=${OUT_NAME}
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
@@ -47,15 +66,31 @@ cp /staging/lnell/assemblies/${ASSEMBLY2}.gz ./ && gunzip ${ASSEMBLY2}.gz
 check_exit_status "cp genome 2" $?
 
 
-# Also, make both assemblies not have spaces in sequence names.
+# Make both assemblies not have spaces in sequence names.
+sed -i '/^>/{s/ .*//}' ${ASSEMBLY1}
+sed -i '/^>/{s/ .*//}' ${ASSEMBLY2}
 
 
-# try the command 'merge_wrapper.py -h' for detail on options available with this wrapper.
-# merge_wrapper.py hybrid_assembly.fasta self_assembly.fasta
 
-# > merge_wrapper.py -h
-# usage: merge_wrapper.py [-h] [-pre PREFIX] [-hco HCO] [-c C] [-l LENGTH_CUTOFF] [--no_nucmer] [--no_delta] [--stop_after_nucmer] [--stop_after_df] [-ml MERGING_LENGTH_CUTOFF] [--clean_only]
-#                         hybrid_assembly_fasta self_assembly_fasta
+# Set some parameters for quickmerge:
+# Default is 0, but they recommend near the N50 of the first assembly.
+export L_CUTOFF=$(summ-scaffs.py ${ASSEMBLY1} | grep "N50" | sed 's/.* //')
+# Default is 5000, but they recommend higher
+export ML_CUTOFF=10000
+
+
+merge_wrapper.py -pre ${OUT_DIR} \
+    -l ${L_CUTOFF} \
+    -ml ${ML_CUTOFF} \
+    ${ASSEMBLY1} ${ASSEMBLY2}
+
+mv merged_${OUT_DIR}.fasta ${OUT_FASTA}
+
+
+# usage: merge_wrapper.py [-h] [-pre PREFIX] [-hco HCO] [-c C] [-l LENGTH_CUTOFF]
+#                              [--no_nucmer] [--no_delta] [--stop_after_nucmer]
+#                              [--stop_after_df] [-ml MERGING_LENGTH_CUTOFF]
+#                              [--clean_only] hybrid_assembly_fasta self_assembly_fasta
 #
 # run mummer and the merge program.
 #
@@ -79,9 +114,6 @@ check_exit_status "cp genome 2" $?
 #   -ml MERGING_LENGTH_CUTOFF, --merging_length_cutoff MERGING_LENGTH_CUTOFF
 #                         set the merging length cutoff necessary for use in quickmerge (default 5000)
 #   --clean_only          generate safe FASTA files for merging, but do not merge
-#
-
-
 
 
 
@@ -90,20 +122,21 @@ check_exit_status "cp genome 2" $?
 # ===================*
 
 
-
-cp XXXXXXXXXXXXXXXXXXX ${OUT_FASTA}
-
-# Summarize new assembly
-
 summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out
 check_exit_status "summ-scaffs.py" $?
 
 run_busco ${OUT_FASTA} ${THREADS}
-rm -r busco_downloads
+rm -r busco_downloads busco
 
-busco_seq_summary_csv contigs_summary.out busco.out ${OUT_NAME} | \
-    tee ${OUT_NAME}.csv
+busco_seq_summary_csv contigs_summary.out busco.out ${OUT_DIR} \
+    | tee ${OUT_DIR}.csv
 
+
+if (( SAVE_OUT == 0 )); then
+    cd ..
+    rm -r ${OUT_DIR}
+    exit 0
+fi
 
 # Keep the uncompressed version for output in main directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
