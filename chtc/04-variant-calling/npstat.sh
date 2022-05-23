@@ -157,8 +157,8 @@ if [ ! -f \${scaff}.pileup ] || [ ! -f \${scaff}.snp ]; then
     rm \${scaff}.pileup \${scaff}.snp 2> /dev/null
     exit 1
 fi
-npstat -n $((N_ADULTS * 2)) -l ${WIN_SIZE} -maxcov 10000 -nolowfreq 0 \
-    -snpfile \${scaff}.snp \${scaff}.pileup \
+npstat -n $((N_ADULTS * 2)) -l ${WIN_SIZE} -maxcov 10000 -nolowfreq 0 \\
+    -snpfile \${scaff}.snp \${scaff}.pileup \\
     &> \${scaff}_npstat.out
 status=\$?
 if [ "\$status" != "0" ]; then
@@ -167,7 +167,7 @@ fi
 rm \${scaff}.pileup \${scaff}.snp \${scaff}_npstat.out
 
 # Keep only columns that are useful given my input parameters
-cut -f 1,2,4-10 \${scaff}.pileup.stats \
+cut -f 1,2,4-10 \${scaff}.pileup.stats \\
     > \${scaff}.stats
 rm \${scaff}.pileup.stats
 
@@ -198,8 +198,8 @@ if __name__ == "__main__":
     tasks = args.inputs
     with mp.Pool(processes=${THREADS}) as pool:
         exit_codes = pool.map(work, tasks)
-    not_found = [tasks[i] for i in exit_codes if i == 1]
-    failed = [tasks[i] for i in exit_codes if i == 2]
+    not_found = [tasks[j] for j,i in enumerate(exit_codes) if i == 1]
+    failed = [tasks[j] for j,i in enumerate(exit_codes) if i == 2]
     if len(not_found) > 0:
         sys.stderr.write("WARNING: these scaffolds were not found : {}\n".format(not_found))
     if len(failed) > 0:
