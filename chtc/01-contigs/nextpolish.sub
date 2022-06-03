@@ -3,14 +3,14 @@
 # Polish assembly using Illumina reads via NextPolish
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.5.4
+docker_image = lucasnell/tany_genomics:v0.5.9
 
 log = nextpolish_$(assembly).log
 error = nextpolish_$(assembly).err
 output = nextpolish_$(assembly).out
 
 executable = nextpolish.sh
-arguments = $(assembly).fasta
+arguments = $(assembly).fasta 3 0
 
 batch_name = "nextpolish"
 

@@ -5,25 +5,45 @@
 #' Requires argument for which assembly to polish.
 #'
 
+#' Not immediately exiting so that all errors are printed.
+export status=0
 
-export ASSEMBLY=$1
-
-#' Second argument (if provided) is # rounds.
-#' I wouldn't recommend more than 3: More rounds isn't necessarily better!
-if [ -z ${2+x} ]; then
-    N_ROUNDS=3
-else
-    N_ROUNDS=$2
-    if ! [[ $N_ROUNDS =~ ^[0-9]+$ ]]; then
-        echo "ERROR: Second arg is not an integer!" 1>&2
-        exit 1
-    fi
+#' Requires 3 arguments:
+if [[ $# -ne 3 ]]; then
+    echo "ERROR: nextpolish.sh requires 3 input arguments. You have $#." 1>&2
+    status=1
 fi
-export N_ROUNDS
 
+#' First is assembly to polish:
+export ASSEMBLY=$1
 if [[ "${ASSEMBLY}" != *.fasta ]]; then
-    echo "ERROR: Assembly files must end in *.fasta. Exiting..." 1>&2
+    echo -n "ERROR: First arg to nextpolish.sh must end in *.fasta. " 1>&2
+    echo "Yours is '${ASSEMBLY}'." 1>&2
+    status=1
+fi
+
+#' Second argument is number of rounds.
+#' I wouldn't recommend more than 3: More rounds isn't necessarily better!
+export N_ROUNDS=$2
+if ! [[ $N_ROUNDS =~ ^[0-9]+$ ]]; then
+    echo -n "ERROR: Second arg to nextpolish.sh must be an integer. " 1>&2
+    echo "Your is '${N_ROUNDS}'." 1>&2
+    status=1
+fi
+
+#' Third argument is whether Illumina reads should be normalized ($NORM == 1)
+#' or not ($NORM == 0).
+export NORM=$3
+if ! [[ "${NORM}" == "0" ]] && ! [[ "${NORM}" == "1" ]]; then
+    echo "ERROR: Third arg to nextpolish.sh should be 0 or 1. " 1>&2
+    echo "Yours is '${NORM}'." 1>&2
+    status=1
+fi
+
+if (( status != 0 )); then
     exit 1
+else
+    echo -e "\nBasic tests passed for nextpolish.sh inputs.\n\n"
 fi
 
 
@@ -39,98 +59,138 @@ export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 export TARGET=/staging/lnell/assemblies
 
 # Output names:
-export OUT_NAME=${ASSEMBLY/.fasta/}_nextpolish
+if (( NORM == 0 )); then
+    OUT_NAME=${ASSEMBLY/.fasta/}_nextpolish
+else
+    OUT_NAME=${ASSEMBLY/.fasta/}_norm-nextpolish
+fi
+export OUT_NAME
 export OUT_DIR=${OUT_NAME}
 export OUT_FASTA=${OUT_NAME}.fasta
 
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
-# Inputs
+#' Input assembly:
 cp /staging/lnell/assemblies/${ASSEMBLY}.gz ./ && gunzip ${ASSEMBLY}.gz
 check_exit_status "cp genome" $?
 
-export READS1=trimmed_MyKS-19-B_S18_L002_R1_001.fastq.gz
-export READS2=trimmed_MyKS-19-B_S18_L002_R2_001.fastq.gz
-export READS_TAR=trimmed_MyKS-19-B_S18.tar
-cp /staging/lnell/dna/trimmed/${READS_TAR} ./ \
-    && tar -xf ${READS_TAR} \
+#' All reads have uncalled bases filtered out (to prevent N in final assembly),
+#' and if NORM == 1, then they are also normalized.
+
+READS1=noN_trimmed_MyKS-19-B_S18_L002_R1_001.fastq
+READS2=noN_trimmed_MyKS-19-B_S18_L002_R2_001.fastq
+READS_TAR=noN_trimmed_MyKS-19-B_S18.tar.gz
+if (( NORM == 1 )); then
+    READS1=norm_${READS1}
+    READS2=norm_${READS2}
+    READS_TAR=norm_${READS_TAR}
+fi
+export READS1
+export READS2
+export READS_TAR
+
+cp /staging/lnell/dna/trimmed/for-polishing/${READS_TAR} ./ \
+    && tar -xzf ${READS_TAR} \
     && rm ${READS_TAR}
-check_exit_status "cp, tar, rm reads tar file" $?
 
 
+#' For proper date-times:
+export TZ="America/Chicago"
 
-# Filter out reads with any uncalled bases, to prevent N in final assembly
-# Input reads have already been trimmed for adapters, etc.
-export TRIM_READS1=in_reads1.fastq
-export TRIM_READS2=in_reads2.fastq
+#' Function to print to stdout and stderr.
+#' Usage:
+#'     print_start [NAME_OF_STAGE]
+print_start () {
+    local L="================================================================\n"
+    echo -e "\n\n\n${L}${L}\n""$@" "\n@" $(date "+%F %T") "\n\n${L}${L}\n" \
+        | tee /dev/stderr
+}
+#' Similar but for end point. No arguments needed here.
+print_end () {
+    local L="================================================================\n"
+    echo -e "\n\n\n\n${L}${L}\nFinished\n@ "$(date "+%F %T") "\n\n" \
+        | tee /dev/stderr
+}
 
-fastp --in1 ${READS1} --in2 ${READS2} \
-    --out1 ${TRIM_READS1} --out2 ${TRIM_READS2} \
-    --thread ${THREADS} \
-    --disable_length_filtering \
-    --disable_adapter_trimming \
-    --disable_trim_poly_g \
-    --dont_eval_duplication \
-    --qualified_quality_phred 0 \
-    --unqualified_percent_limit 100 \
-    --n_base_limit 0
+#'
+#' Functions for each section of NextPolish pipeline, to easy capturing output.
+#' All these functions use environmental variables, not input arguments.
+#'
 
-rm ${READS1} ${READS2} fastp*
+status=0
+#' Index assembly then map reads to it.
+do_map () {
+    print_start "BWA-indexing assembly"
+    bwa index ${input}
+    status=$?
+    if (( status != 0 )); then return $status; fi
+    print_start "Aligning"
+    bwa mem -t ${THREADS} ${input} ${READS1} ${READS2} | \
+        samtools view --threads 3 -F 0x4 -b -| \
+        samtools fixmate -m --threads 3 - -| \
+        samtools sort -m 2g --threads 5 -| \
+        samtools markdup --threads 5 -r - sgs.sort.bam
+    status=$?
+    print_end
+    return $status
+}
+#' Index BAM and faidx-index assembly.
+do_index () {
+    # print_start "Index BAM"
+    samtools index -@ ${THREADS} sgs.sort.bam
+    status=$?
+    if (( status != 0 )); then return $status; fi
+    # print_start "FAIDX-index assembly"
+    samtools faidx ${input}
+    status=$?
+    # print_end
+    return $status
+}
+#' Polish assembly using NextPolish, remove unneeded files from previous steps,
+#' then update `input` variable.
+#' NOTE: If you change the iterator for step from `j` to something else,
+#'       you should also update this function!
+do_polish () {
+    print_start "Polishing"
+    local OUT=genome_round${i}_step${j}.fa
+    python /opt/NextPolish/lib/nextpolish1.py -g ${input} \
+        --task ${j} -p ${THREADS} -s sgs.sort.bam \
+        > ${OUT}
+    status=$?
+    if (( status != 0 )); then return $status; fi
+    rm ${input}.* sgs.sort.bam*
+    input=${OUT}
+    print_end
+    return $status
+}
 
-export READS1=${TRIM_READS1}
-export READS2=${TRIM_READS2}
-unset TRIM_READS1 TRIM_READS2
 
+export input=${ASSEMBLY}
 
-
-
-input=${ASSEMBLY}
+mkdir logs
 
 for ((i=1; i<=${N_ROUNDS}; i++)); do
-# step 1:
-    # index the genome file and do alignment
-    bwa index ${input}
-    bwa mem -t ${THREADS} ${input} ${READS1} ${READS2} | \
-        samtools view --threads 3 -F 0x4 -b -| \
-        samtools fixmate -m --threads 3  - -| \
-        samtools sort -m 2g --threads 5 -| \
-        samtools markdup --threads 5 -r - sgs.sort.bam
-    # index bam and genome files
-    samtools index -@ ${THREADS} sgs.sort.bam
-    samtools faidx ${input}
-    # polish genome file
-    python /opt/NextPolish/lib/nextpolish1.py -g ${input} \
-        --task 1 -p ${THREADS} -s sgs.sort.bam \
-        > genome.polishtemp.fa
-    rm ${input}.* sgs.sort.bam*
-    input=genome.polishtemp.fa
-# step2:
-    # index genome file and do alignment
-    bwa index ${input}
-    bwa mem -t ${THREADS} ${input} ${READS1} ${READS2} | \
-        samtools view --threads 3 -F 0x4 -b -| \
-        samtools fixmate -m --threads 3  - -| \
-        samtools sort -m 2g --threads 5 -| \
-        samtools markdup --threads 5 -r - sgs.sort.bam
-    # index bam and genome files
-    samtools index -@ ${THREADS} sgs.sort.bam
-    samtools faidx ${input}
-    # polish genome file
-    python /opt/NextPolish/lib/nextpolish1.py -g ${input} \
-        --task 2 -p ${THREADS} -s sgs.sort.bam \
-        > genome.nextpolish.fa
-    rm ${input}.* sgs.sort.bam*
-    input=genome.nextpolish.fa
-    if (( i < N_ROUNDS )); then
-        cp ${input} genome.nextpolish_${i}.fa
-    fi
+    for ((j=1; j<=2; j++)); do
+        # Map:
+        do_map 2> logs/mapping_round${i}_step${j}.log
+        # Only print this massive *.log file if something went wrong:
+        if (( status != 0 )); then
+            cat logs/mapping_round${i}_step${j}.log >&2
+        fi
+        check_exit_status "alignment, round ${i}, step ${j}" $status
+        # Index:
+        do_index
+        check_exit_status "index, round ${i}, step ${j}" $status
+        # Polish:
+        do_polish 2> >(tee -a logs/polish_round${i}_step${j}.log >&2)
+        check_exit_status "polish, round ${i}, step ${j}" $status
+    done
 done
 
 
-# Finally polished genome file: genome.nextpolish.fa
-
-cp genome.nextpolish.fa ${OUT_FASTA}
+# Finally polished genome file: $input
+cp ${input} ${OUT_FASTA}
 check_exit_status "cp output" $?
 
 rm ${READS1} ${READS2} ${ASSEMBLY}
@@ -153,4 +213,3 @@ tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz ${TARGET}/
 
 rm -r ${OUT_DIR}
-
