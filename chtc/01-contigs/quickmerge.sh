@@ -19,7 +19,7 @@
 export ASSEMBLY1=$1
 export ASSEMBLY2=$2
 export OUT_NAME=$3
-# 1 for saving output, 0 for not
+# 2 for saving all output, 1 for saving just FASTA, 0 for no saving
 export SAVE_OUT=$4
 
 
@@ -35,8 +35,8 @@ if [[ "${OUT_NAME}" != *.fasta ]]; then
     echo "ERROR: Output assembly file must end in *.fasta." 1>&2
     exit 1
 fi
-if ! [[ "${SAVE_OUT}" == "0" ]] && ! [[ "${SAVE_OUT}" == "1" ]]; then
-   echo "ERROR: The 6th input should be 0 or 1. Yours is '${SAVE_OUT}'." 1>&2
+if ! [[ "${SAVE_OUT}" == "0" ]] && ! [[ "${SAVE_OUT}" == "1" ]] && ! [[ "${SAVE_OUT}" == "2" ]]; then
+   echo "ERROR: The 6th input should be 0, 1, or 2. Yours is '${SAVE_OUT}'." 1>&2
    exit 1
 fi
 
@@ -82,7 +82,9 @@ export ML_CUTOFF=10000
 merge_wrapper.py -pre ${OUT_DIR} \
     -l ${L_CUTOFF} \
     -ml ${ML_CUTOFF} \
-    ${ASSEMBLY1} ${ASSEMBLY2}
+    ${ASSEMBLY1} ${ASSEMBLY2} \
+    > >(tee -a quickmerge.out) \
+    2> >(tee -a quickmerge.err >&2)
 
 mv merged_${OUT_DIR}.fasta ${OUT_FASTA}
 
@@ -145,8 +147,11 @@ mv ${OUT_FASTA}.gz ${TARGET}/
 rm ${ASSEMBLY1} ${ASSEMBLY2}
 
 cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz ${TARGET}/
+
+if (( SAVE_OUT == 2 )); then
+    tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+    mv ${OUT_DIR}.tar.gz ${TARGET}/
+fi
 
 rm -r ${OUT_DIR}
 

@@ -10,12 +10,19 @@ source /staging/lnell/helpers.sh
 # Where to send files:
 export TARGET=/staging/lnell/assemblies
 
-export ASSEMBLIES=(contigs_necat_ont-polish_nextpolish.fasta \
-                   contigs_smart_ont-polish_nextpolish.fasta)
-export L_CUTS=(30 40)
-export M_CUTS=(150 155)
-export U_CUTS=(390 400)
-export a_ARGS=(70 45)
+# export ASSEMBLIES=(contigs_necat_ont-polish_nextpolish.fasta \
+#                    contigs_smart_ont-polish_nextpolish.fasta)
+# export L_CUTS=(30 40)
+# export M_CUTS=(150 155)
+# export U_CUTS=(390 400)
+# export a_ARGS=(70 45)
+export ASSEMBLIES=(contigs_necat_ont-polish.fasta \
+                   contigs_smart_ont-polish.fasta \
+                   contigs_flye_ont-polish.fasta)
+export L_CUTS=(10 30 10)
+export M_CUTS=(150 160 150)
+export U_CUTS=(390 400 400)
+export a_ARGS=(70 45 60)
 
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
@@ -31,6 +38,8 @@ cd ${WD}
 export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
 cp /staging/lnell/${LONGREADS} ./
 
+export N_ASS=${#ASSEMBLIES[@]}
+
 for ASS in ${ASSEMBLIES[@]}; do
     cp /staging/lnell/assemblies/${ASS}.gz ./ && gunzip ${ASS}.gz
     ALIGN=${ASS/.fasta/_mm2-align.paf.gz}
@@ -41,8 +50,7 @@ done
 rm ${LONGREADS}
 
 
-for i in 0 1; do
-
+for ((i=0; i < N_ASS; i+=1)); do
     A=${ASSEMBLIES[i]/.fasta/}
     OUT_DIR=${A}_purgedups
     mkdir ${OUT_DIR}
