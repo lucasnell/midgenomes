@@ -1,0 +1,25 @@
+# flye.sub
+
+# Assemble Tanytarsus gracilentus genome using Flye
+
+universe = docker
+docker_image = lucasnell/tany_genomics:v0.5.8
+
+log = flye.log
+error = flye.err
+output = flye.out
+
+executable = flye.sh
+
+batch_name = "flye"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 100GB
+request_disk = 100GB
+
+queue 1
