@@ -90,21 +90,48 @@ read_csv("~/Box Sync/midges/full-DNA-info.csv",
 
 # And for quickmerge:
 
-# Matching others with NextDenovo assembly
-crossing(ass1 = c("contigs_necat_ont-polish_nextpolish_purgedups.fasta",
-                  "contigs_next_ont-polish_nextpolish.fasta",
-                  "contigs_smart_ont-polish_nextpolish_purgedups.fasta"),
+
+
+
+crossing(ass1 = c("contigs_flye_ont-polish_purgedups.fasta",
+                  "contigs_necat_ont-polish_purgedups.fasta",
+                  "contigs_next_ont-polish.fasta",
+                  "contigs_smart_ont-polish_purgedups.fasta"),
          ass2 = ass1,
-         # 1 for saving output, 0 for not
+         # 2 for saving all output, 1 for saving just FASTA, 0 for no saving
          save_out = 1L) %>%
-    filter(ass1 != ass2, grepl("^contigs_next", ass1)) %>%
-    mutate(nm1 = str_remove_all(ass1, "^contigs_|_ont-polish_nextpolish|_purgedups|.fasta$"),
-           nm2 = str_remove_all(ass2, "^contigs_|_ont-polish_nextpolish|_purgedups|.fasta$"),
-           out_name = sprintf("merged_%s_%s", nm1, nm2)) %>%
+    filter(ass1 != ass2) %>%
+    arrange(ass1, ass2) %>%
+    mutate(nm1 = str_remove_all(ass1, "^contigs_|_ont-polish|_purgedups|.fasta$"),
+           nm2 = str_remove_all(ass2, "^contigs_|_ont-polish|_purgedups|.fasta$"),
+           out_name = sprintf("contigs_merged_%s_%s", nm1, nm2)) %>%
     select(ass1, ass2, out_name, save_out) %>%
     format_delim(", ") %>%
     str_replace_all(",", ", ") %>%
     cat()
+
+crossing(ass1 = c("contigs_merged_next_flye.fasta",
+                  "contigs_merged_next_smart.fasta",
+                  "contigs_merged_smart_necat.fasta",
+                  "contigs_merged_smart_next.fasta"),
+         ass2 = ass1,
+         # 2 for saving all output, 1 for saving just FASTA, 0 for no saving
+         save_out = 1L) %>%
+    filter(ass1 != ass2 & (grepl("merged_next_flye", ass1) |
+                               grepl("merged_next_flye", ass2))) %>%
+    arrange(ass1, ass2) %>%
+    mutate(nm1 = str_remove_all(ass1, "^contigs_merged_|.fasta$") %>%
+               str_replace("_", "-"),
+           nm2 = str_remove_all(ass2, "^contigs_merged_|.fasta$") %>%
+               str_replace("_", "-"),
+           out_name = sprintf("contigs_merged_%s_%s", nm1, nm2)) %>%
+    select(ass1, ass2, out_name, save_out) %>%
+    format_delim(", ") %>%
+    str_replace_all(",", ", ") %>%
+    cat()
+
+
+
 
 # second round where we tried both combos of smart + smart--necat assemblies
 crossing(ass1 = c("merged_smart_necat.fasta",
@@ -145,9 +172,10 @@ crossing(ass1 = c("merged_smart__smart_necat.fasta",
 
 # LongStitch:
 
-crossing(ass = c("scaffolds_besst_dentist"),
+crossing(ass = c("contigs_merged_next_smart"),
          k_ntLink = c(24, 32, 40),
          w = c(100, 250, 500),
+         ark= 0:1,
          save_out = 0L) %>%
     format_delim(", ") %>%
     str_replace_all(",", ", ") %>%
