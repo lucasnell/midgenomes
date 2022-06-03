@@ -4,7 +4,7 @@
 # Then use BESST_RNA to scaffold assembly.
 
 # Extra threads are for HISAT2 only
-export THREADS=32
+export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 . /app/.bashrc
 source /staging/lnell/helpers.sh
@@ -28,18 +28,18 @@ if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
 else
-    OUT_DIR=${GENOME/.fasta/}${OUT_SUFFIX}
+    OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
 fi
 export OUT_DIR
 
 export OUT_FASTA=${OUT_DIR}.fasta
 
-# If the output FASTA already exists, this job stops with exit code 0
-if [ -f ${TARGET}/${OUT_FASTA}.gz ]; then
-    echo -e "\n\nMESSAGE: ${TARGET}/${OUT_FASTA}.gz already exists."
-    echo -e "Exiting...\n"
-    exit 0
-fi
+# # If the output FASTA already exists, this job stops with exit code 0
+# if [ -f ${TARGET}/${OUT_FASTA}.gz ]; then
+#     echo -e "\n\nMESSAGE: ${TARGET}/${OUT_FASTA}.gz already exists."
+#     echo -e "Exiting...\n"
+#     exit 0
+# fi
 
 
 mkdir ${OUT_DIR}
@@ -47,6 +47,7 @@ mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 cp ${TARGET}/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+check_exit_status "cp genome" $?
 
 
 
@@ -67,18 +68,25 @@ if [ ! -f /staging/lnell/rna/trimmed_TanyAdult_S1.tar ]; then
     exit 1
 fi
 
-cp /staging/lnell/rna/trimmed_TanyAdult_S1.tar ./
-tar -xf trimmed_TanyAdult_S1.tar && rm trimmed_TanyAdult_S1.tar
+cp /staging/lnell/rna/trimmed_TanyAdult_S1.tar ./ \
+    && tar -xf trimmed_TanyAdult_S1.tar \
+    && rm trimmed_TanyAdult_S1.tar
+check_exit_status "move rna tar" $?
 
 gunzip ${RNA1}.gz && gunzip ${RNA2}.gz
+check_exit_status "gunzip rna" $?
 
 hisat2-build ${GENOME} tany_hisat_idx
+check_exit_status "hisat2-build" $?
 
 # (Pipe to samtools is to convert it to an aligned BAM file)
 hisat2 -x tany_hisat_idx -1 ${RNA1} -2 ${RNA2} -k 3 -p ${THREADS} \
         --pen-noncansplice 1000000 --no-unal | \
     samtools sort -O bam - > ${BAM}
+check_exit_status "hisat2" $?
 samtools index ${BAM} ${BAM}.bai
+check_exit_status "samtools index" $?
+
 
 # (`tany_hisat_idx*` are index files from `hisat2-build`)
 rm ${RNA1} ${RNA2} tany_hisat_idx*
@@ -110,6 +118,7 @@ python Main.py 1 \
     -o ../ \
     -z 10000 \
     -k 100
+check_exit_status "BESST_RNA" $?
 
 conda deactivate
 
