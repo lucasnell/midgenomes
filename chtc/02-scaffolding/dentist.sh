@@ -81,7 +81,7 @@ chmod +x summ-scaffs.py
 
 
 
-export THREADS=24
+export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 
 
@@ -111,34 +111,34 @@ if [ ! -f ${TARGET}/${GENOME}.gz ]; then
 fi
 
 # The input file dictates the output name:
-export OUT_SUFFIX=_dentist
+export OUT_SUFFIX=dentist
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
 else
-    OUT_DIR=${GENOME/.fasta/}${OUT_SUFFIX}
+    OUT_DIR=${GENOME/.fasta/}_${OUT_SUFFIX}
 fi
 export OUT_DIR
 
 
 export OUT_FASTA=${OUT_DIR}.fasta
 
-# If the output FASTA already exists, this job stops with exit code 0
-if [ -f ${TARGET}/${OUT_FASTA}.gz ]; then
-    echo -e "\n\nMESSAGE: ${TARGET}/${OUT_FASTA}.gz already exists."
-    echo -e "Exiting...\n"
-    exit 0
-fi
+# # If the output FASTA already exists, this job stops with exit code 0
+# if [ -f ${TARGET}/${OUT_FASTA}.gz ]; then
+#     echo -e "\n\nMESSAGE: ${TARGET}/${OUT_FASTA}.gz already exists."
+#     echo -e "Exiting...\n"
+#     exit 0
+# fi
 
 
 
 # installation steps for Mambaforge
-cp /staging/lnell/Mambaforge-Linux-x86_64.sh ./
-# wget https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
+# wget "https://github.com/conda-forge/miniforge/releases/download/4.12.0-0/Mambaforge-$(uname)-$(uname -m).sh"
 export HOME=$PWD
 export PATH
 sh Mambaforge-Linux-x86_64.sh -b -p $PWD/mamba3 \
     1> mambaforge.log
+check_exit_status "MambaForge" $?
 export PATH=$PWD/mamba3/bin:$PATH
 rm Mambaforge-Linux-x86_64.sh
 
@@ -150,10 +150,12 @@ export CONDA_PREFIX=$PWD/mamba3
 mamba create -q -y -c bioconda -c conda-forge -n main-env \
     snakemake=6.13.1 seqtk=1.3 numpy pandas \
     1> mamba_create.log
+check_exit_status "main-env" $?
 
 echo -e "\n\n\n" >> mamba_create.log
 mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.3.1 \
     1>> mamba_create.log
+check_exit_status "busco-env" $?
 
 conda init
 . ~/.bashrc
@@ -174,8 +176,11 @@ mkdir ${OUT_DIR}
 
 cd ${OUT_DIR}
 
-# Copy tar file from staging:
+mv ../summ-scaffs.py ./
+
+# Copy :
 cp /staging/lnell/dentist_files.tar.gz ./
+check_exit_status "cp dentist_files" $?
 tar -xzf dentist_files.tar.gz
 rm dentist_files.tar.gz
 cd dentist_files
@@ -197,6 +202,7 @@ cp ${TARGET}/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 # Make sure the genome FASTA file isn't too wide
 mv ${GENOME} ${GENOME/.fasta/_orig.fasta}
 seqtk seq -l 80 -A ${GENOME/.fasta/_orig.fasta} > ${GENOME}
+check_exit_status "fixed-width fasta (seqtk)" $?
 rm ${GENOME/.fasta/_orig.fasta}
 
 
@@ -217,9 +223,11 @@ cp /staging/lnell/${SUMMARY} ./
 # then randomly sample so that desired coverage is reached:
 ./fire-gusu.py -s ${SUMMARY} -c ${COVERAGE} -g 100 -q 10.0 -l 10000 \
     -o ${READS/.fasta/.fastq} --seed ${SEED} ${ALL_READS}
+check_exit_status "fire-gusu" $?
 rm ${ALL_READS} ${SUMMARY}
 # Convert to 80-char-wide FASTA
 seqtk seq -l 80 -A ${READS/.fasta/.fastq} > ${READS}
+check_exit_status "fastq > fixed-width fasta (seqtk)" $?
 rm ${READS/.fasta/.fastq}
 
 
@@ -236,6 +244,7 @@ cp -r -t . \
 
 snakemake --configfile=snakemake.yml --use-conda --cores=${THREADS} \
     2> dentist.log
+check_exit_status "dentist" $?
 
 echo -e "\n-------------------\nLast bit of dentist stderr:\n"
 tail dentist.log

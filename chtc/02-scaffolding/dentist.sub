@@ -7,6 +7,7 @@ arguments =                 $(fasta) $(join) $(coverage) $(seed)
 batch_name =                "dentist"
 should_transfer_files =     YES
 when_to_transfer_output =   ON_EXIT
+transfer_input_files =      dentist_files.tar.gz,Mambaforge-Linux-x86_64.sh
 requirements =              (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7)
 request_cpus =              24
 request_memory =            16GB
