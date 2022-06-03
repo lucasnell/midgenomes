@@ -8,8 +8,9 @@ export GENOME=$1
 # Values for arguments k_ntLink and w, respectively.
 export K=$2
 export W=$3
+export ARKS=$4
 # 1 for saving output, 0 for not
-export SAVE_OUT=$4
+export SAVE_OUT=$5
 
 export TARGET=/staging/lnell/assemblies
 
@@ -27,8 +28,12 @@ if ! [[ $W =~ ^[0-9]+$ ]]; then
     echo "ERROR: Third arg is not an integer! " 1>&2
     init_code=1
 fi
+if ! [[ "${ARKS}" == "0" ]] && ! [[ "${ARKS}" == "1" ]]; then
+   echo "ERROR: The 4th input should be 0 or 1. Yours is '${ARKS}'." 1>&2
+   init_code=1
+fi
 if ! [[ "${SAVE_OUT}" == "0" ]] && ! [[ "${SAVE_OUT}" == "1" ]]; then
-   echo "ERROR: The 6th input should be 0 or 1. Yours is '${SAVE_OUT}'." 1>&2
+   echo "ERROR: The 5th input should be 0 or 1. Yours is '${SAVE_OUT}'." 1>&2
    init_code=1
 fi
 if (( init_code != 0 )); then
@@ -45,13 +50,13 @@ conda activate main-env
 
 
 # The input file dictates the output name:
-export OUT_SUFFIX=_longstitch
+export OUT_SUFFIX=longstitch
 
 if  [[ $GENOME == contigs* ]]
 then
     OUT_DIR=scaffolds_${OUT_SUFFIX}
 else
-    OUT_DIR=${GENOME}${OUT_SUFFIX}
+    OUT_DIR=${GENOME}_${OUT_SUFFIX}
 fi
 export OUT_DIR
 
@@ -76,27 +81,30 @@ mv ${FASTQ}.fastq.gz ${FASTQ}.fq.gz
 
 # longstitch run
 conda activate longstitch-env
-longstitch tigmint-ntLink-arks \
-    draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000 \
-    k_ntLink=${K} w=${W}
-check_exit_status "longstitch" $?
+
+if (( ARKS == 1 )); then
+    longstitch tigmint-ntLink-arks \
+        draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000 \
+        k_ntLink=${K} w=${W} out_prefix=ls_out
+    check_exit_status "longstitch" $?
+else
+    longstitch tigmint-ntLink \
+        draft=${GENOME} reads=${FASTQ} t=${THREADS} G=100000000 \
+        k_ntLink=${K} w=${W} out_prefix=ls_out
+    check_exit_status "longstitch" $?
+fi
 conda deactivate
 
 rm -rf ${GENOME}.fa ${FASTQ}.fq.gz
 
-if [ ! -f *-arks.longstitch-scaffolds.fa ]; then
-    echo -e "\n\nERROR: LongStitch failed to produce output." 1>&2
-    echo -e "Exiting...\n" 1>&2
-    cd ..
-    rm -r ./${OUT_DIR}
-    exit 1
+if [ ! -f ls_out.scaffolds.fa ]; then
+    check_exit_status "longstitch output" 1
 fi
-
 
 
 # Moving the final FASTA to staging
 # Gets filename of final scaffolds FASTA file
-export LS_FASTA=$(basename -- $(readlink -f *-arks.longstitch-scaffolds.fa))
+export LS_FASTA=$(basename -- $(readlink -f ls_out.scaffolds.fa))
 cp $LS_FASTA ${OUT_FASTA}
 
 summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out

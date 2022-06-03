@@ -1,10 +1,10 @@
 universe =                  docker
-docker_image =              lucasnell/tany_genomics:v0.5.4
-log =                       $(fasta)_longstitch_k$(k)_w$(w).log
-error =                     $(fasta)_longstitch_k$(k)_w$(w).err
-output =                    $(fasta)_longstitch_k$(k)_w$(w).out
+docker_image =              lucasnell/tany_genomics:v0.5.9
+log =                       $(fasta)_longstitch_k$(k)_w$(w)_ark$(ark).log
+error =                     $(fasta)_longstitch_k$(k)_w$(w)_ark$(ark).err
+output =                    $(fasta)_longstitch_k$(k)_w$(w)_ark$(ark).out
 executable =                longstitch.sh
-arguments =                 $(fasta) $(k) $(w) $(do_save)
+arguments =                 $(fasta) $(k) $(w) $(ark) $(do_save)
 batch_name =                "longstitch"
 should_transfer_files =     YES
 when_to_transfer_output =   ON_EXIT
@@ -13,4 +13,4 @@ request_cpus =              16
 request_memory =            24GB
 request_disk =              50GB
 
-queue fasta, k, w, do_save from assemblies.txt
+queue fasta, k, w, ark, do_save from assemblies.txt
