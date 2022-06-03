@@ -38,11 +38,11 @@ export GENOME=tany_scaffolds.fasta
 export ONT_FASTQ=basecalls_guppy-5.0.11.fastq
 
 if [ ! -f /staging/lnell/${GENOME}.gz ]; then
-    echo "/staging/lnell/${GENOME}.gz does not exist!" 1>&2
+    echo "/staging/lnell/${GENOME}.gz does not exist! " 1>&2
     exit 111
 fi
 if [ ! -f /staging/lnell/${ONT_FASTQ}.gz ]; then
-    echo "/staging/lnell/${ONT_FASTQ}.gz does not exist!" 1>&2
+    echo "/staging/lnell/${ONT_FASTQ}.gz does not exist! " 1>&2
     exit 222
 fi
 

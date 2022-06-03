@@ -39,11 +39,11 @@ export OUT_DIR=trimmed_${READ_BASE}
 
 
 if [ ! -f /staging/lnell/dna/raw_fq/${READS1} ]; then
-    echo "/staging/lnell/dna/raw_fq/${READS1} does not exist!" 1>&2
+    echo "/staging/lnell/dna/raw_fq/${READS1} does not exist! " 1>&2
     exit 111
 fi
 if [ ! -f /staging/lnell/dna/raw_fq/${READS2} ]; then
-    echo "/staging/lnell/dna/raw_fq/${READS2} does not exist!" 1>&2
+    echo "/staging/lnell/dna/raw_fq/${READS2} does not exist! " 1>&2
     exit 222
 fi
 

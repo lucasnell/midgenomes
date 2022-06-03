@@ -63,11 +63,11 @@ export IN_READS_TAR=trimmed_${READ_BASE}.tar
 export GENOME=tany_scaffolds.fasta
 
 if [ ! -f /staging/lnell/dna/trimmed/${IN_READS_TAR} ]; then
-    echo "/staging/lnell/dna/trimmed/${IN_READS_TAR} does not exist!" 1>&2
+    echo "/staging/lnell/dna/trimmed/${IN_READS_TAR} does not exist! " 1>&2
     exit 111
 fi
 if [ ! -f /staging/lnell/${GENOME}.gz ]; then
-    echo "/staging/lnell/${GENOME}.gz does not exist!" 1>&2
+    echo "/staging/lnell/${GENOME}.gz does not exist! " 1>&2
     exit 222
 fi
 

@@ -35,11 +35,11 @@ export OUT_DIR=trimmed_${READ_BASE}
 
 
 if [ ! -f /staging/lnell/rna/${READS1} ]; then
-    echo "/staging/lnell/rna/${READS1} does not exist!" 1>&2
+    echo "/staging/lnell/rna/${READS1} does not exist! " 1>&2
     exit 111
 fi
 if [ ! -f /staging/lnell/rna/${READS2} ]; then
-    echo "/staging/lnell/rna/${READS2} does not exist!" 1>&2
+    echo "/staging/lnell/rna/${READS2} does not exist! " 1>&2
     exit 222
 fi
 

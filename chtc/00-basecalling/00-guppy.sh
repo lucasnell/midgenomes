@@ -37,6 +37,8 @@ guppy_basecaller \
   --device cuda:0,1	\
   --flowcell FLO-MIN106 --kit SQK-LSK109
 
+# Above is equivalent to config file `dna_r9.4.1_450bps_hac.cfg`
+# version 2021-05-17_dna_r9.4.1_minion_384_d37a2ab9
 
 
 # FASTQ file should already be compressed, so just tar-ing the folder, then

@@ -12,7 +12,7 @@ if [ -z ${2+x} ]; then
 else
     N_RAKON=$2
     if ! [[ $N_RAKON =~ ^[0-9]+$ ]]; then
-        echo "ERROR: Second arg is not an integer!" 1>&2
+        echo "ERROR: Second arg is not an integer! " 1>&2
         exit 1
     fi
 fi

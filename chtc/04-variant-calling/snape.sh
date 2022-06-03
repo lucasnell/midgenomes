@@ -135,7 +135,7 @@ awk '{if (last != $1) close(last); print >> $1; last = $1}' ../${IN_MP}
 # Rename scaffold files and verify they exist in the reference
 for scaff in *; do
     if [[ ! " ${SCAFF_NAMES[*]} " =~ " ${scaff} " ]]; then
-        echo "Scaffold ${scaff} does not exist in reference!" 1>&2
+        echo "Scaffold ${scaff} does not exist in reference! " 1>&2
         exit 1
     fi
     mv $scaff ${scaff}_mp.txt
@@ -182,7 +182,7 @@ for scaff in ${SCAFF_NAMES[@]}; do
     NON_WARNS=$(tail -n +5 ${ERR_FILE} | grep -v "^warning:" | wc -l)
     if [ $NON_WARNS -ge 1 ]; then
         echo -e "\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" 1>&2
-        echo "SNAPE call on '${scaff}' may contain errors!" 1>&2
+        echo "SNAPE call on '${scaff}' may contain errors! " 1>&2
         echo "see ${ERR_FILE}" 1>&2
         echo -e "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" 1>&2
     else

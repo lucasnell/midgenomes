@@ -20,11 +20,11 @@ if [ ! -f ${TARGET}/${GENOME}.fasta.gz ]; then
     init_code=1
 fi
 if ! [[ $K =~ ^[0-9]+$ ]]; then
-    echo "ERROR: Second arg is not an integer!" 1>&2
+    echo "ERROR: Second arg is not an integer! " 1>&2
     init_code=1
 fi
 if ! [[ $W =~ ^[0-9]+$ ]]; then
-    echo "ERROR: Third arg is not an integer!" 1>&2
+    echo "ERROR: Third arg is not an integer! " 1>&2
     init_code=1
 fi
 if ! [[ "${SAVE_OUT}" == "0" ]] && ! [[ "${SAVE_OUT}" == "1" ]]; then

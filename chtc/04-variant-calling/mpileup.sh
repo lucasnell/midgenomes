@@ -57,11 +57,11 @@ export READ_BASE=$1
 export IN_BAM=${READ_BASE}_bwa.bam
 export GENOME=tany_scaffolds.fasta
 if [ ! -f /staging/lnell/dna/bwa/${IN_BAM} ]; then
-    echo "/staging/lnell/dna/bwa/${IN_BAM} does not exist!" 1>&2
+    echo "/staging/lnell/dna/bwa/${IN_BAM} does not exist! " 1>&2
     exit 111
 fi
 if [ ! -f /staging/lnell/${GENOME}.gz ]; then
-    echo "/staging/lnell/${GENOME}.gz does not exist!" 1>&2
+    echo "/staging/lnell/${GENOME}.gz does not exist! " 1>&2
     exit 222
 fi
 

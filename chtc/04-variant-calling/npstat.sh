@@ -109,7 +109,7 @@ awk '{if (last != $1) close(last); print >> $1; last = $1}' ../${PILEUP}
 # Rename scaffold files and verify they exist in the reference
 for scaff in *; do
     if [[ ! " ${SCAFF_NAMES[*]} " =~ " ${scaff} " ]]; then
-        echo "Scaffold ${scaff} does not exist in reference!" 1>&2
+        echo "Scaffold ${scaff} does not exist in reference! " 1>&2
         exit 1
     fi
     mv $scaff ../${scaff}.pileup
@@ -121,7 +121,7 @@ rm ../${PILEUP}
 awk '{if (last != $1) close(last); print $2 >> $1; last = $1}' ../${SNP}
 for scaff in *; do
     if [[ ! " ${SCAFF_NAMES[*]} " =~ " ${scaff} " ]]; then
-        echo "Scaffold ${scaff} does not exist in reference!" 1>&2
+        echo "Scaffold ${scaff} does not exist in reference! " 1>&2
         exit 1
     fi
     mv $scaff ../${scaff}.snp
