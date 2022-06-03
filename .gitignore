@@ -2,8 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-
-summ_scaffs
+.Rprofile
 
 *.fastq
 *.fastq.gz
