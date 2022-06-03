@@ -8,15 +8,15 @@
 export ASSEMBLY=$1
 
 if [ -z ${2+x} ]; then
-    N_RAKON=5
+    N_RACON=3
 else
-    N_RAKON=$2
-    if ! [[ $N_RAKON =~ ^[0-9]+$ ]]; then
+    N_RACON=$2
+    if ! [[ $N_RACON =~ ^[0-9]+$ ]]; then
         echo "ERROR: Second arg is not an integer! " 1>&2
         exit 1
     fi
 fi
-export N_RAKON
+export N_RACON
 
 
 
@@ -36,7 +36,7 @@ export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 export TARGET=/staging/lnell/assemblies
 
 # Output names:
-if (( N_RAKON > 0 )); then
+if (( N_RACON > 0 )); then
     OUT_NAME=${ASSEMBLY/.fasta/}_ont-polish
 else
     OUT_NAME=${ASSEMBLY/.fasta/}_medaka
@@ -66,8 +66,8 @@ export ALIGN=mm2_align.paf
 export NEW_ASSEMBLY=${ASSEMBLY}
 
 # X rounds of polishing using Racon:
-if (( N_RAKON > 0 )); then
-    for i in $(seq 1 ${N_RAKON}); do
+if (( N_RACON > 0 )); then
+    for i in $(seq 1 ${N_RACON}); do
         minimap2 -x map-ont -t $((THREADS - 1)) -K 1G \
             ${NEW_ASSEMBLY} ${LONGREADS} \
             > ${ALIGN}
@@ -127,6 +127,12 @@ gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz ${TARGET}/
 
 rm ${LONGREADS} ${ASSEMBLY}
+
+# These files are massive. Removing for storage.
+cd medaka
+calls_to_draft.bam
+rm calls_to_draft.* consensus_probs.hdf
+cd ..
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
