@@ -7,7 +7,7 @@ as in the tables used to summarize the results.
 
 import glob
 import sys
-
+from pathlib import Path
 
 
 def fix_one_line(in_csv_line):
@@ -36,6 +36,16 @@ def fixed_csv_lines(txt):
     return csv_line_list
 
 
+def rename_csv_col1(csv_lines, filename):
+    """ 
+    Rename first column in CSV so that it matches the file name.
+    """
+    new_name = Path(filename).stem
+    for i in range(len(csv_lines)):
+        line_i = csv_lines[i].split(",")
+        line_i[0] = new_name
+        csv_lines[i] = ",".join(line_i)
+    return csv_lines
 
 
 if __name__ == "__main__":
@@ -43,6 +53,9 @@ if __name__ == "__main__":
     # Count the arguments
     cargs = len(sys.argv) - 1
     patterns = sys.argv[1:]
+    rename = "--rename" in patterns
+    if rename:
+        patterns = [x for x in patterns if x != "--rename"]
     print("\npatterns = " + " ".join(patterns) + "\n")
     if len(patterns) == 0:
         sys.exit(0)
@@ -56,6 +69,8 @@ if __name__ == "__main__":
         with open(filename, 'r') as f:
             txt = f.read()
             csv_lines = fixed_csv_lines(txt)
+            if rename:
+                csv_lines = rename_csv_col1(csv_lines, filename)
             out_csv_lines.extend(csv_lines)
     
     print("\n".join(out_csv_lines))
