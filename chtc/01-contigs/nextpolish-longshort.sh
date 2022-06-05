@@ -55,6 +55,11 @@ if (( LONG_ROUNDS == 0 )) && (( SHORT_ROUNDS == 0 )); then
 fi
 
 
+# export ASSEMBLY=contigs_quickmerge_medaka.fasta
+# export LONG_ROUNDS=3
+# export SHORT_ROUNDS=3
+
+
 . /app/.bashrc
 conda activate main-env
 source /staging/lnell/helpers.sh
@@ -102,17 +107,55 @@ export CURRENT_ASS=${ASSEMBLY}
 #' ============================================================================
 
 
+
+
 if (( LONG_ROUNDS > 0 )); then
 
     export RAW_LONG_READS=basecalls_guppy-5.0.11.fastq
     cp /staging/lnell/${RAW_LONG_READS}.gz ./ && gunzip ${RAW_LONG_READS}.gz
     check_exit_status "cp long reads" $?
 
-    #' This hangs if I use all the data, so I can filter by read length
-    #' to reduce coverage to ~100x.
-    #' (Use `minlength=12200` if you want to reach ~50x.)
+    #' This hangs if I use all the data, so I filter by read length
+    #' to reduce overall coverage.
+    #'
+    #' These are the thresholds for a number of coverages:
+    #'   coverage thresh
+    #'        100   9038
+    #'         50  12202
+    #'         40  12999
+    #'         30  13963
+    #'         20  15244
+    #'         10  17282
+    #'
+    #' Code to create this table, where "sequencing_summary.txt.gz" is the
+    #' tab-delimited summary table output from the ONT sequencer.
+    #'
+    #' ```r
+    #' library(readr)
+    #' lens <- read_tsv(paste0("sequencing_summary.txt.gz"))
+    #' lens <- lens[["sequence_length_template"]]
+    #' get_cov_diff <- function(thresh, desired, penalty = 1) {
+    #'     observed <- sum(lens[lens > thresh]) / 92e6L
+    #'     cov_diff <- abs(observed - desired)
+    #'     # Add small penalty for being below desired:
+    #'     if (observed < desired) cov_diff <- cov_diff + penalty
+    #'     return(cov_diff)
+    #' }
+    #' thresh_df <- data.frame(coverage = c(100, 5:1 * 10),
+    #'                         thresh = 0.0)
+    #' set.seed(1703704117)
+    #' thresh_df$thresh <- sapply(thresh_df$coverage,
+    #'                            function(z) {
+    #'                                fx <- function(x) get_cov_diff(x, z)
+    #'                                opt = optimize(fx, c(1, 20e3L))
+    #'                                return(floor(opt[["minimum"]]))
+    #'                            })
+    #' print(thresh_df, row.names = FALSE)
+    #' ```
     export LONG_READS=filtered_nanopore_reads.fastq
-    reformat.sh in=${RAW_LONG_READS} out=${LONG_READS} minlength=9000
+    reformat.sh in=${RAW_LONG_READS} out=${LONG_READS} qin=33 minlength=9038
+
+    # rm ${RAW_LONG_READS}
 
     export L_BAM=long_sorted.bam
 
@@ -145,11 +188,11 @@ if (( LONG_ROUNDS > 0 )); then
         OUT=genome_longs_round${i}.fa
         msg "Polishing" > ${LOG}
         python /opt/NextPolish/lib/nextpolish2.py -g ${CURRENT_ASS} \
-            -l ${L_BAM}.fofn -r ont -p ${THREADS} -sp \
+            -l ${L_BAM}.fofn -r ont -p ${THREADS} -sp -a \
             > ${OUT} \
             2>> >(tee -a ${LOG} >&2)
         check_exit_status "polish, longs round ${i}" $?
-        rm ${CURRENT_ASS}.* ${L_BAM}*
+        rm ${L_BAM}*
         msg "Finished" >> ${LOG}
         CURRENT_ASS=${OUT}
         conda activate main-env
@@ -157,6 +200,8 @@ if (( LONG_ROUNDS > 0 )); then
         unset LOG OUT
 
     done
+
+    rm ${LONG_READS}
 
     unset RAW_LONG_READS LONG_READS L_BAM
 
