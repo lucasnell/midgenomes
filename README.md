@@ -1,1 +1,3 @@
-midge_archive
+
+# Code for *Tanytarsus gracilentus* reference assembly
+

@@ -17,34 +17,27 @@
 check_exit_status () {
     if [ "$2" != "0" ]; then
         echo "Step $1 failed with exit status $2" 1>&2
-        local wd=${PWD##*/}
-        cd ..
-        tar -czf ERROR_${wd}.tar.gz ${wd}
-        local SEND_LOC=/staging/lnell/
-        if [ -n "$TARGET" ]; then
-            SEND_LOC=${TARGET}
+        # Only do exiting if inside a non-interactive job:
+        if [ -z "$PS1" ]; then
+            local wd=${PWD##*/}
+            cd ..
+            tar -czf ERROR_${wd}.tar.gz ${wd}
+            local SEND_LOC=/staging/lnell/
+            if [ -n "$TARGET" ]; then
+                SEND_LOC=${TARGET}
+            fi
+            mv ERROR_${wd}.tar.gz ${SEND_LOC}
+            rm -r ${wd}
+            exit $2
+        else
+            break 2> /dev/null
+            return 0
         fi
-        mv ERROR_${wd}.tar.gz ${SEND_LOC}
-        rm -r ${wd}
-        exit $2
     fi
     if [[ "$1" != "null" ]]; then
         echo "Checked step $1"
     fi
-}
-
-#' Check on BAM file with `bamtools stats`, check status of this call,
-#' then output the file name.
-#' NOTE: Must be run inside an environment containing `bamtools`
-#' (e.g., main-env for docker image).
-#' Usage:
-#' call_bam_stats ${BAM_FILE} "description"
-call_bam_stats () {
-    local B=$1
-    local S=${B/.bam/.stats}
-    bamtools stats -in $B | tee $S
-    check_exit_status "bamtools stats $2" $?
-    echo -e "FILE:" $B "\n**********************************************"
+    return 0
 }
 
 
@@ -67,6 +60,8 @@ run_busco () {
     check_exit_status "busco" $?
     conda deactivate
 }
+
+
 
 #'
 #' Organize output from `summ-scaffs.py` and `busco` into a string
