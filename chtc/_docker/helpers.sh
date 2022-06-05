@@ -1,10 +1,7 @@
 #!/bin/bash
 
 #'
-#' This script has some helper functions used throughout.
-#'
-#' To send to cluster:
-#' scp ~/GitHub/Wisconsin/midge_archive/chtc/helpers.sh lnell@transfer.chtc.wisc.edu:/staging/lnell/
+#' This script has some two main helper functions used many times throughout.
 #'
 
 
@@ -13,7 +10,9 @@
 #' If the object `TARGET` is defined, it sends the tar file there.
 #' The tar file is sent to `/staging/lnell/` otherwise
 #' Usage:
-#' check_exit_status "NameOfOperation" $?
+#' OperationX ... options ...
+#' check_exit_status "OperationX" $?
+#'
 check_exit_status () {
     if [ "$2" != "0" ]; then
         echo "Step $1 failed with exit status $2" 1>&2
@@ -59,39 +58,6 @@ run_busco () {
         tee busco.out
     check_exit_status "busco" $?
     conda deactivate
+    return 0
 }
-
-
-
-#'
-#' Organize output from `summ-scaffs.py` and `busco` into a string
-#' that can be used in a CSV file.
-#' Usage:
-#' busco_seq_summary_csv ${SUMM_SCAFFS_OUT} ${BUSCO_OUT} ${SEQS_DESCRIPTOR}
-busco_seq_summary_csv () {
-    local OUT=""
-    # Header:
-    OUT+="file,size,scaffs,N50,min,max,total_N,"
-    OUT+="BUSCO_C,BUSCO_C-S,BUSCO_C-D,BUSCO_F,BUSCO_M,BUSCO_n\n"
-    # Output file identifier:
-    OUT+="${3},"
-    # Output from summ-scaffs.py:
-    OUT+="$(grep "size" ${1} | sed 's/.* //'),"
-    OUT+="$(grep "scaffolds$" ${1} | sed -r 's/\ .+//'),"
-    OUT+="$(grep "N50" ${1} | sed 's/.* //'),"
-    OUT+="$(grep "min" ${1} | sed 's/.* //'),"
-    OUT+="$(grep "max" ${1} | sed 's/.* //'),"
-    OUT+="$(grep "total\ N" ${1} | sed 's/.* //'),"
-    # Output from BUSCO:
-    OUT+="$(grep '|' ${2} | grep '(C)' | tr -d '|' | xargs | sed 's/ .*//'),"
-    OUT+="$(grep '|' ${2} | grep '(S)' | tr -d '|' | xargs | sed 's/ .*//'),"
-    OUT+="$(grep '|' ${2} | grep '(D)' | tr -d '|' | xargs | sed 's/ .*//'),"
-    OUT+="$(grep '|' ${2} | grep '(F)' | tr -d '|' | xargs | sed 's/ .*//'),"
-    OUT+="$(grep '|' ${2} | grep '(M)' | tr -d '|' | xargs | sed 's/ .*//'),"
-    OUT+="$(grep '|' ${2} | grep 'Total BUSCO' | tr -d '|' | xargs | sed 's/ .*//')\n"
-    # Print output:
-    echo -e ${OUT}
-}
-
-
 
