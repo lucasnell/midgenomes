@@ -12,6 +12,45 @@ import sys
 import os.path
 import gzip
 import argparse
+import re
+import math
+
+
+
+def get_Ls_Ns(size_vec, thresholds):
+    """
+    Get Lx and Nx for all x corresponding to thresholds in `thresholds`.
+    """
+    
+    size_vec.sort(reverse = True)
+    thresholds.sort()
+    
+    if len(size_vec) == 1:
+        lvec = [1] * len(thresholds)
+        nvec = [size_vec[0]] * len(thresholds)
+        return lvec, nvec
+    
+    lvec = [0] * len(thresholds)
+    nvec = [0] * len(thresholds)
+    
+    if len(size_vec) == 0:
+        return lvec, nvec
+    
+    csum = 0
+    i = 0
+    j = 0
+    while i < len(size_vec) and j < len(thresholds):
+        csum += size_vec[i]
+        if csum >= thresholds[j]:
+            nvec[j] = size_vec[i]
+            lvec[j] = i+1
+            j += 1
+        i+=1
+    
+    return lvec, nvec
+
+
+
 
 
 if __name__ == "__main__":
@@ -43,51 +82,94 @@ if __name__ == "__main__":
         
     total_size = 0
     total_N = 0
-    sizes = []
-    i = -1
+    N_regions = 0
+    total_GC = 0
+    # scaffold and contig size vectors
+    ssizes = []
+    csizes = []
     
     for line in fasta_file:
         if line.startswith(">"):
-            sizes.append(0)
-            i += 1
+            ssizes.append(0)
+            # If scaffolds ends with N/n for some reason, then we need this 
+            # check to avoid extra zero values:
+            if len(csizes) == 0 or csizes[-1] != 0:
+                csizes.append(0)
         else:
-            if len(sizes) == 0:
+            if len(ssizes) == 0:
                 sys.stderr.write("FASTA doesn't start with header. Exiting.\n")
                 sys.exit(1)
-            # we don't want to include newline at the end in our counts:
-            llen = len(line) - 1
-            sizes[i] += llen
+            # we don't want to include newline:
+            line = line.rstrip()
+            llen = len(line)
+            ssizes[-1] += llen
             total_size += llen
-            total_N += line.count('n')
-            total_N += line.count('N')
+            numN = line.count("n") + line.count("N")
+            if numN == 0:
+                csizes[-1] += llen
+            elif numN == llen:
+                if csizes[-1] != 0:
+                    csizes.append(0)
+                    N_regions += 1
+            else:
+                line_Nspl = [x for x in re.split("N+|n+", line) if x != ""]
+                if (line[0] == "n" or line[0] == "N") and csizes[-1] != 0:
+                    csizes.append(len(line_Nspl[0]))
+                    N_regions += 1
+                else:
+                    csizes[-1] += len(line_Nspl[0])
+                for i in range(1, len(line_Nspl)):
+                    csizes.append(len(line_Nspl[i]))
+                    N_regions += 1
+                if line[-1] == "n" or line[-1] == "N":
+                    csizes.append(0)
+                    N_regions += 1
+            total_N += numN
+            total_GC += line.count("G")
+            total_GC += line.count("g")
+            total_GC += line.count("C")
+            total_GC += line.count("c")
     
+    if len(csizes) > 0 and csizes[-1] == 0:
+        tmp = csizes.pop()
+
     fasta_file.close()
     
-    sizes.sort(reverse = True)
+    contig_size = total_size - total_N
     
+    sthreshs = [math.ceil(float(total_size) * x) for x in [0.5, 0.9]]
+    sL, sN = get_Ls_Ns(ssizes, sthreshs)
+    cthreshs = [math.ceil(float(contig_size) * x) for x in [0.5, 0.9]]
+    cL, cN = get_Ls_Ns(csizes, cthreshs)
     
-    n50_threshold = round(float(total_size) / 2.0)
-    cum_sum = 0;
-    i = 0;
-    while i < len(sizes):
-        cum_sum += sizes[i]
-        if cum_sum >= n50_threshold:
-            break
-        i+=1
-    n50 = sizes[i]
-    
+    print(">> Scaffold stats:")
     print("size = " + str(total_size))
-    print(str(len(sizes)) + " scaffolds")
-    print("N50 = " + str(n50))
-    print("min = " + str(sizes[-1]))
-    print("max = " + str(sizes[0]))
+    print("%GC = " + str(round(total_GC / total_size * 100, 2)))
     print("total N = " + str(total_N))
+    print("N regions = " + str(N_regions))
+    print("# sequences = " + str(len(ssizes)))
+    print("N50 = " + str(sN[0]))
+    print("L50 = " + str(sL[0]))
+    print("N90 = " + str(sN[1]))
+    print("L90 = " + str(sL[1]))
+    print("min = " + str(ssizes[-1]))
+    print("max = " + str(ssizes[0]))
+    print("mean = " + str(round(sum(ssizes) / len(ssizes), 2)))
+    
+    print("\n\n>> Contig stats:")
+    print("size = " + str(contig_size))
+    print("%GC = " + str(round(total_GC / contig_size * 100, 2)))
+    print("# sequences = " + str(len(csizes)))
+    print("N50 = " + str(cN[0]))
+    print("L50 = " + str(cL[0]))
+    print("N90 = " + str(cN[1]))
+    print("L90 = " + str(cL[1]))
+    print("min = " + str(csizes[-1]))
+    print("max = " + str(csizes[0]))
+    print("mean = " + str(round(sum(csizes) / len(csizes), 2)))
     
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
     
     sys.exit(0)
-
-
-
 
