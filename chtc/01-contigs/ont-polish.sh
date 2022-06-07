@@ -28,7 +28,6 @@ fi
 
 . /app/.bashrc
 conda activate assembly-env
-source /staging/lnell/helpers.sh
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
@@ -89,9 +88,10 @@ if (( N_RACON > 0 )); then
     mv busco.out racon_busco.out
     rm -r busco_downloads busco
 
-    busco_seq_summary_csv racon_contigs_summary.out racon_busco.out \
-        ${OUT_NAME}_racon | \
-        tee ${OUT_NAME}_racon.csv
+    pretty-csv.py -s racon_contigs_summary.out -b racon_busco.out \
+        ${OUT_NAME}_racon \
+        | tee ${OUT_NAME}_racon.csv
+
 fi
 
 
@@ -118,9 +118,8 @@ run_busco ${OUT_FASTA} ${THREADS}
 rm -r busco_downloads busco
 
 
-busco_seq_summary_csv contigs_summary.out busco.out ${OUT_NAME} | \
-    tee ${OUT_NAME}.csv
-
+pretty-csv.py -s contigs_summary.out -b busco.out ${OUT_NAME} \
+    | tee ${OUT_NAME}.csv
 
 # Keep the uncompressed version for output in main directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz

@@ -3,7 +3,7 @@
 # Combine assemblies using quickmerge.
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.5.4
+docker_image = lucasnell/tanyssembly:v0.0.1
 
 log = quickmerge_$(out_name).log
 error = quickmerge_$(out_name).err

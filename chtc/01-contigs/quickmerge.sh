@@ -44,7 +44,6 @@ fi
 
 . /app/.bashrc
 conda activate assembly-env
-source /staging/lnell/helpers.sh
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
@@ -130,9 +129,8 @@ check_exit_status "summ-scaffs.py" $?
 run_busco ${OUT_FASTA} ${THREADS}
 rm -r busco_downloads busco
 
-busco_seq_summary_csv contigs_summary.out busco.out ${OUT_DIR} \
+pretty-csv.py -s contigs_summary.out -b busco.out ${OUT_DIR} \
     | tee ${OUT_DIR}.csv
-
 
 if (( SAVE_OUT == 0 )); then
     cd ..

@@ -3,7 +3,7 @@
 # Polish assembly using ONT reads and programs Racon and medaka
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.5.9
+docker_image = lucasnell/tanyssembly:v0.0.1
 
 log = ont-polish_$(assembly)_$(n_rakon)rakon.log
 error = ont-polish_$(assembly)_$(n_rakon)rakon.err

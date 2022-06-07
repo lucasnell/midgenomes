@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . /app/.bashrc
-source /staging/lnell/helpers.sh
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
@@ -43,8 +42,9 @@ check_exit_status "summ-scaffs.py" $?
 run_busco ${OUT_FASTA} ${THREADS}
 rm -r busco_downloads busco
 
-busco_seq_summary_csv contigs_summary.out busco.out ${OUT_NAME} | \
-    tee ${OUT_NAME}.csv
+pretty-csv.py -s contigs_summary.out -b busco.out ${OUT_NAME} \
+    | tee ${OUT_NAME}.csv
+
 
 # Keep the uncompressed version for output in main directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz

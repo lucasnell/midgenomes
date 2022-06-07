@@ -5,7 +5,6 @@
 
 . /app/.bashrc
 conda activate assembly-env
-source /staging/lnell/helpers.sh
 
 # Where to send files:
 export TARGET=/staging/lnell/assemblies
@@ -77,10 +76,10 @@ for ((i=0; i < N_ASS; i+=1)); do
     mv purged.fa ${OUT_FASTA}
 
     summ-scaffs.py ${OUT_FASTA} | \
-        tee scaff_summary.out
+        tee contigs_summary.out
     run_busco ${OUT_FASTA} ${THREADS}
     rm -r busco busco_downloads
-    busco_seq_summary_csv scaff_summary.out busco.out ${OUT_FASTA/.fasta/}
+    pretty-csv.py -s contigs_summary.out -b busco.out ${OUT_FASTA/.fasta/}
 
     gzip ${OUT_FASTA}
     mv ${OUT_FASTA}.gz ${TARGET}/

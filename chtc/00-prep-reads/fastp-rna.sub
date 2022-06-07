@@ -3,7 +3,7 @@
 # Trim RNA reads
 
 universe = docker
-docker_image = lucasnell/tany_genomics:v0.5
+docker_image = lucasnell/tanyssembly:v0.0.1
 
 log = fastp-rna_$(readbase).log
 error = fastp-rna_$(readbase).err
