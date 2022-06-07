@@ -10,12 +10,7 @@ source /staging/lnell/helpers.sh
 # Where to send files:
 export TARGET=/staging/lnell/assemblies
 
-# export ASSEMBLIES=(contigs_necat_ont-polish_nextpolish.fasta \
-#                    contigs_smart_ont-polish_nextpolish.fasta)
-# export L_CUTS=(30 40)
-# export M_CUTS=(150 155)
-# export U_CUTS=(390 400)
-# export a_ARGS=(70 45)
+
 export ASSEMBLIES=(contigs_necat_ont-polish.fasta \
                    contigs_smart_ont-polish.fasta \
                    contigs_flye_ont-polish.fasta)
