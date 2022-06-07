@@ -1,5 +1,5 @@
 ############################################################
-# Dockerfile for Tanytarsus gracilentus genomics.
+# Dockerfile for Tanytarsus gracilentus reference assembly.
 ############################################################
 
 
@@ -12,12 +12,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 # Environment configuration files:
 COPY main-env.yml .
 COPY annotate-env.yml .
-COPY besst-env.yml .
 COPY assembly-env.yml .
-# Simple summary of scaffolds:
-COPY summ-scaffs.py .
-# Sliding window of coverage based on mpileup
-COPY window-mpileup.py .
+COPY backmap-env.yml .
 # To get GeneMark to work for BRAKER2:
 COPY gm_key_64.gz .
 COPY gmes_linux_64_4.tar.gz .
@@ -37,8 +33,8 @@ RUN chmod -R 777 /opt/conda && \
 RUN apt-get clean && \
     apt-get update -y && \
     apt-get install -y build-essential && \
-    apt-get install -y locales wget rsync unzip nano sudo ocaml-nox zlib1g-dev \
-        libbz2-dev liblzma-dev gsl-bin libgsl0-dev libboost-all-dev && \
+    apt-get install -y locales wget rsync unzip nano sudo pv \
+        ocaml-nox zlib1g-dev libbz2-dev liblzma-dev libboost-all-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Set locale
@@ -48,14 +44,6 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV TZ America/Chicago
 
-# simple python script to summarize scaffold sequences:
-RUN chmod +x summ-scaffs.py && \
-    mv summ-scaffs.py /usr/local/bin/
-
-# simple python script for sliding window of coverage based on mpileup:
-RUN chmod +x window-mpileup.py && \
-    mv window-mpileup.py /usr/local/bin/
-
 # Make primary conda environment
 RUN mamba env create -q -f main-env.yml && \
     rm main-env.yml && \
@@ -63,16 +51,8 @@ RUN mamba env create -q -f main-env.yml && \
 
 # new environments for other programs that need separate environments:
 
-# for BESST_RNA scaffolder
-RUN mamba env create -q -f besst-env.yml && \
-    rm besst-env.yml && \
-    conda clean --all -y
 # for BUSCO
 RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.3.1 && \
-    conda clean --all -y
-# for LongStitch scaffolder
-RUN mamba create -q -y -c bioconda -c conda-forge -n longstitch-env \
-    longstitch=1.0.2 && \
     conda clean --all -y
 # for genome annotating using BRAKER2 and RepeatModeler
 RUN mamba env create -q -f annotate-env.yml && \
@@ -85,34 +65,27 @@ RUN mamba env create -q -f assembly-env.yml && \
 # for Flye assembler:
 RUN mamba create -q -y -c bioconda -c conda-forge -n flye-env flye=2.9 && \
     conda clean --all -y
+# for backmap.pl:
+RUN mamba env create -q -f backmap-env.yml && \
+    rm backmap-env.yml && \
+    conda clean --all -y
 
 RUN conda init bash
 
-# --------------------------------
-# Manually install SNAPE-pooled
-# --------------------------------
-RUN cd /opt && \
-    git clone https://github.com/EmanueleRaineri/snape-pooled.git && \
-    cd snape-pooled && \
-    make snape-pooled
-ENV PATH="${PATH}:/opt/snape-pooled"
-
-
-# --------------------------------
-# Add scripts for BESST_RNA
-# --------------------------------
-# Only the `src` folder needed from GitHub repo.
-# I'm using the newest commit as of 29 Jan 2022.
-# (It hasn't been updated in 6 years, but just in case...)
-RUN wget -q https://github.com/ksahlin/BESST_RNA/archive/9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
-    unzip 9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
-    rm 9cc039b5db080e98361a9b54dd333a7bb8b35223.zip && \
-    cd BESST_RNA-9cc039b5db080e98361a9b54dd333a7bb8b35223 && \
-    mv src ../ && \
+# One extra perl module for backmap.pl, then add backmap.pl itself
+RUN . /app/.bashrc && \
+    conda activate backmap-env && \
+    cpanm Number::FormatEng && \
+    wget -c https://github.com/schellt/backmap/archive/refs/tags/v0.5.tar.gz \
+        -O - | tar -xz && \
+    cd backmap-0.5 && \
+    chmod +x backmap.pl && \
+    mv backmap.pl /opt/conda/envs/backmap-env/bin/ && \
     cd .. && \
-    rm -rf BESST_RNA-9cc039b5db080e98361a9b54dd333a7bb8b35223 && \
-    mv src BESST_RNA && \
-    chmod -R 777 BESST_RNA
+    rm -rf backmap-0.5
+
+
+
 
 # ---------------------------------
 # Adjusting to allow BRAKER2 to work
@@ -149,13 +122,13 @@ RUN pip install paralleltask && \
 ENV PATH="${PATH}:/opt/NextPolish:/opt/NextDenovo"
 
 
+# simple python scripts to summarize scaffold sequences and
+# produce pretty CSV file, plus some helper functions in bash:
+COPY summ-scaffs.py .
+COPY pretty-csv.py .
+COPY helpers.sh .
+RUN chmod +x summ-scaffs.py pretty-csv.py helpers.sh && \
+    mv summ-scaffs.py pretty-csv.py helpers.sh /usr/local/bin/ && \
+    echo -e "\nsource /usr/local/bin/helpers.sh\n" >> ~/.bashrc
 
-# --------------------------------
-# Manually install npstat
-# --------------------------------
-RUN cd /opt && \
-    git clone https://github.com/lucaferretti/npstat.git && \
-    cd npstat && \
-    make
-ENV PATH="${PATH}:/opt/npstat"
 
