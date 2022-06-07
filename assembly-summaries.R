@@ -1,6 +1,6 @@
 
 #'
-#' Create figures to summarize assembly stats.
+#' Create figures and tables to summarize assembly stats.
 #'
 
 library(tidyverse)

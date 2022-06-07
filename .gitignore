@@ -12,3 +12,5 @@
 *.pdf
 
 *.rds
+
+explore-assembly-stats.R
