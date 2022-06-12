@@ -1,0 +1,26 @@
+# braker-prot.sub
+
+# Annotate Tanytarsus gracilentus assembly using database of proteins
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v0.0.1
+
+log = braker-prot.log
+error = braker-prot.err
+output = braker-prot.out
+
+executable = braker-prot.sh
+
+batch_name = "braker-prot"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 48GB
+request_disk = 200GB
+
+
+queue 1

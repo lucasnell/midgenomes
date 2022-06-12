@@ -1,51 +1,45 @@
+
+
 #!/bin/bash
 
 # Use EDTA to create a repeat library for the Tanytarsus gracilentus genome
 # and to annotate the genome based on this library.
 
 
-export THREADS=24
+export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 
-. /app/.bashrc
+eval "$(conda shell.bash hook)"
 conda activate annotate-env
 
-# # From here: https://github.com/oushujun/EDTA/issues/250
-# export PERL5LIB=/
 
 export OUT_DIR=tany_repeats
 # Annotation of assembly for repeats:
-export OUT_ANNO=tany_repeat_anno.gff3
+export OUT_ANNO=tany_repeats_anno.gff3
+# Low-threshold masked assembly for use in MAKER:
+export OUT_MAKER=tany_contigs_maker.fasta
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 
-export GENOME=tany_scaffolds.fasta
-cp /staging/lnell/${GENOME}.gz ./ && gunzip ${GENOME}.gz
+export GENOME=tany_contigs.fasta
+cp /staging/lnell/assemblies/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 
 
-# >> Names are already simplified
-# # EDTA docs recommend simplifying sequence names:
-# # I'll do this by removing everything after the first comma or the first
-# # space in the seq names:
-# sed -i -r 's/\,.+//' ${GENOME}
-# sed -i -r 's/\ .+//' ${GENOME}
 
 
-EDTA.pl --genome ${GENOME} --threads ${THREADS} --anno 1 --sensitive 1 \
-    --evaluate 1
-status=$?
+#' ------------------------------------------------
+#' run EDTA pipeline
+#' ------------------------------------------------
 
-if [ ! "$status" -eq "0" ]; then
-    echo "EDTA failed with exit status $status" 1>&2
-    cd ..
-    tar -czf ERROR_${OUT_DIR}.tar.gz ${OUT_DIR}
-    mv ERROR_${OUT_DIR}.tar.gz /staging/lnell/
-    rm -r ${OUT_DIR}
-    exit $status
-fi
 
-rm ${GENOME}
+EDTA.pl --genome ${GENOME} --threads ${THREADS} \
+    --anno 1 \
+    --sensitive 1 \
+    --evaluate 1 \
+    1> >(tee -a edta.out) \
+    2> >(tee -a edta.err >&2)
+check_exit_status "EDTA.pl" $?
 
 # perl EDTA.pl [options]
 #   --genome	[File]	The genome FASTA
@@ -87,15 +81,58 @@ rm ${GENOME}
 
 
 
-# Saving output:
 
-cp *.mod.EDTA.TEanno.gff3 ${OUT_ANNO}
+#' ------------------------------------------------
+#' softmask assembly
+#' ------------------------------------------------
+
+#' EDTA hard-masks assembly for MAKER (BRAKER in my case), but I'd prefer
+#' to have it soft-masked.
+#' The code below replicates what EDTA does except for having it be softmasked.
+
+#' List of the repeat elements output from RepeatMasker, from
+#' which we'll filter to make soft-masked version for BRAKER.
+export FULL_MASK=$(ls *EDTA.anno/*EDTA.RM.out)
+#' File to do the masking. Have to copy it here to make it executable.
+#' (User doesn't have permission to do this to `/opt/...` on the cluster.)
+cp /opt/conda/envs/annotate-env/share/EDTA/util/make_masked.pl ./ \
+    && chmod +x make_masked.pl \
+    && ln -s /opt/conda/envs/annotate-env/share/EDTA/util/substract_parallel.pl \
+        substract_parallel.pl \
+    && ln -s /opt/conda/envs/annotate-env/share/EDTA/util/combine_overlap.pl \
+        combine_overlap.pl
+
+
+./make_masked.pl -genome ${GENOME} -t ${THREADS} \
+    -rmout ${FULL_MASK} \
+    -maxdiv 30 -minscore 1000 -minlen 1000 -hardmask 0
+
+mv ${GENOME}.new.masked ${GENOME}.mod.MAKER.softmasked
+
+rm *.pl
+
+
+
+#' ------------------------------------------------
+#' handling output
+#' ------------------------------------------------
+
+conda activate main-env
+
+cp ${GENOME}.mod.EDTA.TEanno.gff3 ${OUT_ANNO}
 gzip ${OUT_ANNO}
-mv ${OUT_ANNO}.gz /staging/lnell/
+
+seqtk seq -l 60 ${GENOME}.mod.MAKER.softmasked \
+    > ${OUT_MAKER}
+gzip ${OUT_MAKER}
+
+
+mv ${OUT_ANNO}.gz ${OUT_MAKER}.gz /staging/lnell/annotation/
+
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/
+mv ${OUT_DIR}.tar.gz /staging/lnell/annotation/
 rm -r ${OUT_DIR}
 
 

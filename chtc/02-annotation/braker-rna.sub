@@ -1,0 +1,26 @@
+# braker-rna.sub
+
+# Annotate Tanytarsus gracilentus assembly using RNAseq reads
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v0.0.1
+
+log = braker-rna.log
+error = braker-rna.err
+output = braker-rna.out
+
+executable = braker-rna.sh
+
+batch_name = "braker-rna"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 48GB
+request_disk = 200GB
+
+
+queue 1
