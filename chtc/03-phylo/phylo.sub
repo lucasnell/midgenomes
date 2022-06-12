@@ -1,0 +1,21 @@
+# phylo.sub
+
+# Single submission script for interactive jobs used to construct phylogeny.
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v0.0.2
+
+log = phylo.log
+
+batch_name = "phylo"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 32GB
+request_disk = 50GB
+
+queue 1
