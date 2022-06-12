@@ -1,0 +1,11 @@
+name: phylo-env
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - mafft=7.505
+  - prequal=1.02
+  - python=3.9.7
+  - raxml-ng=1.1.0
+prefix: /opt/conda/envs/phylo-env

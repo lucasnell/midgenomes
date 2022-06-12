@@ -36,6 +36,7 @@ check_exit_status () {
             rm ${TO_RM} 2> /dev/null
             exit $2
         fi
+        return 0
     fi
     if [[ "$1" != "null" ]]; then
         echo "Checked step $1"
