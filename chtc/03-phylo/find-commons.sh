@@ -6,12 +6,45 @@
 #'
 
 
+#' All species in the phylogeny, in alphabetical order:
+export ALL_SPECIES=(Anopheles_stephensi \
+    Belgica_antarctica \
+    Chironomus_riparius \
+    Chironomus_tentans \
+    Chironomus_tepperi \
+    Clunio_marinus \
+    Culicoides_sonorensis \
+    Parochlus_steinenii \
+    Polypedilum_pembai \
+    Polypedilum_vanderplanki \
+    Propsilocerus_akamusi \
+    Tanytarsus_gracilentus)
 
-cp /staging/lnell/phylo/*_odb.tar.gz ./
-for f in *_odb.tar.gz; do
-    tar -xzf $f
-    echo $f " finished"
+#' I'm dropping Simulium_vittatum because it has way too many duplicate genes.
+#     Simulium_vittatum \
+
+mkdir working
+cd working
+
+for SPECIES in ${ALL_SPECIES[@]}; do
+    ODB_DIR=${SPECIES}_odb
+    tar -xf /staging/lnell/phylo/species-files/${ODB_DIR}.tar.gz -C ./
+    status=$?
+    unset ODB_DIR
+    if ((status != 0)); then
+        echo "failed on $SPECIES" 1>&2
+        break
+    fi
+    unset status
 done
+
+
+# #' To view numbers of single-copy genes by species:
+# for SPECIES in ${ALL_SPECIES[@]}; do
+#     echo $SPECIES
+#     ls -1 ${SPECIES}_odb | wc -l
+#     echo -ne "\n"
+# done
 
 
 #'
@@ -44,22 +77,9 @@ with open("common_genes.txt", "w") as file:
 EOF
 
 
-#'
-#' I originally made this vector this way, but I want to be 100% sure it's
-#' always the same order, so I'm hard-coding it.
-#'
-# export SPECIES=(*_odb)
-# SPECIES=(${SPECIES[@]%_odb})
-export SPECIES=(Anopheles_stephensi \
-    Belgica_antarctica \
-    Chironomus_riparius \
-    Chironomus_tentans \
-    Chironomus_tepperi \
-    Clunio_marinus \
-    Polypedilum_pembai \
-    Polypedilum_vanderplanki \
-    Propsilocerus_akamusi \
-    Tanytarsus_gracilentus)
+# #' To view number of common genes:
+# cat common_genes.txt | wc -l
+
 
 mkdir common_genes
 # (brackets below are so that the progress bar shows properly)
@@ -68,7 +88,7 @@ total_genes=$(cat common_genes.txt | wc -l)
 x=1
 
 while read -r gene; do
-    for sp in ${SPECIES[@]}; do
+    for sp in ${ALL_SPECIES[@]}; do
         cat ${sp}_odb/${gene}.faa \
             | sed "s/>.*/>${sp}__${gene}/g" \
             >> common_genes/${gene}.faa
@@ -85,5 +105,4 @@ tar -czf common_genes.tar.gz common_genes
 
 mv common_genes.tar.gz /staging/lnell/phylo/
 
-rm -r common_genes
-
+rm -r common_genes *_odb

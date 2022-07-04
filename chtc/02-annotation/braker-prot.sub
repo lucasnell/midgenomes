@@ -3,7 +3,7 @@
 # Annotate Tanytarsus gracilentus assembly using database of proteins
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v0.0.1
+docker_image = lucasnell/tanyssembly:v1.0.3
 
 log = braker-prot.log
 error = braker-prot.err

@@ -10,7 +10,7 @@ export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 
 eval "$(conda shell.bash hook)"
-conda activate annotate-env
+conda activate repeat-env
 
 
 export OUT_DIR=tany_repeats
@@ -95,11 +95,11 @@ check_exit_status "EDTA.pl" $?
 export FULL_MASK=$(ls *EDTA.anno/*EDTA.RM.out)
 #' File to do the masking. Have to copy it here to make it executable.
 #' (User doesn't have permission to do this to `/opt/...` on the cluster.)
-cp /opt/conda/envs/annotate-env/share/EDTA/util/make_masked.pl ./ \
+cp /opt/conda/envs/repeat-env/share/EDTA/util/make_masked.pl ./ \
     && chmod +x make_masked.pl \
-    && ln -s /opt/conda/envs/annotate-env/share/EDTA/util/substract_parallel.pl \
+    && ln -s /opt/conda/envs/repeat-env/share/EDTA/util/substract_parallel.pl \
         substract_parallel.pl \
-    && ln -s /opt/conda/envs/annotate-env/share/EDTA/util/combine_overlap.pl \
+    && ln -s /opt/conda/envs/repeat-env/share/EDTA/util/combine_overlap.pl \
         combine_overlap.pl
 
 

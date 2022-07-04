@@ -8,19 +8,16 @@
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
-. /app/.bashrc
+eval "$(conda shell.bash hook)"
 
 export TARGET=/staging/lnell/annotation
 
 export OUT_DIR=tany_braker_rna
 
-
 mkdir working
 cd working
 
-
-export GENOME=tany_contigs_maker.fasta
-
+export GENOME=tany_contigs_masked.fasta
 
 cp ${TARGET}/${GENOME}.gz ./ && gunzip ${GENOME}.gz
 check_exit_status "cp genome" $?
@@ -36,6 +33,7 @@ check_exit_status "cp genome" $?
 
 conda activate main-env
 
+
 hisat2-build -q ${GENOME} tany_hisat_idx
 check_exit_status "hisat2-build" $?
 
@@ -48,10 +46,8 @@ export RNA_READS_ADULT2=trimmed_TanyAdult_S1_L002_R2_001.fastq
 export RNA_READS_ADULT_TAR=trimmed_TanyAdult_S1.tar
 export BAM_ADULT=tany_rna_adults.bam
 
-cp /staging/lnell/rna/${RNA_READS_ADULT_TAR} ./ \
-    && tar -xf ${RNA_READS_ADULT_TAR} \
-    && rm ${RNA_READS_ADULT_TAR}
-check_exit_status "cp rna adult" $?
+tar -xf /staging/lnell/ill/rna/${RNA_READS_ADULT_TAR} -C ./
+check_exit_status "extract rna adult" $?
 
 gunzip ${RNA_READS_ADULT1}.gz \
     && gunzip ${RNA_READS_ADULT2}.gz
@@ -67,9 +63,6 @@ check_exit_status "hisat2 - adults" $?
 
 cp ${BAM_ADULT} ${TARGET}/
 
-samtools index ${BAM_ADULT} ${BAM_ADULT}.bai
-check_exit_status "index - adults" $?
-
 rm ${RNA_READS_ADULT1} ${RNA_READS_ADULT2}
 
 
@@ -81,10 +74,8 @@ export RNA_READS_JUVEN2=trimmed_TanyJuven_S2_L002_R2_001.fastq
 export RNA_READS_JUVEN_TAR=trimmed_TanyJuven_S2.tar
 export BAM_JUVEN=tany_rna_juveniles.bam
 
-cp /staging/lnell/rna/${RNA_READS_JUVEN_TAR} ./ \
-    && tar -xf ${RNA_READS_JUVEN_TAR} \
-    && rm ${RNA_READS_JUVEN_TAR}
-check_exit_status "cp rna juvenile" $?
+tar -xf /staging/lnell/ill/rna/${RNA_READS_JUVEN_TAR} -C ./
+check_exit_status "extract rna juvenile" $?
 
 gunzip ${RNA_READS_JUVEN1}.gz \
     && gunzip ${RNA_READS_JUVEN2}.gz
@@ -99,12 +90,10 @@ check_exit_status "hisat2 - juveniles" $?
 
 cp ${BAM_JUVEN} ${TARGET}/
 
-samtools index ${BAM_JUVEN} ${BAM_JUVEN}.bai
-check_exit_status "index - juveniles" $?
-
 rm ${RNA_READS_JUVEN1} ${RNA_READS_JUVEN2}
 
 rm tany_hisat_idx*
+
 
 conda deactivate
 
@@ -119,6 +108,7 @@ conda deactivate
 #'
 #' ===========================================================================
 #' ===========================================================================
+
 
 conda activate annotate-env
 

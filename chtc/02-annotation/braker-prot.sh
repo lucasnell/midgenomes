@@ -8,7 +8,7 @@
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
-. /app/.bashrc
+eval "$(conda shell.bash hook)"
 
 export TARGET=/staging/lnell/annotation
 
@@ -17,7 +17,7 @@ export OUT_DIR=tany_braker_prot
 mkdir working
 cd working
 
-export GENOME=tany_contigs_maker.fasta
+export GENOME=tany_contigs_masked.fasta
 
 
 cp ${TARGET}/${GENOME}.gz ./ && gunzip ${GENOME}.gz
@@ -32,12 +32,6 @@ rm -r arthropoda odb10_arthropoda_fasta.tar.gz
 
 
 conda activate annotate-env
-
-wget https://github.com/gatech-genemark/ProtHint/releases/download/v2.6.0/ProtHint-2.6.0.tar.gz
-check_exit_status "download ProtHint" $?
-tar -xzf ProtHint-2.6.0.tar.gz
-rm ProtHint-2.6.0.tar.gz
-
 
 braker.pl --genome=${GENOME} --prot_seq=odb10_arthropoda.fasta \
     --softmasking --cores=${THREADS}

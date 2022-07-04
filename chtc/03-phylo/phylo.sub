@@ -1,6 +1,8 @@
 # phylo.sub
 
 # Single submission script for interactive jobs used to construct phylogeny.
+# This one is used for everything but raxml-ng
+
 
 universe = docker
 docker_image = lucasnell/tanyssembly:v0.0.2

@@ -10,6 +10,9 @@ export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 conda activate phylo-env
 
+mkdir working
+cd working
+
 cp /staging/lnell/phylo/common_genes.tar.gz ./
 tar -xzf common_genes.tar.gz
 rm common_genes.tar.gz
@@ -39,7 +42,6 @@ chmod +x one_filter.sh
 
 
 python3 << EOF
-#!/usr/bin/env python3
 import glob
 import subprocess as sp
 import multiprocessing as mp
