@@ -144,7 +144,7 @@ if __name__ == "__main__":
     
     print(">> Scaffold stats:")
     print("size = " + str(total_size))
-    print("%GC = " + str(round(total_GC / total_size * 100, 2)))
+    print("%GC = " + str(round(total_GC / total_size * 100, 3)))
     print("total N = " + str(total_N))
     print("N regions = " + str(N_regions))
     print("# sequences = " + str(len(ssizes)))
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     
     print("\n\n>> Contig stats:")
     print("size = " + str(contig_size))
-    print("%GC = " + str(round(total_GC / contig_size * 100, 2)))
+    print("%GC = " + str(round(total_GC / contig_size * 100, 3)))
     print("# sequences = " + str(len(csizes)))
     print("N50 = " + str(cN[0]))
     print("L50 = " + str(cL[0]))

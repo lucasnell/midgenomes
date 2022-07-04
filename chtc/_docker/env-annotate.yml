@@ -5,9 +5,9 @@ channels:
   - defaults
 dependencies:
   - braker2=2.1.6
-  - edta=2.0.0
-  - h5py=2.10.0
-  - python=3.6.15
-  - repeatmodeler=2.0.2a
-  - tensorflow=1.14.0
+  - diamond=2.0.15
+  - gffread=0.12.7
+  - hmmer=3.3.2
+  - mantis_pfa=1.5.4
+  - python=3.9.9
 prefix: /opt/conda/envs/annotate-env

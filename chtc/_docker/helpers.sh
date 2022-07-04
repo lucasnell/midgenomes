@@ -1,7 +1,5 @@
-#!/bin/bash
-
 #'
-#' This script has some two main helper functions used many times throughout.
+#' Helper functions used numerous times throughout:
 #'
 
 
@@ -30,10 +28,17 @@ check_exit_status () {
             break 2> /dev/null
         else
             # (non-interactive shell)
-            cd $_CONDOR_SCRATCH_DIR
-            # Remove everything except for the files / folders you start with:
-            TO_RM=$(ls -I tmp -I var -I docker_stderror)
-            rm ${TO_RM} 2> /dev/null
+            if [ -z "$_CONDOR_SCRATCH_DIR" ]; then
+                echo -n "No condor scratch directory detected. " 1>&2
+                echo "No files removed." 1>&2
+            else
+                cd $_CONDOR_SCRATCH_DIR
+                # Remove everything except for the files / folders you start with:
+                shopt -s extglob
+                TO_RM=$(ls -d !(*condor*|tmp|var|*docker*) 2> /dev/null)
+                rm -rf ${TO_RM} 2> /dev/null
+                shopt -u extglob
+            fi
             exit $2
         fi
         return 0
@@ -66,3 +71,26 @@ run_busco () {
     return 0
 }
 
+
+
+#' Get a read name from a tar file.
+#'
+#' Usage or 1st of pair:
+#' read_tar_name ${TAR_FILE} 1
+#' Usage or 2nd of pair:
+#' read_tar_name ${TAR_FILE} 2
+read_tar_name () {
+    if (( $# != 2 )); then
+        echo -e "read_tar_names requires 2 args" 1>&2
+        return 1
+    fi
+    if (( $2 != 1 )) && (( $2 != 2 )); then
+        echo -e "read_tar_names 2nd arg must be 1 or 2" 1>&2
+        return 1
+    fi
+    local READS_ARR=($(tar -tf $1))
+    local SORTED_READS=""
+    IFS=$'\n' SORTED_READS=($(sort <<<"${READS_ARR[*]}")); unset IFS
+    echo ${SORTED_READS[$(( $2 - 1 ))]}
+    return 0
+}
