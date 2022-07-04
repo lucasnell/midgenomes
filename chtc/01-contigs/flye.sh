@@ -16,7 +16,7 @@ mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 export LONGREADS=basecalls_guppy-5.0.11.fastq
-cp /staging/lnell/${LONGREADS}.gz ./ && gunzip ${LONGREADS}.gz
+cp /staging/lnell/ont/${LONGREADS}.gz ./ && gunzip ${LONGREADS}.gz
 check_exit_status "cp guppy" $?
 
 

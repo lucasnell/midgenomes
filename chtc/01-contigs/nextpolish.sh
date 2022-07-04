@@ -1,32 +1,80 @@
 #!/bin/bash
 
+
 #'
 #' Polish assembly using Illumina reads with NextPolish.
 #' Requires argument for which assembly to polish.
+#' Note: options MUST come before assembly.
+#'
+#' Usage:
+#' nextpolish.sh [options] ASSEMBLY
+#'
+#' Options:
+#'   -i tar file containing Illumina reads to use.
+#'      Must be in `/staging/lnell/ill/dna/trimmed` and end with `.tar`.
+#'      This script also assumes that only reads are inside the tar file and
+#'      that if the file names are sorted alphabetically, the first file is
+#'      #1 of pair, and the second is #2 of pair.
+#'      Defaults to `trimmed_MyKS-19-B_S18.tar`.
+#'   -r Number of rounds of polishing. Must be an integer > 0.
+#'      Defaults to 3.
 #'
 
-#' Requires 2 arguments:
-if [[ $# -ne 2 ]]; then
-    echo "ERROR: nextpolish.sh requires 2 input arguments. You have $#." 1>&2
-    exit 1
-fi
+export READS_TAR=trimmed_MyKS-19-B_S18.tar
+export N_ROUNDS=3
+export READS_LOC=/staging/lnell/ill/dna/trimmed
 
-#' First is assembly to polish:
-export ASSEMBLY=$1
+while getopts ":i:r:" opt; do
+    case $opt in
+        i)
+            READS_TAR="$OPTARG"
+            if [[ "${READS_TAR}" != *.tar ]]; then
+                echo -n "ERROR: -n arg must end in *.tar. " 1>&2
+                echo "Yours is '${READS_TAR}'." 1>&2
+                exit 1
+            fi
+            if [ ! -f ${READS_LOC}/${READS_TAR} ]; then
+                echo -n "ERROR: '${READS_LOC}/${READS_TAR}' does not exist." 1>&2
+                exit 1
+            fi
+            ;;
+        r)
+            N_ROUNDS="$OPTARG"
+            if ! [[ $N_ROUNDS =~ ^[0-9]+$ ]] || (( N_ROUNDS <= 0 )); then
+                echo -n "ERROR: -r arg should be an integer > 0. " 1>&2
+                echo "Yours is '${N_ROUNDS}'." 1>&2
+                exit 1
+            fi
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" 1>&2
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." 1>&2
+            exit 1
+            ;;
+    esac
+done
+
+export ASSEMBLY=${@:$OPTIND:1}
 if [[ "${ASSEMBLY}" != *.fasta ]]; then
-    echo -n "ERROR: First arg to nextpolish.sh must end in *.fasta. " 1>&2
+    echo -n "ERROR: Assembly must end in *.fasta. " 1>&2
     echo "Yours is '${ASSEMBLY}'." 1>&2
     exit 1
 fi
 
-#' Second argument is number of rounds.
-#' I wouldn't recommend more than 3: More rounds isn't necessarily better!
-export N_ROUNDS=$2
-if ! [[ $N_ROUNDS =~ ^[0-9]+$ ]]; then
-    echo -n "ERROR: Second arg to nextpolish.sh must be an integer. " 1>&2
-    echo "Your is '${N_ROUNDS}'." 1>&2
+
+if (( OPTIND < $# )); then
+    echo "Options passed after assembly." 1>&2
     exit 1
 fi
+
+
+#' Extract individual read names from tar file:
+export READS1=$(read_tar_name ${READS_LOC}/${READS_TAR} 1)
+export READS2=$(read_tar_name ${READS_LOC}/${READS_TAR} 2)
+
 
 
 . /app/.bashrc
@@ -56,7 +104,7 @@ check_exit_status "cp genome" $?
 #' Usage:
 #'     msg [NAME_OF_STAGE]
 msg () {
-    echo -e "\n\n$@\n@" $(TZ=America/Chicago date "+%F %T") "\n\n"
+    echo -e "\n\n$@\n@" $(date "+%F %T") "\n\n"
 }
 
 
@@ -71,13 +119,8 @@ msg () {
 #' ===========================================================================
 
 # Input reads that have already been trimmed for adapters, etc.
-export READS1=trimmed_MyKS-19-B_S18_L002_R1_001.fastq.gz
-export READS2=trimmed_MyKS-19-B_S18_L002_R2_001.fastq.gz
-export READS_TAR=trimmed_MyKS-19-B_S18.tar
-cp /staging/lnell/dna/trimmed/${READS_TAR} ./ \
-    && tar -xf ${READS_TAR} \
-    && rm ${READS_TAR}
-check_exit_status "cp, tar, rm reads tar file" $?
+tar -xf ${READS_LOC}/${READS_TAR} -C ./
+check_exit_status "extract reads tar file" $?
 
 export NON_READS1=noN_${READS1/.gz/}
 export NON_READS2=noN_${READS2/.gz/}
@@ -180,16 +223,11 @@ done
 cp ${CURRENT_ASS} ${OUT_FASTA}
 check_exit_status "cp output" $?
 
-rm ${READS1} ${READS2} ${ASSEMBLY}
-
 summ-scaffs.py ${OUT_FASTA} | tee contigs_summary.out
 check_exit_status "summ-scaffs.py" $?
 
 run_busco ${OUT_FASTA} ${THREADS}
 rm -r busco busco_downloads
-
-# busco_seq_summary_csv contigs_summary.out busco.out ${OUT_NAME} | \
-#     tee ${OUT_NAME}.csv
 
 pretty-csv.py -s contigs_summary.out -b busco.out ${OUT_NAME} \
     | tee ${OUT_NAME}.csv
@@ -197,6 +235,8 @@ pretty-csv.py -s contigs_summary.out -b busco.out ${OUT_NAME} \
 # Keep the uncompressed version for output in main directory
 gzip < ${OUT_FASTA} > ${OUT_FASTA}.gz
 mv ${OUT_FASTA}.gz ${TARGET}/
+
+rm ${READS1} ${READS2} ${ASSEMBLY}
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}

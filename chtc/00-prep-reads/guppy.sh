@@ -6,13 +6,13 @@
 export GUPPY_V=5.0.11
 
 # Copying the raw signal files and guppy from staging into the working directory:
-cp /staging/lnell/ives_fast5.tar.bz2 ./
+cp /staging/lnell/ont/ives_fast5.tar.bz2 ./
 mkdir fast5
 tar -xf ives_fast5.tar.bz2 -C ./fast5/
 rm ives_fast5.tar.bz2
 
 # Copying and un-taring software
-cp /staging/lnell/guppy.tar.gz ./
+cp /staging/lnell/ont/guppy.tar.gz ./
 tar -xzf guppy.tar.gz
 rm guppy.tar.gz
 
@@ -44,13 +44,13 @@ guppy_basecaller \
 # FASTQ file should already be compressed, so just tar-ing the folder, then
 # sending to staging:
 tar -cf ${OUTDIR}.tar ${OUTDIR}
-mv ${OUTDIR}.tar /staging/lnell/
+mv ${OUTDIR}.tar /staging/lnell/ont/
 
 # Making a single FASTQ file of just passing reads, then sending it to staging.
 # This file will be used for downstream processes.
 cd ${OUTDIR}/pass
 cat *.fastq.gz > ${OUTDIR}.fastq.gz
-mv ${OUTDIR}.fastq.gz /staging/lnell/
+mv ${OUTDIR}.fastq.gz /staging/lnell/ont/
 cd ../../
 
 # Removing files used in this job:

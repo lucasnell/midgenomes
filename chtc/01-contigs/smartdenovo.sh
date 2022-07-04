@@ -16,7 +16,7 @@ mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
-cp /staging/lnell/${LONGREADS} ./
+cp /staging/lnell/ont/${LONGREADS} ./
 check_exit_status "cp guppy" $?
 
 conda activate main-env

@@ -3,14 +3,14 @@
 # Trim RNA reads
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v0.0.1
+docker_image = lucasnell/tanyssembly:v1.0.3
 
-log = fastp-rna_$(readbase).log
-error = fastp-rna_$(readbase).err
-output = fastp-rna_$(readbase).out
+log = fastp-rna_$(readtar).log
+error = fastp-rna_$(readtar).err
+output = fastp-rna_$(readtar).out
 
 executable = fastp-rna.sh
-arguments = $(readbase)
+arguments = $(readtar)
 
 batch_name = "fastp-rna"
 
@@ -23,4 +23,4 @@ request_cpus = 8
 request_memory = 16GB
 request_disk = 60GB
 
-queue readbase from readbases.txt
+queue readtar from readtars.txt

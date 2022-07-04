@@ -3,14 +3,14 @@
 # Polish assembly using ONT reads and programs Racon and medaka
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v0.0.1
+docker_image = lucasnell/tanyssembly:v1.0.3
 
-log = ont-polish_$(assembly)_$(n_rakon)rakon.log
-error = ont-polish_$(assembly)_$(n_rakon)rakon.err
-output = ont-polish_$(assembly)_$(n_rakon)rakon.out
+log = ont-polish_$(assembly)_r$(n_racon)_m$(n_medaka).log
+error = ont-polish_$(assembly)_r$(n_racon)_m$(n_medaka).err
+output = ont-polish_$(assembly)_r$(n_racon)_m$(n_medaka).out
 
 executable = ont-polish.sh
-arguments = $(assembly).fasta $(n_rakon)
+arguments = -n $(nano_reads) -r $(n_racon) -m $(n_medaka) $(assembly).fasta
 
 batch_name = "ont-polish"
 
@@ -23,4 +23,4 @@ request_cpus = 16
 request_memory = 80GB
 request_disk = 100GB
 
-queue assembly, n_rakon from assemblies.txt
+queue assembly, nano_reads, n_racon, n_medaka from assemblies.txt

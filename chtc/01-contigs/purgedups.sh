@@ -30,7 +30,7 @@ cd ${WD}
 # Initial alignments
 
 export LONGREADS=basecalls_guppy-5.0.11.fastq.gz
-cp /staging/lnell/${LONGREADS} ./
+cp /staging/lnell/ont/${LONGREADS} ./
 
 export N_ASS=${#ASSEMBLIES[@]}
 

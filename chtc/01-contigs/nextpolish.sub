@@ -3,14 +3,14 @@
 # Polish assembly using Illumina reads via NextPolish
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v0.0.1
+docker_image = lucasnell/tanyssembly:v1.0.3
 
-log = nextpolish_$(assembly).log
-error = nextpolish_$(assembly).err
-output = nextpolish_$(assembly).out
+log = nextpolish_$(assembly)_r$(rounds).log
+error = nextpolish_$(assembly)_r$(rounds).err
+output = nextpolish_$(assembly)_r$(rounds).out
 
 executable = nextpolish.sh
-arguments = $(assembly).fasta 3 0
+arguments = -i $(reads) -r $(rounds) $(assembly).fasta
 
 batch_name = "nextpolish"
 
@@ -23,4 +23,4 @@ request_cpus = 32
 request_memory = 32GB
 request_disk = 100GB
 
-queue assembly from assemblies.txt
+queue assembly, reads, rounds from assemblies.txt

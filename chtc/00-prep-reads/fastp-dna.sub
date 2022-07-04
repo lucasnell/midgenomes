@@ -1,33 +1,27 @@
 # fastp-dna.sub
 
-# trim Pool-seq DNA reads
+# trim Illumina DNA reads
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v0.0.1
+docker_image = lucasnell/tanyssembly:v1.0.3
 
-log = fastp-dna_$(readbase).log
-error = fastp-dna_$(readbase).err
-output = fastp-dna_$(readbase).out
+log = fastp-dna_$(readtar).log
+error = fastp-dna_$(readtar).err
+output = fastp-dna_$(readtar).out
 
 executable = fastp-dna.sh
-arguments = $(readbase)
+arguments = $(readtar)
 
 batch_name = "fastp-dna"
 
-## Specify that HTCondor should transfer files to and from the
-##  computer where each job runs.
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-## IMPORTANT! Require execute servers that have access to staging
 requirements = (Target.HasCHTCStaging == true)
 
-## Tell HTCondor what amount of compute resources
-##  each job will need on the computer where it runs.
 request_cpus = 8
 request_memory = 16GB
 request_disk = 60GB
 
-
-# Run one instance of this job per line in `readbases.txt`
-queue readbase from readbases.txt
+# Run one instance of this job per line in `readtars.txt`
+queue readtar from readtars.txt
