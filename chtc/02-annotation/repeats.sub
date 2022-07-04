@@ -1,0 +1,25 @@
+# repeats.sub
+
+# Create library of repetitive elements using RepeatModeler.
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v1.0.1
+
+log = repeats.log
+error = repeats.err
+output = repeats.out
+
+executable = repeats.sh
+
+batch_name = "repeats"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 64GB
+request_disk = 100GB
+
+queue 1

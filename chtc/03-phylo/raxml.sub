@@ -1,0 +1,25 @@
+# raxml.sub
+
+# Create phylogeny using RAxML-NG
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v1.0.3
+
+log = raxml.log
+error = raxml.err
+output = raxml.out
+
+executable = raxml.sh
+
+batch_name = "raxml"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 24GB
+request_disk = 20GB
+
+queue 1

@@ -1,0 +1,25 @@
+# mantis.sub
+
+# Gene functional analysis using mantis.
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v1.0.3
+
+log = mantis.log
+error = mantis.err
+output = mantis.out
+
+executable = mantis.sh
+batch_name = "mantis"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+# (Uses lots of disk space because of databases downloaded)
+request_cpus = 32
+request_memory = 64GB
+request_disk = 2000GB
+
+queue 1

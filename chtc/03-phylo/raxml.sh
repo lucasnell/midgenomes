@@ -2,16 +2,17 @@
 
 
 #'
-#' Sequence alignment using MAFFT.
+#' Phylogeny creation using RAxML-NG.
 #'
 
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
+. /app/.bashrc
 conda activate phylo-env
 
 
-export OUT_DIR=raxml
+export OUT_DIR=chir_raxml
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
@@ -23,16 +24,14 @@ cp /staging/lnell/phylo/${ALIGNS}.gz ./ && gunzip ${ALIGNS}
 raxml-ng --msa ${ALIGNS} --prefix chir_phy --threads ${THREADS} \
     --outgroup Anopheles_stephensi \
     --data-type AA \
-    --seed 453014559 \
+    --seed 453418559 \
     --model PROTGTR+I+G \
-    --tree pars{25},rand{25} \
-    1> >(tee -a chir_phy.out) \
-    2> >(tee -a chir_phy.err >&2)
+    --bs-trees 100 \
+    1> >(tee -a chir_phy.log)
 
 
+cd ..
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
+mv ${OUT_DIR}.tar.gz /staging/lnell/phylo/
 
-
-
-# LEFT OFF:
-# WARNING: Sequences Polypedilum_vanderplanki and Propsilocerus_akamusi are exactly identical!
-
+rm -r ${OUT_DIR}
