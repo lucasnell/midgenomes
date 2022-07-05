@@ -1,0 +1,25 @@
+# nextdenovo-Pstein.sub
+
+# Assemble Parochlus steinenii genome using NextDenovo
+
+universe = docker
+docker_image = lucasnell/tanyssembly:v1.0.3
+
+log = nextdenovo-Pstein.log
+error = nextdenovo-Pstein.err
+output = nextdenovo-Pstein.out
+
+executable = nextdenovo-Pstein.sh
+
+batch_name = "nextdenovo-Pstein"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 80GB
+request_disk = 300GB
+
+queue 1
