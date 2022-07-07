@@ -4,7 +4,6 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - edta=2.0.0
   - perl-file-which=1.23
   - perl-json-pp=4.09
   - python=3.6.15

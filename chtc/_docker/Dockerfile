@@ -47,7 +47,7 @@ COPY env-assembly.yml .
 RUN mamba env create -q -f env-assembly.yml && \
     rm env-assembly.yml && \
     conda clean --all -y
-# repeat library creation using RepeatModeler / EDTA, masking using RepeatMasker
+# repeat library creation using RepeatModeler, masking using RepeatMasker
 COPY env-repeat.yml .
 RUN mamba env create -q -f env-repeat.yml && \
     rm env-repeat.yml && \
@@ -125,45 +125,6 @@ RUN pip install paralleltask && \
     rm NextDenovo.tgz
 ENV PATH="${PATH}:/opt/NextPolish:/opt/NextDenovo"
 
-
-
-# --------------------------------
-# install treePL
-# --------------------------------
-# Dependencies:
-RUN cd /app && \
-    ADOL_C="https://github.com/coin-or/ADOL-C/archive/refs/tags/releases/2.7.2.tar.gz" && \
-    wget -c ${ADOL_C} -O - | tar -xz && \
-    mv ADOL-C* ADOL-C && \
-    cd ADOL-C && \
-    ./configure --prefix=/usr/local --with-openmp-flag=-fopenmp && \
-    make && \
-    make install && \
-    cd /app && \
-    NLOPT="https://github.com/stevengj/nlopt/archive/v2.7.1.tar.gz" && \
-    wget -c ${NLOPT} -O - | tar -xz && \
-    mv nlopt* nlopt && \
-    cd nlopt && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make && \
-    make install && \
-    cd /app && \
-    rm -r nlopt ADOL-C
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib:/usr/local/lib64"
-# treePL itself:
-# (this commit apparently has a small edit since release version 1.0)
-RUN SHA="551cbde1a530adad7986c530ca1f254e3ffd42c7" && \
-    wget -q https://github.com/blackrim/treePL/archive/${SHA}.zip && \
-    unzip ${SHA}.zip && \
-    rm ${SHA}.zip && \
-    cd treePL-${SHA}/src && \
-    ./configure && \
-    make && \
-    make install && \
-    cd ../.. && \
-    rm -r treePL-${SHA}
 
 
 

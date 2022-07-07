@@ -5,6 +5,7 @@ channels:
   - defaults
 dependencies:
   - mafft=7.505
+  - paml=4.9
   - prequal=1.02
   - python=3.9.7
   - raxml-ng=1.1.0
