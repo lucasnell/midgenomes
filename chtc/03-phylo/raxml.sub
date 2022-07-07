@@ -18,8 +18,8 @@ when_to_transfer_output = ON_EXIT
 
 requirements = (Target.HasCHTCStaging == true)
 
-request_cpus = 32
-request_memory = 24GB
+request_cpus = 48
+request_memory = 12GB
 request_disk = 20GB
 
 queue 1
