@@ -72,10 +72,12 @@ EOF
 #' Exclude any genes where one or more species had sequences fully removed
 #'
 cd ${OUT_DIR}
-mkdir exclude
 FULLY_RM=($(egrep -lir --include=*.warning "Fully removed" . \
     | sed 's/\.faa\.warning/\*/g'))
-mv ${FULLY_RM[@]} ./exclude/
+if (( ${#FULLY_RM[@]} > 0 )); then
+    mkdir exclude
+    mv ${FULLY_RM[@]} ./exclude/
+fi
 
 
 #'
@@ -109,4 +111,5 @@ rm -r common_genes one_filter.sh
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz /staging/lnell/phylo/
 
-rm -r ${OUT_DIR}
+cd ..
+rm -r working

@@ -17,7 +17,7 @@ export TARGET=/staging/lnell/annotation
 export OUT_NAME=Pstein_tsebra
 
 # Output directory for BUSCO run on CDS:
-export BUSCO_OUT_DIR=busco_Pstein_cds
+export BUSCO_OUT_DIR=Pstein_cds_busco
 
 
 #' ------------------------------------------------------------

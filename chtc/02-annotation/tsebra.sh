@@ -17,7 +17,7 @@ export TARGET=/staging/lnell/annotation
 export OUT_NAME=tany_tsebra
 
 # Output directory for BUSCO run on CDS:
-export BUSCO_OUT_DIR=busco_tany_cds
+export BUSCO_OUT_DIR=tany_cds_busco
 
 
 #' ------------------------------------------------------------

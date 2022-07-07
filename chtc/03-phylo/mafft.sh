@@ -22,14 +22,13 @@ mkdir ${OUT_DIR}
 
 
 #' Script to run mafft to do alignment on a single gene.
-#' Output is `X_align.fasta` for input `X.faa`
 #' Usage:
 #'      ./one_align.sh [*.faa FILE]
 cat << EOF > one_align.sh
 #!/bin/bash
 IN=\$1
 NAME_BASE=\$(basename \$1 | sed 's/\..*//g')
-OUT=./${OUT_DIR}/\${NAME_BASE}.fasta
+OUT=./${OUT_DIR}/\${NAME_BASE}.faa
 LOG=./${OUT_DIR}/\${NAME_BASE}.log
 linsi --thread 1 \${IN} > \${OUT} 2> \${LOG}
 EOF

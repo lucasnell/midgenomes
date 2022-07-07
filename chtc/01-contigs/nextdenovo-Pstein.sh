@@ -41,7 +41,7 @@ MOR=$(python -c "print(round(${THREADS} / ${PJ}))")
 MOC=${MOR}
 
 
-cat <<EOF > pstein.cfg
+cat << EOF > pstein.cfg
 [General]
 job_type = local
 job_prefix = ${OUT_NAME}
