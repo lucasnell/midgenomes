@@ -1,16 +1,16 @@
-# mantis.sub
+# mantis-download.sub
 
-# Gene functional analysis using mantis.
+# Download databases for gene functional analysis using mantis.
 
 universe = docker
 docker_image = lucasnell/tanyssembly:v1.0.5
 
-log = mantis.log
-error = mantis.err
-output = mantis.out
+log = mantis-download.log
+error = mantis-download.err
+output = mantis-download.out
 
-executable = mantis.sh
-batch_name = "mantis"
+executable = mantis-download.sh
+batch_name = "mantis-download"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -18,7 +18,7 @@ when_to_transfer_output = ON_EXIT
 requirements = (Target.HasCHTCStaging == true)
 
 # (Uses lots of disk space because of databases downloaded)
-request_cpus = 32
+request_cpus = 16
 request_memory = 50GB
 request_disk = 300GB
 

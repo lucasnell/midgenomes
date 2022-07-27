@@ -1,8 +1,7 @@
 #!/bin/bash
 
-
 #'
-#' Functional annotations using mantis.
+#' Functional annotations using mantis - initial database downloads.
 #'
 
 
@@ -13,21 +12,19 @@ export MEMORY=$(grep "^Memory = " $_CONDOR_MACHINE_AD | sed 's/Memory\ =\ //')
 # In GB, with 5 GB overhead:
 MEMORY=$(( MEMORY / 1000 - 5 ))
 
-export OUT_DIR=tany_mantis
+export OUT_TAR=mantis-downloads.tar.gz
 
 mkdir working
 cd working
 
+# For databases:
+mkdir dbs
+# For references:
+mkdir refs
+
 
 eval "$(conda shell.bash hook)"
 conda activate annotate-env
-
-cp /staging/lnell/annotation/tany_proteins.fasta.gz ./ \
-    && gunzip tany_proteins.fasta.gz
-check_exit_status "cp, extract proteins" $?
-
-tar -xf /staging/lnell/annotation/mantis-downloads.tar.gz -C ./
-check_exit_status "cp, extract databases" $?
 
 
 #' Setup MANTIS.cfg based on default from
@@ -44,22 +41,14 @@ pfam_weight=0.9
 EOF
 
 
-#' Run mantis:
-mantis run -mc MANTIS.cfg -i tany_proteins.fasta -o ${OUT_DIR} -od 288803 \
-    --verbose_kegg_matrix \
-    --cores ${THREADS} --memory ${MEMORY} --hmmer_threads 2
+#' Download and setup databases:
+mantis setup -mc MANTIS.cfg --cores ${THREADS} --memory ${MEMORY}
 
-rm -rf refs dbs
+tar -czf ${OUT_TAR} dbs refs
+mv ${OUT_TAR} /staging/lnell/annotation/
 
-
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/annotation/
 
 cd ..
 rm -r working
-
-
-
-
 
 
