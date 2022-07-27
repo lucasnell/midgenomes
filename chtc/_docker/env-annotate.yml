@@ -8,6 +8,6 @@ dependencies:
   - diamond=2.0.15
   - gffread=0.12.7
   - hmmer=3.3.2
-  - mantis_pfa=1.5.4
+  - mantis_pfa=1.5.5
   - python=3.9.9
 prefix: /opt/conda/envs/annotate-env
