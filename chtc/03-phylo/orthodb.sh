@@ -26,6 +26,7 @@ export ALL_SPECIES=(Anopheles_stephensi \
     Tanytarsus_gracilentus)
 
 
+. /app/.bashrc
 conda activate busco-env
 
 busco --download diptera_odb10

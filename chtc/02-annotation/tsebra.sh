@@ -24,13 +24,10 @@ export BUSCO_OUT_DIR=tany_cds_busco
 #' Copy over BRAKER1 and BRAKER2 gene predictions:
 #' ------------------------------------------------------------
 
-cp ${TARGET}/tany_braker_rna.tar.gz ./ \
-    && tar -xzf tany_braker_rna.tar.gz \
-    && rm tany_braker_rna.tar.gz
+tar -xzf ${TARGET}/tany_braker_rna.tar.gz -C ./
 check_exit_status "cp, extract tany_braker_rna" $?
-cp ${TARGET}/tany_braker_prot.tar.gz ./ \
-    && tar -xzf tany_braker_prot.tar.gz \
-    && rm tany_braker_prot.tar.gz
+
+tar -xzf ${TARGET}/tany_braker_prot.tar.gz -C ./
 check_exit_status "cp, extract tany_braker_prot" $?
 
 
@@ -79,19 +76,6 @@ gffread -y tany_proteins.fasta -g tany_contigs.fasta ${OUT_NAME}.gff3
 
 conda deactivate
 
-# 2022-06-17 09:56:58 INFO:
-#
-# 	--------------------------------------------------
-# 	|Results from dataset diptera_odb10               |
-# 	--------------------------------------------------
-# 	|C:93.4%[S:88.0%,D:5.4%],F:1.0%,M:5.6%,n:3285     |
-# 	|3069	Complete BUSCOs (C)                       |
-# 	|2892	Complete and single-copy BUSCOs (S)       |
-# 	|177	Complete and duplicated BUSCOs (D)        |
-# 	|33	    Fragmented BUSCOs (F)                     |
-# 	|183	Missing BUSCOs (M)                        |
-# 	|3285	Total BUSCO groups searched               |
-# 	--------------------------------------------------
 
 
 
@@ -107,6 +91,19 @@ mv busco.out ./${BUSCO_OUT_DIR}/busco.stdout
 tar -czf ${BUSCO_OUT_DIR}.tar.gz ${BUSCO_OUT_DIR}
 mv ${BUSCO_OUT_DIR}.tar.gz ${TARGET}/
 
+# 2022-06-17 09:56:58 INFO:
+#
+# 	--------------------------------------------------
+# 	|Results from dataset diptera_odb10               |
+# 	--------------------------------------------------
+# 	|C:93.4%[S:88.0%,D:5.4%],F:1.0%,M:5.6%,n:3285     |
+# 	|3069	Complete BUSCOs (C)                       |
+# 	|2892	Complete and single-copy BUSCOs (S)       |
+# 	|177	Complete and duplicated BUSCOs (D)        |
+# 	|33	    Fragmented BUSCOs (F)                     |
+# 	|183	Missing BUSCOs (M)                        |
+# 	|3285	Total BUSCO groups searched               |
+# 	--------------------------------------------------
 
 
 #' ------------------------------------------------------------

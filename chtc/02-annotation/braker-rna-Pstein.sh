@@ -99,6 +99,7 @@ braker.pl --species=Parochlus_steinenii --genome=${GENOME} \
     --cores=${THREADS} \
     --softmasking \
     --bam=$(IFS=, ; echo "${BAM_FILES[*]}")
+check_exit_status "braker" $?
 
 mv braker ${OUT_DIR}
 

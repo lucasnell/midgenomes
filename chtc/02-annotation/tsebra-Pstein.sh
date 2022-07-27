@@ -89,7 +89,19 @@ mv busco.out ./${BUSCO_OUT_DIR}/busco.stdout
 tar -czf ${BUSCO_OUT_DIR}.tar.gz ${BUSCO_OUT_DIR}
 mv ${BUSCO_OUT_DIR}.tar.gz ${TARGET}/
 
-
+# 2022-07-09 10:55:23 INFO:
+#
+# 	--------------------------------------------------
+# 	|Results from dataset diptera_odb10               |
+# 	--------------------------------------------------
+# 	|C:95.2%[S:88.9%,D:6.3%],F:0.8%,M:4.0%,n:3285     |
+# 	|3128	Complete BUSCOs (C)                       |
+# 	|2921	Complete and single-copy BUSCOs (S)       |
+# 	|207	Complete and duplicated BUSCOs (D)        |
+# 	|25	    Fragmented BUSCOs (F)                     |
+# 	|132	Missing BUSCOs (M)                        |
+# 	|3285	Total BUSCO groups searched               |
+# 	--------------------------------------------------
 
 #' ------------------------------------------------------------
 #' Move over final outputs:

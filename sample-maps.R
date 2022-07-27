@@ -18,7 +18,7 @@ if (file.exists(".Rprofile")) source(".Rprofile")
 
 
 save_plot <- function(n, p, w, h, ...) {
-    cairo_pdf(sprintf("~/Box Sync/midgenomics/genome-report/%s.pdf", n),
+    cairo_pdf(sprintf("~/Box Sync/tanyssembly/%s.pdf", n),
               width = w, height = h, bg = NA, ...)
     plot(p)
     dev.off()
@@ -131,6 +131,6 @@ myvatn_p <- myvatn_df %>%
           panel.grid = element_blank()) +
     NULL
 
-save_plot("myvatn_map", myvatn_p, 4, 5, family = "Lexend")
+save_plot("myvatn_map", myvatn_p, 4, 5)
 
 
