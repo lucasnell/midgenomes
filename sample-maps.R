@@ -18,7 +18,7 @@ if (file.exists(".Rprofile")) source(".Rprofile")
 
 
 save_plot <- function(n, p, w, h, ...) {
-    cairo_pdf(sprintf("~/Box Sync/tanyssembly/%s.pdf", n),
+    cairo_pdf(sprintf("~/Stanford_Drive/UW/midgenomes/%s.pdf", n),
               width = w, height = h, bg = NA, ...)
     plot(p)
     dev.off()
