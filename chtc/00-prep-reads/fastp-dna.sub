@@ -3,7 +3,7 @@
 # trim Illumina DNA reads
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v1.0.3
+docker_image = lucasnell/midgenomes:v1.0.1
 
 log = fastp-dna_$(readtar).log
 error = fastp-dna_$(readtar).err

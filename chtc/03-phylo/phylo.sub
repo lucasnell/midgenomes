@@ -5,7 +5,7 @@
 
 
 universe = docker
-docker_image = lucasnell/tanyssembly:v0.0.2
+docker_image = lucasnell/midgenomes:v1.0.1
 
 log = phylo.log
 

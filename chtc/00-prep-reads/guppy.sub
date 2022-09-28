@@ -10,8 +10,8 @@ executable = guppy/guppy.sh
 output = guppy/guppy.out
 
 
-## Require execute servers that have staging and CentOS 7 and newest CUDA
-requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 7) && (CUDACapability == 7.5)
+## Require execute servers that have staging and CentOS 8 and newest CUDA
+requirements = (Target.HasCHTCStaging == true) && (OpSysMajorVer == 8) && (CUDACapability == 7.5)
 
 ## GPU specifications
 request_gpus = 2

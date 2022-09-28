@@ -5,10 +5,7 @@
 #' Use backmap.sh to estimate size of genome by back-mapping ONT
 #' reads to assembly.
 #'
-#' IMPORTANT: use one of these docker images:
-#' lucasnell/tany_backmap:v0.0.1
-#' lucasnell/tanyssembly:v0.0.2
-#' NOT the newest lucasnell/tanyssembly version
+#' IMPORTANT: use the lucasnell/tany_backmap docker image:
 #'
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
