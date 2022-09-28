@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - mafft=7.505
+  - mafft=7.508
   - paml=4.9
   - prequal=1.02
   - python=3.9.7
