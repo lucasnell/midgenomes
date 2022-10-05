@@ -4,6 +4,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - blast=2.13.0
+  - mcl=14.137
+  - cafe=5.0.0
+  - hyphy=2.5.42
   - mafft=7.508
   - paml=4.9
   - prequal=1.02

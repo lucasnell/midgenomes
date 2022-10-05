@@ -68,7 +68,7 @@ RUN . /app/.bashrc && \
         ./config/MANTIS.cfg && \
     cd /app && \
     rm -rf build
-# creating phylogeny:
+# creating phylogeny and associated analyses:
 COPY env-phylo.yml .
 RUN mamba env create -q -f env-phylo.yml && \
     rm env-phylo.yml && \
@@ -79,9 +79,6 @@ RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.4.3 && \
     conda clean --all -y
 # Flye assembler:
 RUN mamba create -q -y -c bioconda -c conda-forge -n flye-env flye=2.9 && \
-    conda clean --all -y
-# HyPhy:
-RUN mamba create -q -y -c bioconda -c conda-forge -n hyphy-env hyphy=2.5.42 && \
     conda clean --all -y
 
 
@@ -140,6 +137,18 @@ RUN cd /opt && \
     mv TSEBRA* TSEBRA
 ENV PATH="${PATH}:/opt/TSEBRA/bin"
 
+
+# --------------------------------
+# install OMA
+# --------------------------------
+RUN cd /opt && \
+    OMA_URL="https://omabrowser.org/standalone/OMA.2.5.0.tgz" && \
+    wget -c ${OMA_URL} -O - | tar -xz && \
+    cd OMA.2.5.0 && \
+    ./install.sh /opt && \
+    cd .. && \
+    rm -r OMA.2.5.0
+ENV PATH="${PATH}:/opt/OMA/bin"
 
 
 # --------------------------------
