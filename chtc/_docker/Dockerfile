@@ -139,7 +139,7 @@ ENV PATH="${PATH}:/opt/TSEBRA/bin"
 
 
 # --------------------------------
-# install OMA
+# install OMA Standalone
 # --------------------------------
 RUN cd /opt && \
     OMA_URL="https://omabrowser.org/standalone/OMA.2.5.0.tgz" && \
@@ -149,6 +149,32 @@ RUN cd /opt && \
     cd .. && \
     rm -r OMA.2.5.0
 ENV PATH="${PATH}:/opt/OMA/bin"
+
+
+# --------------------------------
+# install OrthoLoger (OrthoDB Standalone)
+# note that OrthoLoger scripts themselves are in /opt/orthologer and need to
+# be run inside orthologer-env
+# --------------------------------
+RUN mamba create -q -y -c bioconda -c conda-forge -n orthologer-env \
+        blast=2.13.0 cd-hit=4.8.1 ete3=3.1.2 mmseqs2=13.45111 numpy=1.23.3 && \
+    cd /opt && \
+    ODB_V="2.6.3" && \
+    BRHCLUS_V="5.1.1" && \
+    wget -c "https://www.orthodb.org/software/orthologer_${ODB_V}.tgz" -O - \
+        | tar -xz && \
+    cd orthologer_${ODB_V}/ORTHOLOGER-${ODB_V} && \
+    cp -r bin /opt/ && \
+    cd /opt && \
+    mv bin orthologer && \
+    cd orthologer_${ODB_V}/BRHCLUS-${BRHCLUS_V} && \
+    ./create_cmake_build_env.sh && \
+    cd build/release && \
+    cmake ../../ && \
+    make install && \
+    cp ../../bin/* /opt/conda/envs/orthologer-env/bin/ && \
+    cd /opt/ && \
+    rm -r orthologer_${ODB_V}
 
 
 # --------------------------------
