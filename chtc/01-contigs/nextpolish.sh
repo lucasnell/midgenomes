@@ -122,8 +122,8 @@ msg () {
 tar -xf ${READS_LOC}/${READS_TAR} -C ./
 check_exit_status "extract reads tar file" $?
 
-export NON_READS1=noN_${READS1/.gz/}
-export NON_READS2=noN_${READS2/.gz/}
+export NON_READS1=noN_${READS1%.gz}
+export NON_READS2=noN_${READS2%.gz}
 
 fastp --in1 ${READS1} --in2 ${READS2} \
     --out1 ${NON_READS1} --out2 ${NON_READS2} \

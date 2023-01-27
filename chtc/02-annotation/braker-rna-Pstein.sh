@@ -59,8 +59,8 @@ for ((i=0; i<${N_BAM_FILES}; i++)); do
     gunzip ${READS1} && gunzip ${READS2}
     check_exit_status "gunzip rna - ${TAR_FILE}" $?
 
-    READS1=${READS1/.gz/}
-    READS2=${READS2/.gz/}
+    READS1=${READS1%.gz}
+    READS2=${READS2%.gz}
 
     hisat2 -x Pstein_hisat_idx -1 ${READS1} -2 ${READS2} -k 3 -p ${THREADS} \
         | samtools sort -O bam - \
