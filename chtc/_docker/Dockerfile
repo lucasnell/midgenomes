@@ -82,6 +82,80 @@ RUN mamba create -q -y -c bioconda -c conda-forge -n flye-env flye=2.9 && \
     conda clean --all -y
 
 
+# --------------------------------
+# TEclass for TE classification:
+# note that TEclass scripts (notably TEclassTest.pl) are in /opt/TEclass and
+# need to be run inside teclass-env
+# --------------------------------
+RUN mamba create -q -y -c bioconda -c conda-forge -n teclass-env \
+        blast-legacy=2.2.26 glimmer=3.02 libsvm=330 && \
+    conda clean --all -y && \
+    cd /opt/ && \
+    wget --no-check-certificate -c 'http://www.compgen.uni-muenster.de/tools/teclass/download/TEclass-2.1.3b.tar.gz' -O - \
+        | tar -xz && \
+    mv TEclass* TEclass && \
+    cd TEclass && \
+    wget -c 'https://github.com/cjlin1/libsvm/archive/refs/tags/v330.tar.gz' -O - | tar -xz && \
+    mv libsvm-330/tools ./ && \
+    mv tools libsvm_tools && \
+    rm -r libsvm-330 && \
+    wget -c 'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/librf/librf.0.1.tar.gz' -O - \
+        | tar -xz && \
+    cd librf* && \
+    ./configure && \
+    perl -p -i -e 's/#include <vector>/#include <iostream>\n#include <vector>/' \
+        librf/random_forest.h && \
+    perl -p -i -e 's/#include <vector>/#include <cassert>\n#include <vector>/' \
+        librf/discrete_dist.h && \
+    perl -p -i -e 's/#include <fstream>/#include <cassert>\n#include <fstream>/' \
+        librf/tree_node.h && \
+    perl -p -i -e 's/#include <string>/#include <stdlib.h>\n#include <string>/' \
+        librf/instance_set.h && \
+    perl -p -i -e 's/#include <string>/#include <algorithm>\n#include <string>/' \
+        librf/instance_set.h && \
+    make && \
+    cd .. && \
+    wget -c 'http://www.cis.hut.fi/research/lvq_pak/lvq_pak-3.1.tar' -O - \
+        | tar -x && \
+    cd lvq_pak* && \
+    perl -p -i -e 's/getline/lvq_getline/g' * && \
+    perl -p -i -e 's/setprogname/lvq_setprogname/g' * && \
+    if [ -s fileio.c.bak ]; then rm *.bak; fi && \
+    cp makefile.unix makefile && \
+    make && \
+    cd .. && \
+    perl Configure.pl && \
+    sed -i 's/\$path_to_svm         = ""/\$path_to_svm         = "\/opt\/conda\/envs\/teclass-env\/bin"/g' Configuration.pm && \
+    sed -i 's/\$path_to_glimmer     = ""/\$path_to_glimmer     = "\/opt\/conda\/envs\/teclass-env\/bin"/g' Configuration.pm && \
+    sed -i 's/\$path_to_blastclust  = ""/\$path_to_blastclust  = "\/opt\/conda\/envs\/teclass-env\/bin"/g' Configuration.pm && \
+    sed -i 's/\$path_to_scripts     = path_to_svm\/tools/\$path_to_scripts     = "\/opt\/TEclass\/libsvm_tools"/g' Configuration.pm && \
+    ./Install.sh && \
+    cd classifiers && \
+    wget --no-check-certificate -c 'http://www.compgen.uni-muenster.de/tools/teclass/download/classifiers.tar.gz' -O - \
+        | tar -xz && \
+    cd .. && \
+    perlies=$(find $(pwd) -maxdepth 1 -not -name "Configure.pl" -name "*.pl") && \
+    for p in $perlies; do ln -s "$p" /opt/conda/envs/teclass-env/bin/; done && \
+    sed -i '478s/\"2>\/dev\/null\"/\"1>\/dev\/null 2>\/dev\/null\"/' \
+        ./TEclassTest.pl && \
+    sed -i '539s/\"2>\/dev\/null\"/\"1>\/dev\/null 2>\/dev\/null\"/' \
+        ./TEclassTest.pl && \
+    sed -i '414s/\" 2>$path_to_outdir\/$file.$analysis_type.rf.log\"/\"1>$path_to_outdir\/$file.$analysis_type.rf.log 2>$path_to_outdir\/$file.$analysis_type.rf.log\"/' \
+        ./TEclassTest.pl
+
+
+# ---------------------------------
+# Making RepeatMasker also use RepBase library
+# ---------------------------------
+COPY RepBaseRepeatMaskerEdition-20181026.tar.gz .
+RUN tar -xzf RepBaseRepeatMaskerEdition-20181026.tar.gz && \
+    mv ./Libraries/RMRBSeqs.embl /opt/conda/envs/repeat-env/share/RepeatMasker/Libraries/ && \
+    rm -r Libraries RepBaseRepeatMaskerEdition-20181026.tar.gz && \
+    cd /opt/conda/envs/repeat-env/share/RepeatMasker && \
+    . /app/.bashrc && \
+    conda activate repeat-env && \
+    ./addRepBase.pl -libdir ./Libraries/
+
 
 # ---------------------------------
 # Adjusting to allow BRAKER2 to work
@@ -159,9 +233,9 @@ ENV PATH="${PATH}:/opt/OMA/bin"
 RUN mamba create -q -y -c bioconda -c conda-forge -n orthologer-env \
         blast=2.13.0 cd-hit=4.8.1 ete3=3.1.2 mmseqs2=13.45111 numpy=1.23.3 && \
     cd /opt && \
-    ODB_V="2.6.3" && \
-    BRHCLUS_V="5.1.1" && \
-    wget -c "https://www.orthodb.org/software/orthologer_${ODB_V}.tgz" -O - \
+    ODB_V="2.8.3" && \
+    BRHCLUS_V="5.1.6" && \
+    wget -c "https://data.orthodb.org/v11/download/software/orthologer_${ODB_V}.tgz" -O - \
         | tar -xz && \
     cd orthologer_${ODB_V}/ORTHOLOGER-${ODB_V} && \
     cp -r bin /opt/ && \
