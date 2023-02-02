@@ -1,14 +1,6 @@
 #!/bin/bash
 
-#' Use fastp to trim paired-end, Poolseq (DNA) Illumina reads.
-#'
-#' Requires argument for full path to tar file containing reads.
-#' Outputs will be `trimmed_${READS_TAR}` and `trimmed_${READS_TAR}.gz`
-#' and will be put into the same directory.
-#'
-#' Usage:
-#' fastp-dna.sh READS_TAR
-#'
+# Use fastp to trim paired-end, Poolseq (DNA) Illumina reads.
 
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')

@@ -1,5 +1,29 @@
 #!/bin/bash
 
+#' Using mantis for functional annotations on Pstein assembly using
+#' non-Docker ("vanilla") environment on CHTC cluster.
+#' This means I have to build my conda environment myself.
+
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh
+sh Miniconda3-py39_4.12.0-Linux-x86_64.sh
+# say yes to running `conda init`
+
+. .bashrc
+
+conda create -y -c conda-forge -c bioconda -n mantis-env mantis_pfa=1.5.5
+
+
+conda install -y -c conda-forge conda-pack
+
+conda pack -n mantis-env
+chmod 644 mantis-env.tar.gz
+ls -sh mantis-env.tar.gz
+cp mantis-env.tar.gz /staging/lnell/annotation/
+
+conda activate mantis-env
+
+
 
 #'
 #' Functional annotations using mantis.
@@ -13,7 +37,7 @@ export MEMORY=$(grep "^Memory = " $_CONDOR_MACHINE_AD | sed 's/Memory\ =\ //')
 # In GB, with 5 GB overhead:
 MEMORY=$(( MEMORY / 1000 - 5 ))
 
-export OUT_DIR=Cripa_mantis
+export OUT_DIR=Pstein_mantis
 
 mkdir working
 cd working
@@ -24,11 +48,8 @@ mkdir dbs
 mkdir refs
 
 
-eval "$(conda shell.bash hook)"
-conda activate annotate-env
-
-cp /staging/lnell/annotation/Cripa_proteins.fasta.gz ./ \
-    && gunzip Cripa_proteins.fasta.gz
+cp /staging/lnell/annotation/Pstein_proteins.fasta.gz ./ \
+    && gunzip Pstein_proteins.fasta.gz
 
 
 #' Setup MANTIS.cfg based on default from
@@ -46,13 +67,18 @@ EOF
 
 
 #' Download and setup databases:
-mantis setup -mc MANTIS.cfg
+mantis setup -mc MANTIS.cfg --cores ${THREADS} --memory ${MEMORY}
+
+tar -czf mantis-downloads.tar.gz dbs refs
+mv mantis-downloads.tar.gz /staging/lnell/annotation/
+
 
 
 #' Run mantis:
-mantis run -mc MANTIS.cfg -i Cripa_proteins.fasta -o ${OUT_DIR} -od 315571 \
+mantis run -mc MANTIS.cfg -i Pstein_proteins.fasta -o ${OUT_DIR} -od 315571 \
     --verbose_kegg_matrix \
     --cores ${THREADS} --memory ${MEMORY} --hmmer_threads 2
+
 
 rm -rf refs dbs
 
