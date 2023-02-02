@@ -1,0 +1,28 @@
+# braker-rna-Cson.sub
+
+# Annotate Culicoides sonorensis assembly using RNAseq reads
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.1
+
+log = braker-rna-Cson.log
+error = braker-rna-Cson.err
+output = braker-rna-Cson.out
+
+executable = braker-rna.sh
+arguments = -i /staging/lnell/Cson-RNA -a XXXXXXXX______ASSEMBLY_DIR_____XXXXXXXX -o Cson_braker_rna -s Culicoides_sonorensis -r ERR637904.tar -r ERR637905.tar -r ERR637906.tar -r ERR637907.tar -r ERR637908.tar -r ERR637909.tar -r ERR637910.tar -r ERR637911.tar -r ERR637912.tar -r ERR637913.tar -r ERR637914.tar XXXXXXXX______ASSEMBLY_FILE_____XXXXXXXX
+
+
+batch_name = "braker-rna-Cson"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 48GB
+request_disk = 200GB
+
+
+queue 1
