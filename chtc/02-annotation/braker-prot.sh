@@ -4,27 +4,33 @@
 #' Use BRAKER2 for ".. prediction of protein coding gene structures"
 #' using proteins from a database (pipeline C)
 #'
-#' Requires arguments for directory containing assembly, output naming,
-#' and assembly name.
+#' Requires arguments for output naming and assembly file.
 #'
 #' Usage:
-#' braker-prot.sh -a ASSEMBLY_DIR -o OUTPUT_NAME ASSEMBLY
+#' braker-prot.sh [-o OUTPUT_LOC] -p OUTPUT_PREFIX ASSEMBLY
 #'
 #' Options:
-#'   -a Directory containing the input assembly file.
-#'   -o Output directory name.
+#'   -o Folder for all output. Defaults to `/staging/lnell/annotation`.
+#'   -p Prefix for output directory name.
+#'      Final output will be `${OUT_PREFIX}_braker_prot.tar.gz`.
 #'
 #'
 #' For Tanytarsus gracilentus assembly, the command was...
 #'
-#' braker-prot.sh -a /staging/lnell/annotation -o tany_braker_prot \
-#'      tany_contigs_masked.fasta.gz
+#' braker-prot.sh -p Tgraci \
+#'      /staging/lnell/annotation/Tgraci_contigs_masked.fasta.gz
 #'
 #'
 #' For Parochlus steinenii assembly, the command was...
 #'
-#' braker-prot.sh -a /staging/lnell/annotation -o Pstein_braker_prot \
-#'      Pstein_contigs_masked.fasta.gz
+#' braker-prot.sh -p Pstein \
+#'      /staging/lnell/annotation/Pstein_contigs_masked.fasta.gz
+#'
+#'
+#' For Culicoides sonorensis assembly, the command was...
+#'
+#' braker-prot.sh -p Csonor \
+#'      /staging/lnell/annotation/Csonor_contigs_masked.fasta.gz
 #'
 
 
@@ -41,24 +47,20 @@
 #' ===========================================================================
 
 
+export OUT_LOC=/staging/lnell/annotation
 
-unset -v ASSEMBLY_LOC
-unset -v OUT_DIR
+unset -v OUT_PREFIX
 
 
-while getopts ":a:o:" opt; do
+while getopts ":o:p:" opt; do
     case $opt in
-        a)
-            ASSEMBLY_LOC=$(echo "$OPTARG" | sed 's/\/$//g')
-            if [ ! -f "${ASSEMBLY_LOC}" ]; then
-                echo "ERROR: '${ASSEMBLY_LOC}' does not exist." 1>&2
-                exit 1
-            fi
-            ;;
         o)
-            OUT_DIR="$OPTARG"
-            if [[ "$OUT_DIR" == */* ]]; then
-                echo "ERROR: -o arg cannot contain '/'." 1>&2
+            OUTPUT_LOC=$(echo "$OPTARG" | sed 's/\/$//g')
+            ;;
+        p)
+            OUT_PREFIX="$OPTARG"
+            if [[ "${OUT_PREFIX}" == */* ]]; then
+                echo "ERROR: -p arg cannot contain '/'." 1>&2
                 exit 1
             fi
             ;;
@@ -73,13 +75,21 @@ while getopts ":a:o:" opt; do
     esac
 done
 
-export ASSEMBLY=${@:$OPTIND:1}
-if ! [[ "$ASSEMBLY" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
+export ASSEMBLY_FULL_PATH=${@:$OPTIND:1}
+if [ ! -f "${ASSEMBLY_FULL_PATH}" ]; then
+    echo "ERROR: Your assembly file ('${ASSEMBLY_FULL_PATH}') does not exist." 1>&2
+    exit 1
+if ! [[ "${ASSEMBLY_FULL_PATH}" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
     echo -n "ERROR: Assembly must end in *.fasta, *.fa, *.fasta.gz, or *.fa.gz. " 1>&2
-    echo "Yours is '${ASSEMBLY}'." 1>&2
+    echo "Yours is '${ASSEMBLY_FULL_PATH}'." 1>&2
     exit 1
 fi
+fi
 
+if [ ! -f "${OUT_LOC}" ]; then
+    echo "ERROR: Output directory ('${OUT_LOC}') does not exist." 1>&2
+    exit 1
+fi
 
 if (( OPTIND < $# )); then
     echo "Options passed after assembly." 1>&2
@@ -87,16 +97,11 @@ if (( OPTIND < $# )); then
 fi
 
 
-if [ -z "$ASSEMBLY_LOC" ]; then echo "Missing -a argument." 1>&2; exit 1; fi
-if [ -z "$OUT_DIR" ]; then echo "Missing -o argument." 1>&2; exit 1; fi
+if [ -z "$OUT_PREFIX" ]; then echo "Missing -p argument." 1>&2; exit 1; fi
 
-export ASSEMBLY_LOC
-export OUT_DIR
+export OUT_PREFIX
 
-if [ ! -f ${ASSEMBLY_LOC}/${ASSEMBLY} ]; then
-    echo "ERROR: '${ASSEMBLY_LOC}/${ASSEMBLY}' does not exist." 1>&2
-    exit 1
-fi
+
 
 
 
@@ -112,23 +117,23 @@ export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 eval "$(conda shell.bash hook)"
 
-export TARGET=/staging/lnell/annotation
-if [ ! -f ${TARGET} ]; then
-    echo "INTERNAL ERROR: '${TARGET}' (TARGET object) does not exist." 1>&2
-    exit 1
-fi
 
 mkdir working
 cd working
 
+export OUT_DIR=${OUT_PREFIX}_braker_prot
 
-cp ${ASSEMBLY_LOC}/${ASSEMBLY} ./
+
+cp ${ASSEMBLY_FULL_PATH} ./
 check_exit_status "cp genome" $?
+export ASSEMBLY=$(basename "${ASSEMBLY_FULL_PATH}")
 if [[ "${ASSEMBLY}" == *.gz ]]; then
     gunzip ${ASSEMBLY}
     ASSEMBLY=${ASSEMBLY%.gz}
     check_exit_status "gunzip genome" $?
 fi
+
+
 
 
 
@@ -159,7 +164,7 @@ mv braker ${OUT_DIR}
 
 # Saving output:
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz ${TARGET}/
+mv ${OUT_DIR}.tar.gz ${OUT_LOC}/
 
 cd ..
 rm -r working
