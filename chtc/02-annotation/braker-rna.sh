@@ -122,11 +122,11 @@ if ! [[ "${ASSEMBLY_FULL_PATH}" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
     exit 1
 fi
 
-if [ ! -f "${READS_LOC}" ]; then
+if [ ! -d "${READS_LOC}" ]; then
     echo "ERROR: Reads directory ('${READS_LOC}') does not exist." 1>&2
     exit 1
 fi
-if [ ! -f "${OUT_LOC}" ]; then
+if [ ! -d "${OUT_LOC}" ]; then
     echo "ERROR: Output directory ('${OUT_LOC}') does not exist." 1>&2
     exit 1
 fi

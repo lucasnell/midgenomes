@@ -92,7 +92,7 @@ if ! [[ "${PROTEINS_FULL_PATH}" =~ (.faa|.faa.gz)$ ]]; then
     exit 1
 fi
 
-if [ ! -f "${OUTPUT_LOC}" ]; then
+if [ ! -d "${OUTPUT_LOC}" ]; then
     echo "ERROR: Output directory ('${OUTPUT_LOC}') does not exist." 1>&2
     exit 1
 fi
@@ -152,9 +152,11 @@ fi
 
 tar -xf ${MANTIS_DL_FULL_PATH} -C ./
 check_exit_status "cp, extract databases" $?
-if [ ! -f "dbs" ] || [ ! -f "refs" ]; then
+if [ ! -d "dbs" ] || [ ! -d "refs" ]; then
     echo -n "ERROR: when un-tarred, '${MANTIS_DL_FULL_PATH}' should create " 1>&2
     echo "'dbs' and 'refs' folders." 1>&2
+    cd ..
+    rm -r working
     exit 1
 fi
 

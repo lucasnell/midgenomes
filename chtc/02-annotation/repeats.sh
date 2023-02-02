@@ -128,7 +128,7 @@ if ! [[ "${ASSEMBLY_FULL_PATH}" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
     exit 1
 fi
 
-if [ ! -f "${OUTPUT_LOC}" ]; then
+if [ ! -d "${OUTPUT_LOC}" ]; then
     echo "ERROR: '${OUTPUT_LOC}' does not exist." 1>&2
     exit 1
 fi
