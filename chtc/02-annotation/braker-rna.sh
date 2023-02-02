@@ -76,7 +76,7 @@
 
 
 export READS_LOC=/staging/lnell/ill/rna
-export OUT_LOC=/staging/lnell/annotation
+export OUTPUT_LOC=/staging/lnell/annotation
 
 unset -v OUT_PREFIX
 unset -v TARS_BAMS
@@ -93,7 +93,7 @@ while getopts ":i:o:p:r:" opt; do
         p)
             OUT_PREFIX="$OPTARG"
             if [[ "$OUT_PREFIX" == */* ]]; then
-                echo "ERROR: -o arg cannot contain '/'." 1>&2
+                echo "ERROR: -p arg cannot contain '/'." 1>&2
                 exit 1
             fi
             ;;
@@ -117,7 +117,7 @@ if [ ! -f "${ASSEMBLY_FULL_PATH}" ]; then
     exit 1
 fi
 if ! [[ "${ASSEMBLY_FULL_PATH}" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
-    echo -n "ERROR: Assembly must end in *.fasta, *.fa, *.fasta.gz, or *.fa.gz. " 1>&2
+    echo -n "ERROR: Assembly must end in '.fasta', '.fa', '.fasta.gz', or '.fa.gz'. " 1>&2
     echo "Yours is '${ASSEMBLY_FULL_PATH}'." 1>&2
     exit 1
 fi
@@ -126,8 +126,8 @@ if [ ! -d "${READS_LOC}" ]; then
     echo "ERROR: Reads directory ('${READS_LOC}') does not exist." 1>&2
     exit 1
 fi
-if [ ! -d "${OUT_LOC}" ]; then
-    echo "ERROR: Output directory ('${OUT_LOC}') does not exist." 1>&2
+if [ ! -d "${OUTPUT_LOC}" ]; then
+    echo "ERROR: Output directory ('${OUTPUT_LOC}') does not exist." 1>&2
     exit 1
 fi
 
@@ -240,7 +240,7 @@ for tb_file in ${TARS_BAMS[@]}; do
         | samtools sort -O bam - \
         > ${BAM_FILE}
     check_exit_status "hisat2 - $tb_file" $?
-    cp ${BAM_FILE} ${OUT_LOC}/
+    cp ${BAM_FILE} ${OUTPUT_LOC}/
     rm ${READS1} ${READS2}
     BAM_ARRAY+=("$BAM_FILE")
     unset -v BAM_FILE READS1 READS2
@@ -278,7 +278,7 @@ mv braker ${OUT_DIR}
 
 # Saving output:
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz ${OUT_LOC}/
+mv ${OUT_DIR}.tar.gz ${OUTPUT_LOC}/
 
 cd ..
 rm -r working

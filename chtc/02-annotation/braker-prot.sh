@@ -47,7 +47,7 @@
 #' ===========================================================================
 
 
-export OUT_LOC=/staging/lnell/annotation
+export OUTPUT_LOC=/staging/lnell/annotation
 
 unset -v OUT_PREFIX
 
@@ -80,14 +80,14 @@ if [ ! -f "${ASSEMBLY_FULL_PATH}" ]; then
     echo "ERROR: Your assembly file ('${ASSEMBLY_FULL_PATH}') does not exist." 1>&2
     exit 1
 if ! [[ "${ASSEMBLY_FULL_PATH}" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
-    echo -n "ERROR: Assembly must end in *.fasta, *.fa, *.fasta.gz, or *.fa.gz. " 1>&2
+    echo -n "ERROR: Assembly must end in '.fasta', '.fa', '.fasta.gz', or '.fa.gz'. " 1>&2
     echo "Yours is '${ASSEMBLY_FULL_PATH}'." 1>&2
     exit 1
 fi
 fi
 
-if [ ! -d "${OUT_LOC}" ]; then
-    echo "ERROR: Output directory ('${OUT_LOC}') does not exist." 1>&2
+if [ ! -d "${OUTPUT_LOC}" ]; then
+    echo "ERROR: Output directory ('${OUTPUT_LOC}') does not exist." 1>&2
     exit 1
 fi
 
@@ -164,7 +164,7 @@ mv braker ${OUT_DIR}
 
 # Saving output:
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz ${OUT_LOC}/
+mv ${OUT_DIR}.tar.gz ${OUTPUT_LOC}/
 
 cd ..
 rm -r working

@@ -123,7 +123,7 @@ if [ ! -f "${ASSEMBLY_FULL_PATH}" ]; then
     exit 1
 fi
 if ! [[ "${ASSEMBLY_FULL_PATH}" =~ (.fasta|.fa|.fasta.gz|.fa.gz)$ ]]; then
-    echo -n "ERROR: Assembly must end in *.fasta, *.fa, *.fasta.gz, or *.fa.gz. " 1>&2
+    echo -n "ERROR: Assembly must end in '.fasta', '.fa', '.fasta.gz', or '.fa.gz'. " 1>&2
     echo "Yours is '${ASSEMBLY_FULL_PATH}'." 1>&2
     exit 1
 fi
