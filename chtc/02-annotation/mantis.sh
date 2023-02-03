@@ -137,7 +137,7 @@ mkdir working
 cd working
 
 
-eval "$(conda shell.bash hook)"
+. /app/.bashrc
 conda activate annotate-env
 
 

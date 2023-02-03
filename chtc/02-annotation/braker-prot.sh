@@ -115,7 +115,7 @@ export OUT_PREFIX
 
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
-eval "$(conda shell.bash hook)"
+. /app/.bashrc
 
 
 mkdir working

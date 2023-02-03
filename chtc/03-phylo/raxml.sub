@@ -3,7 +3,7 @@
 # Create phylogeny using RAxML-NG
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.1
+docker_image = lucasnell/midgenomes:v1.0.4
 
 log = raxml.log
 error = raxml.err

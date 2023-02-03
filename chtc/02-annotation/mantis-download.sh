@@ -23,7 +23,7 @@ mkdir dbs
 mkdir refs
 
 
-eval "$(conda shell.bash hook)"
+. /app/.bashrc
 conda activate annotate-env
 
 

@@ -70,7 +70,6 @@
 #' - Bantar
 #' - Cmarin
 #' - Pakamu
-#' - Csonor
 #' - Asteph
 #' - Aaegyp
 #' - Cquinq
