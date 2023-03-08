@@ -4,7 +4,7 @@
 
 
 FROM condaforge/mambaforge:4.11.0-0
-MAINTAINER Lucas Nell <lucas@lucasnell.com>
+MAINTAINER Lucas Nell <lucnell@gmail.com>
 WORKDIR /app
 ENV HOME /app
 ARG DEBIAN_FRONTEND=noninteractive
@@ -32,7 +32,6 @@ RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
-# ENV TZ America/Chicago
 ENV TZ America/Los_Angeles
 
 RUN conda init bash

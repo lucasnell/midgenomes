@@ -3,7 +3,7 @@
 # Annotate Tanytarsus gracilentus assembly using database of proteins
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.4
+docker_image = lucasnell/midgenomes:v1.0.5
 
 log = braker-prot.log
 error = braker-prot.err
