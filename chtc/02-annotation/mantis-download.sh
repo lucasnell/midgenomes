@@ -45,7 +45,7 @@ EOF
 mantis setup -mc MANTIS.cfg --cores ${THREADS} --memory ${MEMORY}
 
 tar -czf ${OUT_TAR} dbs refs
-mv ${OUT_TAR} /staging/lnell/annotation/
+mv ${OUT_TAR} /staging/lnell/annotations/
 
 
 cd ..

@@ -13,10 +13,10 @@
 #'            -p OUT_PREFIX -n NCBI_LINEAGE PROTEINS
 #'
 #' Options:
-#'   -o Folder for all output. Defaults to `/staging/lnell/annotation/`.
+#'   -o Folder for all output. Defaults to `/staging/lnell/annotations/`.
 #'   -m Full path to compressed tar file containing mantis databases that
 #'      were downloaded previously. Defaults to
-#'      `/staging/lnell/annotation/mantis-downloads.tar.gz`.
+#'      `/staging/lnell/annotations/mantis-downloads.tar.gz`.
 #'   -p Prefix for all output.
 #'      Final output will be `${OUT_PREFIX}_mantis.tar.gz`.
 #'   -n NCBI lineage name. Should be entirely numeric.
@@ -24,21 +24,21 @@
 #'
 #'
 #' For Tanytarsus gracilentus assembly, the command was...
-#' mantis.sh -p Tgraci -n 288803 /staging/lnell/annotation/proteins/Tgraci_proteins.faa.gz
+#' mantis.sh -p Tgraci -n 288803 /staging/lnell/annotations/Tgraci_proteins.faa.gz
 #'
 #' For Parochlus steinenii assembly, the command was...
-#' mantis.sh -p Pstein -n 315571 /staging/lnell/annotation/proteins/Pstein_proteins.faa.gz
+#' mantis.sh -p Pstein -n 315571 /staging/lnell/annotations/Pstein_proteins.faa.gz
 #'
 #' For Chironomus riparius assembly, the command was...
-#' mantis.sh -p Cripar -n 315576 /staging/lnell/annotation/proteins/Cripar_proteins.faa.gz
+#' mantis.sh -p Cripar -n 315576 /staging/lnell/annotations/Cripar_proteins.faa.gz
 #'
 #' For Culicoides sonorensis assembly, the command was...
-#' mantis.sh -p Csonor -n 179676 /staging/lnell/annotation/proteins/Csonor_proteins.faa.gz
+#' mantis.sh -p Csonor -n 179676 /staging/lnell/annotations/Csonor_proteins.faa.gz
 #'
 
 
-export OUTPUT_LOC=/staging/lnell/annotation
-export MANTIS_DL_FULL_PATH=/staging/lnell/annotation/mantis-downloads.tar.gz
+export OUTPUT_LOC=/staging/lnell/annotations
+export MANTIS_DL_FULL_PATH=/staging/lnell/annotations/mantis-downloads.tar.gz
 
 
 unset -v OUT_PREFIX

@@ -12,10 +12,10 @@
 #' repeats.sh [-o OUTPUT_LOC] -p OUT_PREFIX ASSEMBLY
 #'
 #' Options:
+#'   -o Folder for all output. Defaults to `/staging/lnell/annotations`.
 #'   -p Prefix for all output. Final outputs will be
 #'      `${OUT_PREFIX}_repeats.tar.gz` and
 #'      `${OUT_PREFIX}_contigs_masked.fasta.gz`
-#'   -o Folder for all output. Defaults to `/staging/lnell/annotation`.
 #'
 #'
 #' For Tanytarsus gracilentus assembly, the command was...
@@ -88,7 +88,7 @@
 #' ===========================================================================
 
 
-export OUTPUT_LOC=/staging/lnell/annotation
+export OUTPUT_LOC=/staging/lnell/annotations
 
 unset -v OUT_PREFIX
 

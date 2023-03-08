@@ -16,7 +16,7 @@
 #' Options:
 #'   -i Directory containing the input read tar files.
 #'      Defaults to `/staging/lnell/ill/rna`.
-#'   -o Folder for all output. Defaults to `/staging/lnell/annotation`.
+#'   -o Folder for all output. Defaults to `/staging/lnell/annotations`.
 #'   -p Prefix for output directory name.
 #'      Final output will be `${OUT_PREFIX}_braker_rna.tar.gz`.
 #'   -r tar file containing Illumina reads to use, or BAM file containing
@@ -34,16 +34,15 @@
 #'
 #' braker-rna.sh -p Tgraci \
 #'      -r trimmed_TanyAdult_S1.tar -r trimmed_TanyJuven_S2.tar \
-#'      /staging/lnell/annotation/Tgraci_contigs_masked.fasta.gz
+#'      /staging/lnell/annotations/Tgraci_contigs_masked.fasta.gz
 #'
 #'
 #' For Parochlus steinenii assembly, the command was...
 #'
-#' braker-rna.sh -p Pstein \
-#'      -r trimmed_Pstein_RNA_SRR3951283.tar \
+#' braker-rna.sh -p Pstein -r trimmed_Pstein_RNA_SRR3951283.tar \
 #'      -r trimmed_Pstein_RNA_SRR3951284.tar \
 #'      -r trimmed_Pstein_RNA_SRR3951285.tar \
-#'      /staging/lnell/annotation/Pstein_contigs_masked.fasta.gz
+#'      /staging/lnell/annotations/Pstein_contigs_masked.fasta.gz
 #'
 #'
 #' For Culicoides sonorensis assembly, the command was...
@@ -60,7 +59,7 @@
 #'      -r trimmed_ERR637912.tar \
 #'      -r trimmed_ERR637913.tar \
 #'      -r trimmed_ERR637914.tar \
-#'      /staging/lnell/annotation/Csonor_contigs_masked.fasta.gz
+#'      /staging/lnell/annotations/Csonor_contigs_masked.fasta.gz
 #'
 
 
@@ -76,7 +75,7 @@
 
 
 export READS_LOC=/staging/lnell/ill/rna
-export OUTPUT_LOC=/staging/lnell/annotation
+export OUTPUT_LOC=/staging/lnell/annotations
 
 unset -v OUT_PREFIX
 unset -v TARS_BAMS

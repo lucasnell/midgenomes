@@ -15,7 +15,7 @@
 #'    -p OUT_PREFIX ASSEMBLY
 #'
 #' Options:
-#'   -o Folder for all output. Defaults to `/staging/lnell/annotation`.
+#'   -o Folder for all output. Defaults to `/staging/lnell/annotations`.
 #'   -r Full path to compressed folder containing BRAKER annotation using
 #'      RNAseq data. Must end in `.tar.gz`.
 #'      It's assumed that the folder name is the same as the compressed tarball
@@ -43,7 +43,7 @@
 #' ===========================================================================
 
 
-export OUTPUT_LOC=/staging/lnell/annotation
+export OUTPUT_LOC=/staging/lnell/annotations
 
 unset -v RNASEQ_ANNOT_FULL_PATH
 unset -v ORTHO_ANNOT_FULL_PATH

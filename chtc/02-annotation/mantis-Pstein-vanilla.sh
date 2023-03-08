@@ -19,7 +19,7 @@ conda install -y -c conda-forge conda-pack
 conda pack -n mantis-env
 chmod 644 mantis-env.tar.gz
 ls -sh mantis-env.tar.gz
-cp mantis-env.tar.gz /staging/lnell/annotation/
+cp mantis-env.tar.gz /staging/lnell/annotations/
 
 conda activate mantis-env
 
@@ -48,7 +48,7 @@ mkdir dbs
 mkdir refs
 
 
-cp /staging/lnell/annotation/Pstein_proteins.fasta.gz ./ \
+cp /staging/lnell/annotations/Pstein_proteins.fasta.gz ./ \
     && gunzip Pstein_proteins.fasta.gz
 
 
@@ -70,7 +70,7 @@ EOF
 mantis setup -mc MANTIS.cfg --cores ${THREADS} --memory ${MEMORY}
 
 tar -czf mantis-downloads.tar.gz dbs refs
-mv mantis-downloads.tar.gz /staging/lnell/annotation/
+mv mantis-downloads.tar.gz /staging/lnell/annotations/
 
 
 
@@ -84,7 +84,7 @@ rm -rf refs dbs
 
 
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/annotation/
+mv ${OUT_DIR}.tar.gz /staging/lnell/annotations/
 
 cd ..
 rm -r working

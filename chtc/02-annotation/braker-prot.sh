@@ -10,7 +10,7 @@
 #' braker-prot.sh [-o OUTPUT_LOC] -p OUTPUT_PREFIX ASSEMBLY
 #'
 #' Options:
-#'   -o Folder for all output. Defaults to `/staging/lnell/annotation`.
+#'   -o Folder for all output. Defaults to `/staging/lnell/annotations`.
 #'   -p Prefix for output directory name.
 #'      Final output will be `${OUT_PREFIX}_braker_prot.tar.gz`.
 #'
@@ -18,19 +18,19 @@
 #' For Tanytarsus gracilentus assembly, the command was...
 #'
 #' braker-prot.sh -p Tgraci \
-#'      /staging/lnell/annotation/Tgraci_contigs_masked.fasta.gz
+#'      /staging/lnell/annotations/Tgraci_contigs_masked.fasta.gz
 #'
 #'
 #' For Parochlus steinenii assembly, the command was...
 #'
 #' braker-prot.sh -p Pstein \
-#'      /staging/lnell/annotation/Pstein_contigs_masked.fasta.gz
+#'      /staging/lnell/annotations/Pstein_contigs_masked.fasta.gz
 #'
 #'
 #' For Culicoides sonorensis assembly, the command was...
 #'
 #' braker-prot.sh -p Csonor \
-#'      /staging/lnell/annotation/Csonor_contigs_masked.fasta.gz
+#'      /staging/lnell/annotations/Csonor_contigs_masked.fasta.gz
 #'
 
 
@@ -47,7 +47,7 @@
 #' ===========================================================================
 
 
-export OUTPUT_LOC=/staging/lnell/annotation
+export OUTPUT_LOC=/staging/lnell/annotations
 
 unset -v OUT_PREFIX
 
