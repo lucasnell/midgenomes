@@ -31,6 +31,32 @@
 #'      `${OUT_PREFIX}_cds_busco.tar.gz`.
 #'
 #'
+#'
+#'
+#' For Tanytarsus gracilentus assembly, the command was...
+#'
+#' tsebra.sh -r /staging/lnell/annotations/Tgraci_braker_rna.tar.gz \
+#'     -t /staging/lnell/annotations/Tgraci_braker_prot.tar.gz \
+#'     -p Tgraci \
+#'     /staging/lnell/annotations/Tgraci_contigs_masked.fasta.gz
+#'
+#'
+#' For Parochlus steinenii assembly, the command was...
+#'
+#' tsebra.sh -r /staging/lnell/annotations/Pstein_braker_rna.tar.gz \
+#'     -t /staging/lnell/annotations/Pstein_braker_prot.tar.gz \
+#'     -p Pstein \
+#'     /staging/lnell/annotations/Pstein_contigs_masked.fasta.gz
+#'
+#'
+#' For Culicoides sonorensis assembly, the command was...
+#'
+#' tsebra.sh -r /staging/lnell/annotations/Csonor_braker_rna.tar.gz \
+#'     -t /staging/lnell/annotations/Csonor_braker_prot.tar.gz \
+#'     -p Csonor \
+#'     /staging/lnell/annotations/Csonor_contigs_masked.fasta.gz
+#'
+
 
 
 
@@ -268,7 +294,7 @@ fi
 # "spliced CDS for each GFF transcript"
 gffread -x ${OUT_CDS_FASTA} -g ${ASSEMBLY} ${OUT_GFF_PREFIX}.gff3
 # "protein fasta file with the translation of CDS for each record"
-gffread -y ${OUT_PROT_FASTA} -g ${ASSEMBLY} ${OUT_GFF_PREFIX}.gff3
+gffread -y ${OUT_PROT_FASTA} -S -g ${ASSEMBLY} ${OUT_GFF_PREFIX}.gff3
 
 conda deactivate
 
@@ -299,7 +325,6 @@ mv ${BUSCO_OUT_DIR}.tar.gz ${OUTPUT_LOC}/
 #' ----------
 #' Move over final outputs:
 #' ----------
-
 
 gzip ${OUT_GFF_PREFIX}.gff3
 gzip ${OUT_CDS_FASTA}

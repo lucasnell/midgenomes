@@ -1,0 +1,27 @@
+# tsebra.sub
+
+# Combine 2 BRAKER annotations (RNAseq + OrthoDB proteins) using TSEBRA
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.5
+
+log = tsebra-$(species).log
+error = tsebra-$(species).err
+output = tsebra-$(species).out
+
+executable = tsebra.sh
+arguments = -r /staging/lnell/annotations/$(species)_braker_rna.tar.gz -t /staging/lnell/annotation/$(species)_braker_prot.tar.gz -p $(species) /staging/lnell/annotation/$(species)_contigs_masked.fasta.gz
+
+
+batch_name = "tsebra-$(species)"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 32GB
+request_disk = 100GB
+
+queue species from spp-abbrevs.txt
