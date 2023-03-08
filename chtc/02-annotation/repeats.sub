@@ -5,13 +5,14 @@
 universe = docker
 docker_image = lucasnell/midgenomes:v1.0.5
 
-log = repeats.log
-error = repeats.err
-output = repeats.out
+log = repeats-$(species).log
+error = repeats-$(species).err
+output = repeats-$(species).out
 
 executable = repeats.sh
+arguments = -p $(species) /staging/lnell/assemblies/$(species)_contigs.fasta.gz
 
-batch_name = "repeats"
+batch_name = "repeats-$(species)"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -19,7 +20,9 @@ when_to_transfer_output = ON_EXIT
 requirements = (Target.HasCHTCStaging == true)
 
 request_cpus = 32
-request_memory = 64GB
+request_memory = 32GB
 request_disk = 100GB
 
-queue 1
+queue species from spp-abbrevs.txt
+
+

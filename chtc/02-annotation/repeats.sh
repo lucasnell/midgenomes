@@ -53,6 +53,8 @@
 #'
 #' For Aedes aegypti assembly, the command was...
 #' repeats.sh -p Aaegyp /staging/lnell/assemblies/Aaegyp_contigs.fasta.gz
+#' ** ^^ I had to run RepeatModeler and RepeatMasker separately to avoid the
+#'       72 hour limit on the UW cluster.
 #'
 #' For Culex quinquefasciatus assembly, the command was...
 #' repeats.sh -p Cquinq /staging/lnell/assemblies/Cquinq_contigs.fasta.gz
@@ -63,17 +65,8 @@
 
 
 #' Still to do:
-#' - Cripar
-#' - Ctenta
-#' - Pvande
-#' - Ppemba
-#' - Bantar
-#' - Cmarin
-#' - Pakamu
-#' - Asteph
 #' - Aaegyp
-#' - Cquinq
-#' - Mdomes
+
 
 
 
@@ -158,6 +151,10 @@ export OUT_PREFIX
 #' This should be divisible by 4 bc that's how many threads are used per
 #' job using RMBlast, the default engine in RepeatModeler
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+if (( $THREADS < 4 )); then
+    echo "ERROR: You need >= 4 threads, but you provided $THREADS." 1>&2
+    exit 1
+fi
 
 . /app/.bashrc
 conda activate repeat-env
@@ -354,11 +351,11 @@ orig_wd=$(pwd)
 cd /opt/conda/envs/repeat-env/share/RepeatMasker
 ./famdb.py -i ./Libraries/RepeatMaskerLib.h5 families --format fasta_name \
     --include-class-in-name --ancestors --descendants 'diptera' \
-    > ${orig_wd}/diptera_repeats_lib.fasta
+    > ${orig_wd}/diptera_and_${REPEATS_LIB}
 cd ${orig_wd}
 
-cat diptera_repeats_lib.fasta ${REPEATS_LIB} \
-    > diptera_and_${REPEATS_LIB}
+cat ${REPEATS_LIB} \
+    >> diptera_and_${REPEATS_LIB}
 
 
 RepeatMasker \
