@@ -5,13 +5,14 @@
 universe = docker
 docker_image = lucasnell/midgenomes:v1.0.5
 
-log = braker-rna.log
-error = braker-rna.err
-output = braker-rna.out
+log = braker-rna-$(species).log
+error = braker-rna-$(species).err
+output = braker-rna-$(species).out
 
 executable = braker-rna.sh
+arguments = "$(all_args)"
 
-batch_name = "braker-rna"
+batch_name = "braker-rna-$(species)"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -19,8 +20,8 @@ when_to_transfer_output = ON_EXIT
 requirements = (Target.HasCHTCStaging == true)
 
 request_cpus = 32
-request_memory = 48GB
-request_disk = 200GB
+request_memory = 24GB
+request_disk = 100GB
 
 
-queue 1
+queue species, all_args from rna-args.txt

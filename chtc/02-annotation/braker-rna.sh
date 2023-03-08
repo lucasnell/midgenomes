@@ -18,7 +18,10 @@
 #'      Defaults to `/staging/lnell/ill/rna`.
 #'   -o Folder for all output. Defaults to `/staging/lnell/annotations`.
 #'   -p Prefix for output directory name.
-#'      Final output will be `${OUT_PREFIX}_braker_rna.tar.gz`.
+#'      The main output is `${OUT_PREFIX}_braker_rna.tar.gz`.
+#'      It will also output an alignment `${OUT_PREFIX}_rna_all_aligns.bam`
+#'      unless a single BAM file with this name has been input in the
+#'      `-r` argument.
 #'   -r tar file containing Illumina reads to use, or BAM file containing
 #'      alignments from Illumina RNAseq reads.
 #'      Must be inside folder given by `-i` arg and end with `.tar` or `.bam`.
@@ -239,7 +242,6 @@ for tb_file in ${TARS_BAMS[@]}; do
         | samtools sort -O bam - \
         > ${BAM_FILE}
     check_exit_status "hisat2 - $tb_file" $?
-    cp ${BAM_FILE} ${OUTPUT_LOC}/
     rm ${READS1} ${READS2}
     BAM_ARRAY+=("$BAM_FILE")
     unset -v BAM_FILE READS1 READS2
@@ -249,12 +251,20 @@ done
 
 rm ${OUT_DIR}_idx*
 
+export COMBINED_BAM_FILE=${OUT_PREFIX}_rna_all_aligns.bam
+
+#' This check is to prevent unnecessary copying if there was a single input
+#' BAM file and it has the same name, in which case I'm assuming the merging
+#' step has already been done.
+if [ ! -f "${COMBINED_BAM_FILE}" ] || (( ${#BAM_ARRAY[@]} != 1 )); then
+    samtools merge -@ ${THREADS} ${COMBINED_BAM_FILE} ${BAM_ARRAY[@]}
+    check_exit_status "merge BAM files" $?
+    cp ${COMBINED_BAM_FILE} ${OUTPUT_LOC}/
+    rm ${BAM_ARRAY[@]}
+fi
+
 
 conda deactivate
-
-
-export BAM_LIST=$(IFS=','; echo "${BAM_ARRAY[*]}")
-
 
 
 
@@ -271,7 +281,7 @@ conda activate annotate-env
 
 
 braker.pl --genome=${ASSEMBLY} --cores=${THREADS} \
-    --softmasking --bam=${BAM_LIST}
+    --softmasking --bam=${COMBINED_BAM_FILE}
 
 mv braker ${OUT_DIR}
 
