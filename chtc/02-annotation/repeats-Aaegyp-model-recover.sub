@@ -1,0 +1,26 @@
+# repeats-Aaegyp-model-recover.sub
+
+# Restart creation of library of repetitive elements in Aedes aegypti assembly using RepeatModeler.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.5
+
+log = repeats-Aaegyp-model-recover-$(Process).log
+error = repeats-Aaegyp-model-recover-$(Process).err
+output = repeats-Aaegyp-model-recover-$(Process).out
+
+executable = repeats-Aaegyp-model-recover.sh
+arguments  = Aaegyp_repeats_model-unfinished.tar.gz
+
+batch_name = "repeats-Aaegyp-model-recover-$(Process)"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 80
+request_memory = 60GB
+request_disk = 100GB
+
+queue 1

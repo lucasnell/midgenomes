@@ -1,0 +1,25 @@
+# repeats-Aaegyp-mask.sub
+
+# Mask repetitive elements in Aedes aegypti assembly using RepeatMasker.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.5
+
+log = repeats-Aaegyp-mask.log
+error = repeats-Aaegyp-mask.err
+output = repeats-Aaegyp-mask.out
+
+executable = repeats-Aaegyp-mask.sh
+
+batch_name = "repeats-Aaegyp-mask"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 80
+request_memory = 120GB
+request_disk = 100GB
+
+queue 1
