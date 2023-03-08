@@ -1,17 +1,18 @@
 # braker-prot.sub
 
-# Annotate Tanytarsus gracilentus assembly using database of proteins
+# Annotate genome assembly using dipteran proteins from OrthoDB database
 
 universe = docker
 docker_image = lucasnell/midgenomes:v1.0.5
 
-log = braker-prot.log
-error = braker-prot.err
-output = braker-prot.out
+log = braker-prot-$(species).log
+error = braker-prot-$(species).err
+output = braker-prot-$(species).out
 
 executable = braker-prot.sh
+arguments = -p $(species) /staging/lnell/annotations/$(species)_contigs_masked.fasta.gz
 
-batch_name = "braker-prot"
+batch_name = "braker-prot-$(species)"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -22,5 +23,4 @@ request_cpus = 32
 request_memory = 48GB
 request_disk = 200GB
 
-
-queue 1
+queue species from prot-species.txt

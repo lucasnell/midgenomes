@@ -5,12 +5,14 @@
 universe = docker
 docker_image = lucasnell/midgenomes:v1.0.5
 
-log = mantis.log
-error = mantis.err
-output = mantis.out
+log = mantis-$(species).log
+error = mantis-$(species).err
+output = mantis-$(species).out
 
 executable = mantis.sh
-batch_name = "mantis"
+arguments = -p $(species) -n $(ncbi) $(proteins)
+
+batch_name = "mantis-$(species)"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -19,7 +21,7 @@ requirements = (Target.HasCHTCStaging == true)
 
 # (Uses lots of disk space because of databases downloaded)
 request_cpus = 32
-request_memory = 50GB
+request_memory = 80GB
 request_disk = 300GB
 
-queue 1
+queue species, ncbi, proteins from to-mantis.txt
