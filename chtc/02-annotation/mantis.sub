@@ -3,7 +3,7 @@
 # Gene functional analysis using mantis.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.5
+docker_image = lucasnell/midgenomes:v1.0.6
 
 log = mantis-$(species).log
 error = mantis-$(species).err
