@@ -1,0 +1,25 @@
+# orthodb.sub
+
+# Match assemblies to OrthoDB dipteran proteins
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.6
+
+log = orthodb.log
+error = orthodb.err
+output = orthodb.out
+
+executable = orthodb.sh
+
+batch_name = "orthodb"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 32GB
+request_disk = 100GB
+
+queue 1
