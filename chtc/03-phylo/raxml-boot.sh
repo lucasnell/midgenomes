@@ -20,8 +20,8 @@ if ! [[ $SEEDS_IND =~ ^[0-9]+$ ]] || (( SEEDS_IND < 0 )) || (( SEEDS_IND > 9 ));
     exit 2
 fi
 #' Array of seeds (previously generated using `sample.int(2^31-1, 10)` in R):
-SEEDS_ARR=(1686233904  838153601 1341023619 1137233470 1011779318 \
-           1309257016 1615251508 1755012526 1662390602 1658268201)
+SEEDS_ARR=(1478865727 158688736 548184584 1400912585 357834478 667771158
+           145164412 1949248987 532694851 634149308)
 
 export THIS_SEED=${SEEDS_ARR[$SEEDS_IND]}
 
@@ -46,15 +46,15 @@ check_exit_status "move, extract alignments" $?
 
 
 
-raxml-ng --bootstrap --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} --threads ${THREADS} \
-    --bs-trees 10 \
+raxml-ng --bootstrap --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} \
+    --bs-trees 100 \
+    --threads ${THREADS} --extra thread-pin \
+    --outgroup Mdomes \
     --data-type AA \
     --model LG+I+G \
     --seed ${THIS_SEED} \
     1> >(tee -a ${PREFIX}.stdout)
 
-##    --bs-trees 100 \
-##    --outgroup Anopheles_stephensi \
 
 rm ${CONCAT_ALIGNS}
 

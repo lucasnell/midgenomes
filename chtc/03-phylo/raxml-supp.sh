@@ -28,19 +28,19 @@ for t in ${TARGET}/chir_raxml_boot_*; do
     boot_dir=$(basename ${t} | sed 's/\.tar\.gz//g')
     cat ${boot_dir}/chir_phy.raxml.bootstraps >> ${ALL_BOOTS}
     rm -r ${boot_dir}
-    unset boot_dir
+    unset -v boot_dir
 done
 
 
 #' Did the boostraps converge? (--bs-cutoff 0.01 is extra strict)
 raxml-ng --bsconverge --bs-trees ${ALL_BOOTS} --prefix chir_bsconverge \
-    --seed 387034756 --threads ${THREADS} --bs-cutoff 0.01
+    --seed 685724815 --threads ${THREADS} --bs-cutoff 0.01
 
 
 
 #' If that looks good, look at branch support
 raxml-ng --support --tree ${ML_TREE_NAME} --bs-trees ${ALL_BOOTS} \
-    --outgroup Anopheles_stephensi \
+    --outgroup Mdomes \
     --prefix chir_supp --threads ${THREADS} --bs-metric fbp,tbe
 
 

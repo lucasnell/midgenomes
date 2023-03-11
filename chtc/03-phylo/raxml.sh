@@ -6,6 +6,8 @@
 #'
 
 
+
+
 export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
 
 . /app/.bashrc
@@ -24,14 +26,21 @@ export CONCAT_ALIGNS=mafft_aligns_concat.faa
 cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
 
 
-
-raxml-ng --search --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} --threads ${THREADS} \
-    --outgroup Anopheles_stephensi \
+# Started 10:55am
+date > start-end-times.out
+#' Note that `--extra thread-pin` was added to avoid the following error:
+#' "ERROR: CPU core oversubscription detected! RAxML-NG will terminate now
+#'  to avoid wasting resources."
+raxml-ng --search --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} \
+    --threads ${THREADS} --extra thread-pin \
+    --outgroup Mdomes \
     --data-type AA \
     --model LG+I+G \
-    --seed 453418559 \
+    --seed 1171225701 \
     1> >(tee -a ${PREFIX}.stdout)
+date >> start-end-times.out
 #' With 16 threads on CHTC: Elapsed time: 18354.721 seconds (~5 hr 6 min)
+#' With 32 threads on CHTC: Elapsed time:  seconds (~)
 
 
 #' How consistent are final trees?

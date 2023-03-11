@@ -13,9 +13,9 @@ conda activate phylo-env
 mkdir working
 cd working
 
-cp /staging/lnell/phylo/common_genes.tar.gz ./
-tar -xzf common_genes.tar.gz
-rm common_genes.tar.gz
+cp /staging/lnell/phylo/odb/shared_odb.tar.gz ./
+tar -xzf shared_odb.tar.gz
+rm shared_odb.tar.gz
 
 
 export OUT_DIR=prequal_filt
@@ -41,6 +41,11 @@ EOF
 chmod +x one_filter.sh
 
 
+#' Only show progess bar below if in an interactive job:
+export inter_job="False"
+if [[ $- == *i* ]]; then inter_job="True"; fi
+
+
 python3 << EOF
 import glob
 import subprocess as sp
@@ -53,15 +58,17 @@ def work(fa_file):
     ret = sp.run(cmd, shell = True)
     return ret
 
-tasks = glob.glob("common_genes/*.faa")
-
-n_tasks = len(tasks)
-with mp.Pool(processes=${THREADS}) as pool:
-    for i, _ in enumerate(pool.imap_unordered(work, tasks), 1):
-        sys.stderr.write('\rdone {0:%}'.format(i/n_tasks))
-sys.stderr.write('\n')
-
-sys.exit(0)
+if __name__ == "__main__":
+    tasks = glob.glob("shared_odb/*.faa")
+    n_tasks = len(tasks)
+    show_progress = $inter_job
+    with mp.Pool(processes=${THREADS}) as pool:
+        for i, _ in enumerate(pool.imap_unordered(work, tasks), 1):
+            if show_progress:
+                sys.stderr.write('\rdone {0:%}'.format(i/n_tasks))
+    if show_progress:
+        sys.stderr.write('\n')
+    sys.exit(0)
 
 EOF
 
@@ -106,7 +113,7 @@ fi
 cd ..
 
 
-rm -r common_genes one_filter.sh
+rm -r shared_odb one_filter.sh
 
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz /staging/lnell/phylo/

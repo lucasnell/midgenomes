@@ -2,7 +2,7 @@
 
 
 #'
-#' Sequence alignment using MAFFT, the concatenation of alignments.
+#' Sequence alignment using MAFFT, then concatenation of alignments.
 #'
 
 
@@ -12,10 +12,7 @@ conda activate phylo-env
 
 export TARGET=/staging/lnell/phylo
 
-
-cp ${TARGET}/prequal_filt.tar.gz ./
-tar -xzf prequal_filt.tar.gz
-rm prequal_filt.tar.gz
+tar -xzf ${TARGET}/prequal_filt.tar.gz -C ./
 
 
 export OUT_DIR=mafft_aligns
@@ -37,13 +34,17 @@ mkdir ${OUT_DIR}
 cat << EOF > one_align.sh
 #!/bin/bash
 IN=\$1
-NAME_BASE=\$(basename \$1 | sed 's/\..*//g')
+NAME_BASE=\$(basename \$IN | sed 's/\..*//g')
 OUT=./${OUT_DIR}/\${NAME_BASE}.faa
 LOG=./${OUT_DIR}/\${NAME_BASE}.log
 linsi --thread 1 \${IN} > \${OUT} 2> \${LOG}
 EOF
 chmod +x one_align.sh
 
+
+#' Only show progess bar below if in an interactive job:
+export inter_job="False"
+if [[ $- == *i* ]]; then inter_job="True"; fi
 
 python3 << EOF
 import glob
@@ -60,10 +61,13 @@ def work(fa_file):
 if __name__ == "__main__":
     tasks = glob.glob("prequal_filt/*.faa.filtered")
     n_tasks = len(tasks)
+    show_progress = $inter_job
     with mp.Pool(processes=${THREADS}) as pool:
         for i, _ in enumerate(pool.imap_unordered(work, tasks), 1):
-            sys.stderr.write('\rdone {0:%}'.format(i/n_tasks))
-    sys.stderr.write('\n')
+            if show_progress:
+                sys.stderr.write('\rdone {0:%}'.format(i/n_tasks))
+    if show_progress:
+        sys.stderr.write('\n')
     sys.exit(0)
 
 EOF
