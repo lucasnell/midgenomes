@@ -13,5 +13,8 @@ dependencies:
   - paml=4.10.6
   - prequal=1.02
   - python=3.9.7
+  - r-ape=5.5
+  - r-base=3.6.3
+  - r-readr=1.4.0
   - raxml-ng=1.1.0
 prefix: /opt/conda/envs/phylo-env

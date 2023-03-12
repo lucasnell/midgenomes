@@ -2,6 +2,47 @@
 #' Helper functions used numerous times throughout:
 #'
 
+#' Find the number of threads on CHTC cluster and print to stdout.
+#' Apparently sometimes `$_CONDOR_MACHINE_AD` isn't present, so based on some
+#' testing I found a number of other objects to use.
+#' If none are found (and produce integers greater than 0), use `nproc`.
+#'
+#' Usage:
+#' count_threads
+#' or to define an object:
+#' THREADS=$(count_threads)
+#'
+count_threads () {
+    local nt=""
+    if [ ! -z "${_CONDOR_MACHINE_AD}" ] && [ -f "${_CONDOR_MACHINE_AD}" ]; then
+        nt=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+    fi
+    if [ ! -z ${nt} ] && [[ ${nt} =~ ^[0-9]+$ ]] && (( nt >= 1 )); then
+        echo ${nt}
+    elif [ ! -z ${OMP_NUM_THREADS} ] && [[ ${OMP_NUM_THREADS} =~ ^[0-9]+$ ]] &&
+        (( OMP_NUM_THREADS >= 1 )); then
+        echo ${OMP_NUM_THREADS}
+    elif [ ! -z ${JULIA_NUM_THREADS} ] && [[ ${JULIA_NUM_THREADS} =~ ^[0-9]+$ ]] &&
+        (( JULIA_NUM_THREADS >= 1 )); then
+        echo ${JULIA_NUM_THREADS}
+    elif [ ! -z ${MKL_NUM_THREADS} ] && [[ ${MKL_NUM_THREADS} =~ ^[0-9]+$ ]] &&
+        (( MKL_NUM_THREADS >= 1 )); then
+        echo ${MKL_NUM_THREADS}
+    elif [ ! -z ${NUMEXPR_NUM_THREADS} ] && [[ ${NUMEXPR_NUM_THREADS} =~ ^[0-9]+$ ]] &&
+        (( NUMEXPR_NUM_THREADS >= 1 )); then
+        echo ${NUMEXPR_NUM_THREADS}
+    elif [ ! -z ${OPENBLAS_NUM_THREADS} ] && [[ ${OPENBLAS_NUM_THREADS} =~ ^[0-9]+$ ]] &&
+        (( OPENBLAS_NUM_THREADS >= 1 )); then
+        echo ${OPENBLAS_NUM_THREADS}
+    else
+        nproc
+    fi
+
+    return 0
+}
+
+
+
 
 #' Check previous command's exit status.
 #' If != 0, then...
