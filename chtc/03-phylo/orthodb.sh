@@ -6,7 +6,7 @@
 #'
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 export INPUT_LOC=/staging/lnell/assemblies
 export OUTPUT_LOC=/staging/lnell/phylo/odb

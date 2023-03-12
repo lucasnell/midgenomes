@@ -3,7 +3,7 @@
 . /app/.bashrc
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 # Memory available in GB - should be > 48, ideally >= 64
 export MEMORY=$(grep "^Memory = " $_CONDOR_MACHINE_AD | sed 's/Memory\ =\ //')

@@ -81,7 +81,7 @@ export READS2=$(read_tar_name ${READS_LOC}/${READS_TAR} 2)
 conda activate main-env
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 
 # Where to send files:

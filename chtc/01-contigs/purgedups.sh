@@ -19,7 +19,7 @@ export U_CUTS=(390 400 400)
 export a_ARGS=(70 45 60)
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 # Make temporary working directory to delete later:
 export WD=work_dir

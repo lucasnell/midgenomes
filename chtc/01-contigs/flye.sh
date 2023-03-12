@@ -2,7 +2,7 @@
 
 . /app/.bashrc
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 # Where to send files:
 export TARGET=/staging/lnell/assemblies

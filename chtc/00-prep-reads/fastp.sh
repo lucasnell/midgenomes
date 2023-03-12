@@ -45,7 +45,7 @@ if [ ! -f "${READS_TAR_FULL_PATH}" ]; then
 fi
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 . /app/.bashrc
 conda activate main-env

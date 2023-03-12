@@ -3,7 +3,7 @@
 # Combine assemblies using quickmerge.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.6
+docker_image = lucasnell/midgenomes:v1.0.8
 
 log = quickmerge_$(out_name).log
 error = quickmerge_$(out_name).err

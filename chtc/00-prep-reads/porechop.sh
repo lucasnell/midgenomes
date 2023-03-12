@@ -6,7 +6,7 @@
 # using docker container quay.io/biocontainers/porechop::0.2.4--py39hc16433a_3
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 export IN_READS=Pstein_20180703DL1_LabG03.fastq.gz
 export OUT_READS=trimmed_${IN_READS}
 

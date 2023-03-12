@@ -9,7 +9,7 @@
 # Also recommends moderate trimming with read-length filter:
 # https://link.springer.com/article/10.1186/s12859-016-0956-2
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 . /app/.bashrc
 conda activate main-env

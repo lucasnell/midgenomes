@@ -26,7 +26,7 @@ SEEDS_ARR=(1478865727 158688736 548184584 1400912585 357834478 667771158
 export THIS_SEED=${SEEDS_ARR[$SEEDS_IND]}
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 . /app/.bashrc
 conda activate phylo-env

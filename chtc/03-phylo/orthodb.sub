@@ -3,7 +3,7 @@
 # Match assemblies to OrthoDB dipteran proteins
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.6
+docker_image = lucasnell/midgenomes:v1.0.8
 
 log = orthodb.log
 error = orthodb.err

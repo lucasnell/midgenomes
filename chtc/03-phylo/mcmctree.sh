@@ -14,7 +14,7 @@ export N_MCMC_RUNS=4
 
 #' Ideally you provide a number of threads equal to the number of eventual
 #' MCMCtree runs.
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 #' Make sure this array is at least as long as the number of replicate
 #' MCMCtree runs + 1.

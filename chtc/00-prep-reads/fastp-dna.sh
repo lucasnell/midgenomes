@@ -3,7 +3,7 @@
 # Use fastp to trim paired-end, Poolseq (DNA) Illumina reads.
 
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 . /app/.bashrc
 conda activate main-env

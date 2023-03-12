@@ -113,7 +113,7 @@ export OUT_PREFIX
 #' ===========================================================================
 #' ===========================================================================
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 . /app/.bashrc
 

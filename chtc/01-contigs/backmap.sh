@@ -8,7 +8,7 @@
 #' IMPORTANT: use the lucasnell/tany_backmap docker image:
 #'
 
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 
 export GENOME=tany_contigs.fasta
 export LONGREADS=basecalls_guppy-5.0.11.fastq

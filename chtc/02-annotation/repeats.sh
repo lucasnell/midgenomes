@@ -150,7 +150,7 @@ export OUT_PREFIX
 
 #' This should be divisible by 4 bc that's how many threads are used per
 #' job using RMBlast, the default engine in RepeatModeler
-export THREADS=$(grep "^Cpus = " $_CONDOR_MACHINE_AD | sed 's/Cpus\ =\ //')
+export THREADS=$(count_threads)
 if (( $THREADS < 4 )); then
     echo "ERROR: You need >= 4 threads, but you provided $THREADS." 1>&2
     exit 1

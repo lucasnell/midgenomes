@@ -3,7 +3,7 @@
 # Annotate genome assembly using dipteran proteins from OrthoDB database
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.6
+docker_image = lucasnell/midgenomes:v1.0.8
 
 log = braker-prot-$(species).log
 error = braker-prot-$(species).err
