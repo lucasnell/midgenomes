@@ -19,10 +19,15 @@ export N_MCMC_RUNS=4
 #' MCMCtree runs.
 export THREADS=$(count_threads)
 
+#' No need to use more than `N_MCMC_RUNS` threads:
+if (( THREADS > N_MCMC_RUNS )); then
+    THREADS=$N_MCMC_RUNS
+fi
+
 #' Make sure this array is at least as long as the number of replicate
 #' MCMCtree runs + 1.
-export SEEDS=(1920112495 2119836989 966584517 783825211 350114673 772799293
-              211442557  373194819  94249041  543169895 853508965)
+export SEEDS=(264611523 791063585 720616543 2049853014 274801972 218694456
+              827775792 1408775991 467020590 889086769)
 if (( N_MCMC_RUNS+1 > ${#SEEDS[@]} )); then
     echo "ERROR: not enough seeds provided" 1>&2
     exit 1
@@ -39,21 +44,78 @@ cd ${OUT_DIR}
 export OUT_PREFIX=chir_mcmctree
 
 
-
+#' This file was generated in the codeml.sh script
 export ALIGN_PHYLIP=mafft_aligns_concat.phylip
 cp ${TARGET}/${ALIGN_PHYLIP}.gz ./ && gunzip ${ALIGN_PHYLIP}.gz
 check_exit_status "cp, gunzip alignments" $?
 
 
 
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
+#' Add calibrations to ML tree
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
 
-#' This should be the ML tree with no branch lengths but with node calibrations
-export MCMC_IN_TREE=mcmctree_in_tree.nwk
-cp ${TARGET}/${MCMC_IN_TREE} ./
-check_exit_status "cp calibration tree" $?
+
+#' This is the ML tree directly from RAxML-NG
+export ML_TREE=chir_ml.tree
+cp ${TARGET}/${ML_TREE} ./
 
 
+#' This will be the one used in MCMCTree that has no branch lengths and
+#' with node calibrations
+export MCMC_INPUT_TREE=mcmctree_in_tree.nwk
 
+
+R --vanilla << EOF
+library(ape)
+library(readr)
+
+mcmc_tr <- read.tree("${ML_TREE}")
+
+nodeB <- getMRCA(mcmc_tr, tip = c("Csonor", "Tgraci"))
+nodeC <- getMRCA(mcmc_tr, tip = c("Pstein", "Tgraci"))
+nodeD <- getMRCA(mcmc_tr, tip = c("Cripar", "Tgraci"))
+nodeE <- getMRCA(mcmc_tr, tip = c("Cmarin", "Bantar"))
+
+mcmc_tr\$edge.length <- NULL
+mcmc_tr\$node.label <- rep("", mcmc_tr\$Nnode)
+
+#' The extra complexity below is for two reasons:
+#'
+#' 1. \`ape\` removes parentheses and commas when writing to a newick file, so
+#'    I'm assigning each character a "safe" alternative, then replacing them
+#'    in the output string from \`ape\` before writing to file.
+#' 2. I need to add the number of species and trees at the top of the input
+#'    file to mcmctree.
+#'
+
+mcmc_tr\$node.label[nodeB - Ntip(mcmc_tr)] <- "'L__2.420-0.10-0.2-0.1--'"  # B
+mcmc_tr\$node.label[nodeC - Ntip(mcmc_tr)] <- "'L__2.013-0.16-0.5--'"      # C
+mcmc_tr\$node.label[nodeD - Ntip(mcmc_tr)] <- "'L__0.935-0.47-0.5--'"      # D
+mcmc_tr\$node.label[nodeE - Ntip(mcmc_tr)] <- "'L__0.339-1.24-1.0--'"      # E
+
+#' Now write to newick file for use in mcmctree
+mcmc_tr_file <- "${MCMC_INPUT_TREE}"
+write_file(paste0(Ntip(mcmc_tr), " 1\n"), mcmc_tr_file)
+mcmc_tr_str <- gsub("__", "(", write.tree(mcmc_tr))
+mcmc_tr_str <- gsub("--", ")", mcmc_tr_str)
+mcmc_tr_str <- gsub("-", ", ", mcmc_tr_str)
+write_file(paste0(mcmc_tr_str, "\n"), mcmc_tr_file, append = TRUE)
+
+EOF
+
+
+rm ${ML_TREE}
+unset -v ML_TREE
+
+
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
+#' Setup MCMCTree parameters and run it
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
 
 #' Note: The PAML documentation says: "The time unit should be chosen such
 #' that the node ages are roughly in the range 0.01-10."
@@ -98,29 +160,29 @@ check_exit_status "cp calibration tree" $?
 
 #' Estimates for BDparas priors (lambda [birth rate], mu [death rate], and
 #' rho [sampling fraction], respectively):
-export BDparas_PRIORS="3.6612684 3.6612434 0.2195345"
+export BDparas_PRIORS="1.0694326 1.0694338 0.7733908"
+
 
 #' Estimates for rgene_gamma priors (alpha_mu, beta_mu, alpha, respectively):
 alpha=2
 #' Estimate from codeml:
-est_rate="0.090545"
+est_rate="0.090526"
 beta=$(python -c "print('{:.5f}'.format($alpha / $est_rate))")
 export rgene_gamma_PRIORS="${alpha} ${beta} 1"
-
+unset -v est_rate beta
 
 
 #' Create control file:
 cat << EOF > mcmctree.ctl
 seed = ${SEEDS[0]}
 seqfile = ${ALIGN_PHYLIP}
-treefile = ${MCMC_IN_TREE}
+treefile = ${MCMC_INPUT_TREE}
 mcmcfile = ${OUT_PREFIX}_mcmc.txt
 outfile = ${OUT_PREFIX}.out
 seqtype = 2 * 0 : nucleotides; 1: codons; 2: AAs
 usedata = 3 * 0: no data; 1:seq; 2:approximation; 3:out.BV (in.BV)
 clock = 1 * 1: global clock; 2: independent; and 3: correlated rates
-** RootAge = '<2.954' * maximum constraint on root age
-RootAge = 'U(2.954, 0.1)' * maximum constraint on root age
+RootAge = 'B(2.385, 2.954, 0.025, 0.1)' * minimum and maximum constraints on root age
 ndata = 1
 model = 0 * 0:JC69, 1:K80, 2:F81, 3:F84, 4:HKY85
 alpha = 0 * alpha for gamma rates at sites
@@ -138,6 +200,7 @@ sampfreq = 5
 nsample = 20000
 EOF
 
+# Takes ~ 5 min
 mcmctree mcmctree.ctl \
     1> >(tee -a ${OUT_PREFIX}.stdout)
 
@@ -192,9 +255,8 @@ EOF
 #' > calculated using WAG+Gamma [LG+Gamma here].
 #'
 
+# Takes ~ 100 min
 codeml tmp0001.ctl
-
-# Time used: 1:08:39
 
 
 mv rst2 in.BV
@@ -213,8 +275,8 @@ for ((i=1; i<=${N_MCMC_RUNS}; i++)); do
         > ./${MCMC_DIR}/mcmctree.ctl
     cp in.BV ./${MCMC_DIR}/
     cp ${ALIGN_PHYLIP} ./${MCMC_DIR}/
-    cp ${MCMC_IN_TREE} ./${MCMC_DIR}/
-    unset MCMC_DIR
+    cp ${MCMC_INPUT_TREE} ./${MCMC_DIR}/
+    unset -v MCMC_DIR
 done
 
 
@@ -224,22 +286,23 @@ done
 cat << EOF > run_mcmctree.sh
 #!/bin/bash
 cd mcmc_\${1}
-status=$?
+status=\$?
 if (( status != 0 )); then
     exit 1
 fi
 mcmctree mcmctree.ctl \\
     1> mcmctree.stdout \\
     2> mcmctree.stderr
-status=$?
+status=\$?
 cd ..
-exit $status
+exit \$status
 EOF
 chmod +x run_mcmctree.sh
 
 
 #'
 #' Python code to run MCMCtree multiple times using multiple threads.
+#' This step is quite fast (~ 30 sec).
 #'
 python3 << EOF
 import subprocess as sp
@@ -267,6 +330,7 @@ EOF
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz /staging/lnell/phylo/
+mv ${OUT_DIR}.tar.gz ${TARGET}/
 
-rm -r ${OUT_DIR}
+cd ..
+rm -r working

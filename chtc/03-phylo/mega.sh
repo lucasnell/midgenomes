@@ -1,12 +1,25 @@
 #!/bin/bash
 
 
-# Start up local docker container of Ubuntu 21.10
-docker pull ubuntu:impish
-docker run -it --rm=true --platform linux/amd64 -v ~/_data:/data \
-    ubuntu:impish /bin/bash
+#'
+#' Create time tree using RelTime-ML in MEGA.
+#' This is not the final tree and is only used as input to ddBD.
+#' ddBD estimates the birth-death rates to be used in MCMCTree.
+#' MCMCTree computes the final time tree.
+#'
+#' MEGA requires some libraries that can't use the version of Ubuntu
+#' that my main docker container uses, so I use the standard
+#' Ubuntu 22.04 container on my laptop.
+#'
 
-# # Then, in interactive job:
+
+
+# Start up local docker container of Ubuntu 22.04
+docker pull ubuntu:22.04
+docker run -it --rm=true --platform linux/amd64 -v ~/_data:/data \
+    ubuntu:22.04 /bin/bash
+
+# Then, in interactive job:
 
 apt-get clean && \
     apt-get update -y && \
@@ -14,8 +27,11 @@ apt-get clean && \
 
 dpkg -i /data/software/mega-cc-11.0.13-1.x86_64.deb
 
-export THREADS=4
-export TARGET=/data/phylo
+export THREADS=$(nproc)
+export TARGET=/data/_phylo
+
+
+
 
 export OUT_PREFIX=chir_mega
 export OUT_DIR=${OUT_PREFIX}
@@ -23,7 +39,7 @@ mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 export CONCAT_ALIGNS=mafft_aligns_concat.faa
-cp ${TARGET}/${CONCAT_ALIGNS} ./
+cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
 
 export ML_TREE=chir_ml.tree
 cp ${TARGET}/${ML_TREE} ./
@@ -68,7 +84,7 @@ Maximum Execution Time               = -1
 EOF
 
 
-echo "Anopheles_stephensi=outgroup" > chir_outgroup.txt
+echo "Mdomes=outgroup" > chir_outgroup.txt
 
 
 #' From megacc documentation:
@@ -96,15 +112,17 @@ megacc \
     -d ${CONCAT_ALIGNS} \
     -t ${ML_TREE} \
     -g chir_outgroup.txt \
-    -o ${OUT_PREFIX}
-
-# Takes 8805.039 sec (2 hrs 27 min)
-
-echo rm ${ML_TREE} ${CONCAT_ALIGNS}
+    -o ${OUT_PREFIX} \
+    1> >(tee -a megacc.stdout) \
+    2> >(tee -a megacc.stderr)
 
 cp ${OUT_PREFIX}_relTimes.nwk ${TARGET}/
 
+rm ${ML_TREE} ${CONCAT_ALIGNS}
+
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-
 mv ${OUT_DIR}.tar.gz ${TARGET}/
+rm -r ${OUT_DIR}
+
+exit 0

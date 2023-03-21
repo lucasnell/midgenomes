@@ -13,16 +13,30 @@ save_plot <- function(n, p, w, h, ...) {
     plot(p)
     dev.off()
 }
+#' To convert back to full names:
+spp_name_map <- list("Aaegyp" = "Aedes aegypti",
+                     "Asteph" = "Anopheles stephensi",
+                     "Bantar" = "Belgica antarctica",
+                     "Cripar" = "Chironomus riparius",
+                     "Ctenta" = "Chironomus tentans",
+                     "Cmarin" = "Clunio marinus",
+                     "Cquinq" = "Culex quinquefasciatus",
+                     "Csonor" = "Culicoides sonorensis",
+                     "Mdomes" = "Musca domestica",
+                     "Pstein" = "Parochlus steinenii",
+                     "Ppemba" = "Polypedilum pembai",
+                     "Pvande" = "Polypedilum vanderplanki",
+                     "Pakamu" = "Propsilocerus akamusi",
+                     "Tgraci" = "Tanytarsus gracilentus")
 
 
 #' Tree from RAxML-NG with bootstrap (n = 100) branch support
-boot_tr <- read.tree("~/_data/phylo/chir_raxml_boot_0/chir_phy_support_0.raxml.support")
-ml_tr <- read.tree("~/_data/phylo/chir_ml.tree")
+boot_tr <- read.tree("~/_data/_phylo/chir_raxml_boot_0/chir_phy_support_0.raxml.support")
+ml_tr <- read.tree("~/_data/_phylo/chir_ml.tree")
 ml_tr$node.label <- boot_tr$node.label
-ml_tr$tip.label <- gsub("_", " ", ml_tr$tip.label)
-
+ml_tr$tip.label <- map_chr(ml_tr$tip.label, ~ spp_name_map[[.x]])
 #' Use this to set x axis bounds and labels
-node.depth.edgelength(ml_tr) %>% max()
+node.depth.edgelength(ml_tr) |> max()
 
 ml_tr_p <- ggtree(ml_tr) +
     geom_rootedge(0.01) +
@@ -32,25 +46,28 @@ ml_tr_p <- ggtree(ml_tr) +
     scale_x_continuous("Mean substitutions per site", limits = c(-0.01, 1.05),
                        expand = c(0,0), breaks = 0:4 * 0.2) +
     NULL
-# ml_tr_p
+ml_tr_p
 
 
 # save_plot("tree_ML", ml_tr_p, 6, 3.5)
 
 
-time_tr <- read.mcmctree("~/_data/phylo/chir_mcmctree/mcmc_1/FigTree.tre")
+#' I plotted all 4 reps, and they produce the same tree (14 March 2023)
+time_tr <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_1/FigTree.tre")
 
 
 # map(1:4, function(i) {
-#     mcmc <- read_tsv(paste0("~/_data/phylo/chir_mcmctree/mcmc_", i,
+#     mcmc <- read_tsv(paste0("~/_data/_phylo/chir_mcmctree/mcmc_", i,
 #                             "/chir_mcmctree_mcmc.txt"))
-#     mcmc %>%
+#     mcmc |>
 #         select(starts_with("t_n"))
 # })
 
 
-time_tr@data[["CI"]] <- time_tr@data[["0.95"]] %>% map(as.numeric)
-time_tr@phylo$tip.label <- gsub("_", " ", time_tr@phylo$tip.label)
+time_tr@data[["CI"]] <- time_tr@data[["0.95HPD"]] |> map(as.numeric)
+time_tr@phylo$tip.label <- map_chr(time_tr@phylo$tip.label, ~ spp_name_map[[.x]])
+
+
 
 time_tr_p0 <- ggtree(time_tr) +
     geom_rootedge(0.04) +
@@ -60,7 +77,7 @@ time_tr_p0 <- ggtree(time_tr) +
                center = "reltime") +
     theme_tree2()
 
-time_tr_p <- time_tr_p0 %>%
+time_tr_p <- time_tr_p0 |>
     revts() +
     scale_x_continuous("Million years ago", limits = c(-3.53367, 1.6), expand = c(0,0),
                        breaks = -3:0, labels = 3:0 * 100)
@@ -73,32 +90,32 @@ time_tr_p
 
 
 
-tree1 <- time_tr@phylo %>%
+tree1 <- time_tr@phylo |>
     (function(x) {
-        x_genera <- x$tip.label %>%
-            str_split(" ") %>%
+        x_genera <- x$tip.label |>
+            str_split(" ") |>
             map_chr(~ .x[[1]])
         x <- keep.tip(x, x$tip.label[!duplicated(x_genera)])
-        x$tip.label <- x$tip.label %>%
-            str_split(" ") %>%
+        x$tip.label <- x$tip.label |>
+            str_split(" ") |>
             map_chr(~ .x[[1]])
         return(x)
     })()
 
-tree2 <- read.tree("Cranston_2012.nwk") %>%
+tree2 <- read.tree("Cranston_2012.nwk") |>
     (function(x) {
         # genera in `time_tr@phylo`:
-        my_genera <- time_tr@phylo$tip.label %>%
-            str_split(" ") %>%
-            map_chr(~ .x[[1]]) %>%
+        my_genera <- time_tr@phylo$tip.label |>
+            str_split(" ") |>
+            map_chr(~ .x[[1]]) |>
             unique()
-        x_genera <- x$tip.label %>%
-            str_split("_") %>%
+        x_genera <- x$tip.label |>
+            str_split("_") |>
             map_chr(~ .x[[1]])
         lgl1 <- str_detect(x$tip.label, str_c("^", my_genera, collapse = "|"))
         x <- keep.tip(x, x$tip.label[lgl1 & !duplicated(x_genera)])
-        x$tip.label <- x$tip.label %>%
-            str_split("_") %>%
+        x$tip.label <- x$tip.label |>
+            str_split("_") |>
             map_chr(~ .x[[1]])
         return(x)
     })()
@@ -130,7 +147,7 @@ c("Polypedilum", "Chironomus"))) {
     t1 <- mrca_time(tree1, spp[[1]], spp[[2]]) * 100
     t2 <- mrca_time(tree2, spp[[1]], spp[[2]])
     msg1 <- sprintf("%s -- %s = ",
-            spp[[1]], spp[[2]]) %>%
+            spp[[1]], spp[[2]]) |>
         str_pad(30, "right")
     msg2 <- sprintf("%7.2f |%7.2f |%5.2f (us | them | rel. diff.)\n",
                     t1, t2, abs(t1 - t2) / mean(c(t1, t2)))
@@ -165,15 +182,15 @@ bt_lines <- c("(((((Chironomus_riparius:0.028788,Chironomus_tepperi:0.025600):0.
 "((((Parochlus_steinenii:0.189321,(Anopheles_stephensi:0.285715,Culicoides_sonorensis:0.310995):0.130366):0.149742,Propsilocerus_akamusi:0.123982):0.026463,(((Chironomus_tentans:0.018972,(Chironomus_tepperi:0.025268,Chironomus_riparius:0.028808):0.007860):0.106977,(Polypedilum_pembai:0.031248,Polypedilum_vanderplanki:0.029236):0.108174):0.033470,Tanytarsus_gracilentus:0.150447):0.086420):0.043931,Clunio_marinus:0.114298,Belgica_antarctica:0.119618);",
 "(((Chironomus_tentans:0.019418,(Chironomus_tepperi:0.025086,Chironomus_riparius:0.029073):0.007958):0.107041,(Polypedilum_vanderplanki:0.029433,Polypedilum_pembai:0.031444):0.108209):0.034213,((((Culicoides_sonorensis:0.310853,Anopheles_stephensi:0.284779):0.131698,Parochlus_steinenii:0.189661):0.151380,Propsilocerus_akamusi:0.124252):0.026188,(Belgica_antarctica:0.119511,Clunio_marinus:0.113914):0.043126):0.085895,Tanytarsus_gracilentus:0.151090);")
 
-write_lines(bt_lines, "~/_data/phylo/boot_noog.bootstraps")
+write_lines(bt_lines, "~/_data/_phylo/boot_noog.bootstraps")
 
 
-map_lgl(bt_lines, ~ read.tree(text = .x) %>% is.ultrametric())
+map_lgl(bt_lines, ~ read.tree(text = .x) |> is.ultrametric())
 
 
-bt_lines0 <- read_lines("/Users/lucasnell/_data/phylo/chir_raxml_boot_0/chir_phy.raxml.bootstraps")
+bt_lines0 <- read_lines("/Users/lucasnell/_data/_phylo/chir_raxml_boot_0/chir_phy.raxml.bootstraps")
 
-map_lgl(bt_lines0, ~ read.tree(text = .x) %>% is.ultrametric())
+map_lgl(bt_lines0, ~ read.tree(text = .x) |> is.ultrametric())
 read.tree(text = bt_lines0[1])
 
 
@@ -191,12 +208,12 @@ plot(tree); # axisPhylo()
 #     geom_tiplab(size = 3)
 
 
-tree2 <- read.tree("Cranston_2012.nwk") %>%
+tree2 <- read.tree("Cranston_2012.nwk") |>
     (function(x) {
         # genera in `tree`:
-        genera <- tree$tip.label %>%
-            str_split("_") %>%
-            map_chr(~ .x[[1]]) %>%
+        genera <- tree$tip.label |>
+            str_split("_") |>
+            map_chr(~ .x[[1]]) |>
             unique()
         lgl <- str_detect(x$tip.label, str_c("^", genera, collapse = "|"))
         keep.tip(x, x$tip.label[lgl])

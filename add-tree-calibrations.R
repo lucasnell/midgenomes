@@ -7,7 +7,7 @@
 library(ape)
 library(tidyverse)
 
-ml_tr <- read.tree("~/_data/phylo/chir_ml.tree")
+ml_tr <- read.tree("~/_data/zzz-pre-2023/phylo/chir_ml.tree")
 
 #'
 #' Nodes to calibrate
@@ -18,7 +18,10 @@ nodeB <- getMRCA(ml_tr, tip = c("Culicoides_sonorensis", "Tanytarsus_gracilentus
 nodeC <- getMRCA(ml_tr, tip = c("Parochlus_steinenii", "Tanytarsus_gracilentus"))
 nodeD <- getMRCA(ml_tr, tip = c("Chironomus_riparius", "Tanytarsus_gracilentus"))
 nodeE <- getMRCA(ml_tr, tip = c("Clunio_marinus", "Belgica_antarctica"))
-
+# nodeB <- getMRCA(ml_tr, tip = c("Csonor", "Tgraci"))
+# nodeC <- getMRCA(ml_tr, tip = c("Pstein", "Tgraci"))
+# nodeD <- getMRCA(ml_tr, tip = c("Cripar", "Tgraci"))
+# nodeE <- getMRCA(ml_tr, tip = c("Cmarin", "Bantar"))
 
 #'
 #' First create tree with no branch lengths but some fixed time calibrations
@@ -29,8 +32,9 @@ codeml_tr$edge.length <- NULL
 codeml_tr$node.label <- rep("", codeml_tr$Nnode)
 codeml_tr$node.label[nodeC - Ntip(codeml_tr)] <- "'@2.327'"   # from Cranston et al. (2012)
 codeml_tr$node.label[nodeD - Ntip(codeml_tr)] <- "'@1.37573'" # from Cranston et al. (2012)
-codeml_tr$node.label[nodeE - Ntip(codeml_tr)] <- "'@0.76'"      # from timetree.org
-write.tree(codeml_tr, "~/_data/phylo/codeml_in_tree.nwk")
+codeml_tr$node.label[nodeE - Ntip(codeml_tr)] <- "'@0.76'"    # from timetree.org
+# write.tree(codeml_tr, "~/_data/zzz-pre-2023/phylo/codeml_in_tree.nwk")
+write.tree(codeml_tr)
 
 
 #'
@@ -56,15 +60,14 @@ calib_tr$node.label[nodeC - Ntip(calib_tr)] <- "'L__2.013-0.16-0.5--'"      # C
 calib_tr$node.label[nodeD - Ntip(calib_tr)] <- "'L__0.935-0.47-0.5--'"      # D
 calib_tr$node.label[nodeE - Ntip(calib_tr)] <- "'L__0.339-1.24-1.0--'"      # E
 
-write_file(paste(Ntip(calib_tr), 1), "~/_data/phylo/mcmctree_in_tree.nwk")
-write_file("\n", "~/_data/phylo/mcmctree_in_tree.nwk", append = TRUE)
-write.tree(calib_tr) %>%
-    str_replace_all("__", "(") %>%
-    str_replace_all("--", ")") %>%
-    str_replace_all("-", ", ") %>%
-    write_file("~/_data/phylo/mcmctree_in_tree.nwk", append = TRUE)
-write_file("\n", "~/_data/phylo/mcmctree_in_tree.nwk", append = TRUE)
+calib_tr_file <- "~/_data/zzz-pre-2023/phylo/mcmctree_in_tree.nwk"
 
+# version not requiring stringr or pipes:
+write_file(paste0(Ntip(calib_tr), " 1\n"), calib_tr_file)
+calib_tr_str <- gsub("__", "(", write.tree(calib_tr))
+calib_tr_str <- gsub("--", ")", calib_tr_str)
+calib_tr_str <- gsub("-", ", ", calib_tr_str)
+write_file(paste0(calib_tr_str, "\n"), calib_tr_file, append = TRUE)
 
 
 
@@ -72,11 +75,11 @@ write_file("\n", "~/_data/phylo/mcmctree_in_tree.nwk", append = TRUE)
 # ((((((((Chironomus_tentans: 0.225825, (Chironomus_riparius: 0.191673, Chironomus_tepperi: 0.191673) [&95%={0.167724, 0.231869}]: 0.034152) [&95%={0.197619, 0.273171}]: 0.737943, (Polypedilum_vanderplanki: 0.234349, Polypedilum_pembai: 0.234349) [&95%={0.205083, 0.283425}]: 0.729419) [&95%={0.843625, 1.16573}]: 0.169057, Tanytarsus_gracilentus: 1.132824) [&95%={0.991739, 1.37068}]: 0.361535, (Clunio_marinus: 1.010433, Belgica_antarctica: 1.010433) [&95%={0.884667, 1.2226}]: 0.483926) [&95%={1.30827, 1.80844}]: 0.058194, Propsilocerus_akamusi: 1.552554) [&95%={1.35938, 1.87877}]: 0.697730, Parochlus_steinenii: 2.250284) [&95%={1.97052, 2.72394}]: 0.670012, Culicoides_sonorensis: 2.920296) [&95%={2.55699, 3.53357}]: 0.000076, Anopheles_stephensi: 2.920372) [&95%={2.55702, 3.53366}];
 
 
-read_lines("~/_data/phylo/chir_mcmctree/mcmc_1/FigTree.tre") %>%
+read_lines("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_1/FigTree.tre") %>%
     keep(~ grepl("^\tUTREE", .x))
 
 
-mcmc <- read_tsv("~/_data/phylo/chir_mcmctree/mcmc_1/chir_mcmctree_mcmc.txt")
+mcmc <- read_tsv("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_1/chir_mcmctree_mcmc.txt")
 
 
 mcmc %>%
@@ -114,7 +117,7 @@ mcmc %>%
 #' Below looks for differences in credible intervals among MCMCtree runs
 
 mcmc_ests <- map(1:4, function(i) {
-    fn <- paste0("~/_data/phylo/chir_mcmctree/mcmc_", i, "/chir_mcmctree.out")
+    fn <- paste0("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_", i, "/chir_mcmctree.out")
     lns <- read_lines(fn)
     lns <- lns[(which(grepl("^Posterior mean", lns))+2):length(lns)]
     cis <- str_split(lns, "\\s+") %>%

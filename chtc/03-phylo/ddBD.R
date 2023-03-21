@@ -6,12 +6,22 @@
 #'
 #' paper: https://doi.org/10.1093/bioinformatics/btab307
 
-#' It doesn't work on R 4.0.*, so from terminal, run:
-#' docker pull rocker/r-base:3.6.3
-#' docker run -it --rm=true --platform linux/amd64 -v ~/_data:/data  rocker/r-base:3.6.3 R
+#' It doesn't work on R 4.0.*, so I have to run it inside the midgenomes
+#' docker container using the following command:
+#'
+#' ```
+#' docker run -it --rm=true --platform linux/amd64 -v ~/_data:/data \
+#'     lucasnell/midgenomes:v1.0.8 /bin/bash
+#' ```
+#'
+#' Once inside the container, I run the following bash code:
+#'
+#' ```
+#' . /app/.bashrc
+#' conda activate phylo-env
+#' R
+#' ```
 
-
-install.packages(c("ape", "FNN"))
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -113,16 +123,23 @@ ddBD = function(tr, outgroup, root.time = 1, measure = c("SSE","KL")){
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-rel_tr <- read.tree("/data/phylo/chir_mega_relTimes.nwk")
+rel_tr <- read.tree("/data/_phylo/chir_mega_relTimes.nwk")
 
 #' Notes:
 #' * Because RelTime-ML in MEGA removes the outgroup from the relative-time
-#'   tree, our new outgroup is from family Ceratopogonidae.
-#' * The root time is an approximation of the time from timetree.org.
+#'   tree, our new outgroups are from family Culicidae.
+#' * The root time (in units of 100 Ma) is an approximation of the time
+#'   from timetree.org.
 
-ddBD(rel_tr, outgroup = "Culicoides_sonorensis", root.time = 2.2, measure = "SSE")
+ddBD(rel_tr, outgroup = c("Asteph", "Aaegyp", "Cquinq"), root.time = 2.2, measure = "SSE")
 #    lambda        mu       rho
-# 3.6612684 3.6612434 0.2195345
+# 1.0694326 1.0694338 0.7733908
+
+
+# # previous version:
+# ddBD(rel_tr, outgroup = "Culicoides_sonorensis", root.time = 2.2, measure = "SSE")
+# #    lambda        mu       rho
+# # 3.6612684 3.6612434 0.2195345
 
 
 

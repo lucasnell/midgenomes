@@ -16,25 +16,21 @@ export TARGET=/staging/lnell/phylo
 mkdir working
 cd working
 
-export CONCAT_ALIGNS=mafft_aligns_concat.faa
-cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
-
 export OUT_PREFIX=chir_codeml
 export OUT_DIR=${OUT_PREFIX}
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 
-#' This should be the ML tree (from RAxML-NG) with no branch lengths and
-#' containing a few estimated point calibrations:
-export CM_IN_TREE=codeml_in_tree.nwk
-cp ${TARGET}/${CM_IN_TREE} ./
 
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
+#' Input AA alignments and convert to PHYLIP format
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
 
-
-
-
-# Convert to PHYLIP format
+export CONCAT_ALIGNS=mafft_aligns_concat.faa
+cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
 
 export ALIGN_PHYLIP=${CONCAT_ALIGNS/.faa/.phylip}
 
@@ -43,7 +39,7 @@ import glob
 import sys
 
 if __name__ == "__main__":
-    aa_file = "../${CONCAT_ALIGNS}"
+    aa_file = "${CONCAT_ALIGNS}"
     spp_aligns = {}
     species = []
     with open(aa_file, "r") as f:
@@ -80,6 +76,45 @@ EOF
 
 
 
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
+#' Input ML tree and prepare for CODEML
+#' ----------------------------------------------------------------------------
+#' ----------------------------------------------------------------------------
+
+
+
+#' This is the ML tree directly from RAxML-NG
+export ML_TREE=chir_ml.tree
+cp ${TARGET}/${ML_TREE} ./
+
+
+#' This will be the one used in CODEML that has no branch lengths and
+#' contains a few estimated point calibrations
+export CM_INPUT_TREE=codeml_in_tree.nwk
+
+
+R --vanilla << EOF
+library(ape)
+library(readr)
+
+codeml_tr <- read.tree("${ML_TREE}")
+
+nodeC <- getMRCA(codeml_tr, tip = c("Pstein", "Tgraci"))
+nodeD <- getMRCA(codeml_tr, tip = c("Cripar", "Tgraci"))
+nodeE <- getMRCA(codeml_tr, tip = c("Cmarin", "Bantar"))
+
+codeml_tr\$edge.length <- NULL
+codeml_tr\$node.label <- rep("", codeml_tr\$Nnode)
+codeml_tr\$node.label[nodeC - Ntip(codeml_tr)] <- "'@2.327'"   # from Cranston et al. (2012)
+codeml_tr\$node.label[nodeD - Ntip(codeml_tr)] <- "'@1.37573'" # from Cranston et al. (2012)
+codeml_tr\$node.label[nodeE - Ntip(codeml_tr)] <- "'@0.76'"    # from timetree.org
+write.tree(codeml_tr, "${CM_INPUT_TREE}")
+
+EOF
+
+
+
 
 
 
@@ -93,7 +128,7 @@ cp /opt/conda/envs/phylo-env/dat/lg.dat ./
 
 cat << EOF > codeml.ctl
 seqfile = ${ALIGN_PHYLIP}      * sequence data filename
-treefile = ${CM_IN_TREE}    * tree structure file name
+treefile = ${CM_INPUT_TREE}    * tree structure file name
 outfile = ${OUT_PREFIX}_main.out     * main result file name
 
 noisy = 9  * 0,1,2,3,9: how much rubbish on the screen
@@ -153,13 +188,17 @@ method = 0  * Optimization method 0: simultaneous; 1: one branch a time
 EOF
 
 
-
+# Takes ~25 min
 codeml codeml.ctl \
     1> >(tee -a ${OUT_PREFIX}.stdout)
 
-grep -A1 "Substitution rate" ${OUT_PREFIX}_main.out
+
+grep -v '^$' ${OUT_PREFIX}_main.out | grep -A1 "Substitution rate"
 # Substitution rate is per time unit
-#     0.090545
+# 0.090526
+
+# # previous estimate:
+# #     0.090545
 
 gzip < ${ALIGN_PHYLIP} > ${ALIGN_PHYLIP}.gz
 mv ${ALIGN_PHYLIP}.gz ${TARGET}/
@@ -167,5 +206,7 @@ mv ${ALIGN_PHYLIP}.gz ${TARGET}/
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz ${TARGET}/
-
 rm -r ${OUT_DIR}
+
+cd ..
+rm -r working
