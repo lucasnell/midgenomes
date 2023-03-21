@@ -113,10 +113,10 @@ export OUT_PREFIX
 #' ===========================================================================
 #' ===========================================================================
 
-export THREADS=$(count_threads)
 
 . /app/.bashrc
 
+export THREADS=$(count_threads)
 
 mkdir working
 cd working

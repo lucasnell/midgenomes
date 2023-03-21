@@ -124,6 +124,9 @@ export NCBI_LINEAGE
 #' ===========================================================================
 
 
+. /app/.bashrc
+conda activate annotate-env
+
 export THREADS=$(count_threads)
 
 # Memory available:
@@ -136,9 +139,6 @@ export OUT_DIR=${OUT_PREFIX}_mantis
 mkdir working
 cd working
 
-
-. /app/.bashrc
-conda activate annotate-env
 
 
 cp ${PROTEINS_FULL_PATH} ./

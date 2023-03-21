@@ -6,6 +6,8 @@
 #'
 
 
+. /app/.bashrc
+
 export THREADS=$(count_threads)
 
 export INPUT_LOC=/staging/lnell/assemblies
@@ -17,8 +19,6 @@ export SHARED_OUT_DIR=shared_odb
 export ALL_SPECIES=(Aaegyp Asteph Bantar Cripar Ctenta Cmarin Cquinq Csonor
                     Mdomes Pstein Ppemba Pvande Pakamu Tgraci)
 
-
-. /app/.bashrc
 
 mkdir ${SHARED_OUT_DIR}
 cd ${SHARED_OUT_DIR}

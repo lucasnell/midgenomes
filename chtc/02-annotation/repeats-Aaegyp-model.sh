@@ -65,6 +65,9 @@ fi
 #' ===========================================================================
 
 
+. /app/.bashrc
+conda activate repeat-env
+
 
 #' This should be divisible by 4 bc that's how many threads are used per
 #' job using RMBlast, the default engine in RepeatModeler
@@ -73,9 +76,6 @@ if (( $THREADS < 4 )); then
     echo "ERROR: You need >= 4 threads, but you provided $THREADS." 1>&2
     exit 1
 fi
-
-. /app/.bashrc
-conda activate repeat-env
 
 
 export OUT_DIR=${OUT_PREFIX}_repeats_model

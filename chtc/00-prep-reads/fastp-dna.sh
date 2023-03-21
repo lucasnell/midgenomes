@@ -3,11 +3,11 @@
 # Use fastp to trim paired-end, Poolseq (DNA) Illumina reads.
 
 
-export THREADS=$(count_threads)
 
 . /app/.bashrc
 conda activate main-env
 
+export THREADS=$(count_threads)
 
 #' The input argument specifies the *.tar file that contains the reads.
 #' ** The tar file must be present in `/staging/lnell/ill/dna/raw_fq/` folder.

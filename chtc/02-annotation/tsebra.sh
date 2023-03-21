@@ -163,10 +163,10 @@ done
 
 
 
-export THREADS=$(count_threads)
 
 . /app/.bashrc
 
+export THREADS=$(count_threads)
 
 
 #' Prefix (everything but extension) to eventual gff3 file:

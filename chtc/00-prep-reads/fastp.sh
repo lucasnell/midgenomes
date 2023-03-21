@@ -45,10 +45,10 @@ if [ ! -f "${READS_TAR_FULL_PATH}" ]; then
 fi
 
 
-export THREADS=$(count_threads)
-
 . /app/.bashrc
 conda activate main-env
+
+export THREADS=$(count_threads)
 
 export READS1=$(read_tar_name ${READS_TAR_FULL_PATH} 1)
 export READS2=$(read_tar_name ${READS_TAR_FULL_PATH} 2)

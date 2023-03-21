@@ -8,7 +8,6 @@
 #' IMPORTANT: use the lucasnell/tany_backmap docker image:
 #'
 
-export THREADS=$(count_threads)
 
 export GENOME=tany_contigs.fasta
 export LONGREADS=basecalls_guppy-5.0.11.fastq
@@ -28,6 +27,7 @@ cp /staging/lnell/ont/${LONGREADS}.gz ./ \
 . /app/.bashrc
 conda activate backmap-env
 
+export THREADS=$(count_threads)
 
 backmap.pl -o ${OUT_DIR} -pre tany -t ${THREADS} \
     -a ${GENOME} -ont ${LONGREADS}

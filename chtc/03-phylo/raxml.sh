@@ -7,11 +7,10 @@
 
 
 
-
-export THREADS=$(count_threads)
-
 . /app/.bashrc
 conda activate phylo-env
+
+export THREADS=$(count_threads)
 
 export TARGET=/staging/lnell/phylo
 

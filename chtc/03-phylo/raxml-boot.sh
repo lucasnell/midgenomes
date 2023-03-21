@@ -26,10 +26,10 @@ SEEDS_ARR=(1478865727 158688736 548184584 1400912585 357834478 667771158
 export THIS_SEED=${SEEDS_ARR[$SEEDS_IND]}
 
 
-export THREADS=$(count_threads)
-
 . /app/.bashrc
 conda activate phylo-env
+
+export THREADS=$(count_threads)
 
 export TARGET=/staging/lnell/phylo
 

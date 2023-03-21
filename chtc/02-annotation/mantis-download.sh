@@ -5,12 +5,6 @@
 #'
 
 
-export THREADS=$(count_threads)
-
-# Memory available:
-export MEMORY=$(grep "^Memory = " $_CONDOR_MACHINE_AD | sed 's/Memory\ =\ //')
-# In GB, with 5 GB overhead:
-MEMORY=$(( MEMORY / 1000 - 5 ))
 
 export OUT_TAR=mantis-downloads.tar.gz
 
@@ -25,6 +19,13 @@ mkdir refs
 
 . /app/.bashrc
 conda activate annotate-env
+
+export THREADS=$(count_threads)
+
+# Memory available:
+export MEMORY=$(grep "^Memory = " $_CONDOR_MACHINE_AD | sed 's/Memory\ =\ //')
+# In GB, with 5 GB overhead:
+MEMORY=$(( MEMORY / 1000 - 5 ))
 
 
 #' Setup MANTIS.cfg based on default from

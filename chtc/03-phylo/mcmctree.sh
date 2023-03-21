@@ -9,6 +9,9 @@
 #' run the final steps in parallel.
 #'
 
+. /app/.bashrc
+conda activate phylo-env
+
 #' If you ever increase this, change `SEEDS` below.
 export N_MCMC_RUNS=4
 
@@ -24,9 +27,6 @@ if (( N_MCMC_RUNS+1 > ${#SEEDS[@]} )); then
     echo "ERROR: not enough seeds provided" 1>&2
     exit 1
 fi
-
-. /app/.bashrc
-conda activate phylo-env
 
 export TARGET=/staging/lnell/phylo
 
