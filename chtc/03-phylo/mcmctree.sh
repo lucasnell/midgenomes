@@ -39,6 +39,7 @@ mkdir working
 cd working
 
 export OUT_DIR=chir_mcmctree
+export OUT_TREE=chir_mcmctree.tre
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 export OUT_PREFIX=chir_mcmctree
@@ -327,7 +328,8 @@ if __name__ == "__main__":
 EOF
 
 
-
+cp ./mcmc_1/FigTree.tre ./${OUT_TREE}
+cp ${OUT_TREE} ${TARGET}/
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 mv ${OUT_DIR}.tar.gz ${TARGET}/
