@@ -113,48 +113,144 @@ orig_gnames |>
 #' ===========================================================================
 
 
-# Convert raw vector to single string:
-to_str <- \(x) paste(rawToChar(x), collapse = "")
 
-spp_names <- orig_gnames |> select(Aaegyp:Tgraci) |> colnames() |> sort()
+#' Write HOG sequences to directory.
+#'
+#' @param hog_df Data frame from one of the tsv files within
+#'        `Phylogenetic_Hierarchical_Orthogroups`.
+#' @param hog_seq_dir Directory where sequence faa files should be written.
+#' @param proteins List of `AAbin` objects containing all proteins for all
+#'        species.
+#'
+write_hog_seqs <- function(hog_df, hog_seq_dir, proteins) {
 
-n = spp_names[1]
+    stopifnot(inherits(hog_df, "data.frame"))
+    stopifnot(inherits(hog_seq_dir, "character"))
+    stopifnot(inherits(proteins, "list"))
+    stopifnot(!is.null(names(proteins)))
+    stopifnot(all(sapply(proteins, inherits, what = "AAbin")))
 
-# for (n in spp_names) {
+    if ("OG" %in% colnames(hog_df)) hog_df[["OG"]] <- NULL
+    if ("Gene Tree Parent Clade" %in% colnames(hog_df)) {
+        hog_df[["Gene Tree Parent Clade"]] <- NULL
+    }
 
-rfa <- read.FASTA(psd(n, ".faa"), "AA")
-stopifnot(!any(duplicated(names(rfa))))
+    spp_names <- hog_df |>
+        select(-HOG) |>
+        colnames()
 
-lens <- map_int(rfa, length) |> as.integer()
-sum(duplicated(lens))
-mean(duplicated(lens))
+    stopifnot(all(spp_names %in% names(proteins)))
 
-#' Unique lengths that aren't duplicated:
-nond_lens <- lens[duplicated(lens)] |> unique()
-length(nond_lens)
+    if (!dir.exists(hog_seq_dir)) dir.create(hog_seq_dir, recursive = TRUE)
 
-#' Now go through each duplicated length and see if any proteins themselves
-#' are duplicated.
-dup_seq <- logical(length(rfa))
+    # Convert raw vector to single string:
+    to_str <- \(x) paste(rawToChar(x), collapse = "")
 
-for (len in nond_lens) {
-    len_inds <- which(lens == len)
-    seqs <- rfa[len_inds] |> map_chr(to_str) |> as.character()
-    seq_dups <- duplicated(seqs)
-    if (any(seq_dups)) dup_seq[len_inds[seq_dups]] <- TRUE
+    for (i in 1:nrow(hog_df)) {
+
+        hog <- hog_df$HOG[[i]]
+        n_genes <- length(unlist(hog_df[i,spp_names]))
+        hog_lines <- character(2 * n_genes)
+        j <- 1
+
+        for (spp in spp_names) {
+
+            gene_vec <- hog_df[[spp]][[i]]
+
+            for (gene in gene_vec) {
+
+                hog_lines[j] <- sprintf(">%s__%s", spp, gene)
+                j <- j + 1
+
+                hog_lines[j] <- to_str(proteins[[spp]][[gene]])
+                j <- j + 1
+
+            }
+
+        }
+
+        write_lines(hog_lines, paste0(hog_seq_dir, "/", hog, ".faa"))
+
+    }
+
+    invisible(NULL)
+
 }
 
-# cat(sprintf("%s\n  total   = %i\n  percent = %.1f\n\n", n, sum(dup_seq),
-#             100 * mean(dup_seq)))
-
-nond_rfa <- rfa[!dup_seq]
-
-write.FASTA(nond_rfa, psd(n, "_proteins_nond.faa"))
-
-# }
 
 
+#' All species names (minus Cmarin bc of its poor matching)
+all_spp_names <- orig_gnames |> select(Aaegyp:Tgraci) |> colnames() |> sort()
+
+# All proteins from all species
+proteins <- map(all_spp_names, \(n) {
+    rfa <- read.FASTA(psd(n, ".faa"), "AA")
+    stopifnot(all(!duplicated(names(rfa))))
+    return(rfa)
+})
+names(proteins) <- all_spp_names
 
 
+#' ============================================================================
+#' ============================================================================
+#'
+#' Root node POGs
+#'
+#' ============================================================================
+#' ============================================================================
+
+write_hog_seqs(gnames11, ofd("Single_Copy_HOG_Sequences/N0"), proteins)
+
+
+
+
+#' ============================================================================
+#' ============================================================================
+#'
+#' Non-root POGs
+#'
+#' ============================================================================
+#' ============================================================================
+
+# Species tree with node labels:
+read.tree(ofd("Species_Tree/SpeciesTree_rooted_node_labels.txt")) |>
+    plot(show.node.label = TRUE, no.margin = TRUE)
+
+#'
+#' From this, other nodes that may be of interest, in order from most to least
+#' inclusive, are
+#' - N1: Culicomorpha (no Musca domestica)
+#' - N3: just families Chironomidae and Ceratopogonidae (no Musca domestica
+#'       or family Culicidae)
+#' - N5: family Chironomidae
+#'
+
+for (node in c("N1", "N3", "N5")) {
+
+    hogdf <- read_tsv(ofd("Phylogenetic_Hierarchical_Orthogroups/", node, ".tsv"),
+             col_types = cols()) |>
+        #' Remove species not represented by this node:
+        select(\(x) any(!is.na(x))) |>
+        #' This species only had ~58% of genes match to orthogroups, so
+        #' I'm removing it from the analyses:
+        select(-Cmarin) |>
+        select(-OG, -starts_with("Gene")) |>
+        mutate(across(-HOG, \(x) {
+            z <- rep(list(character(0)), length(x))
+            z[!is.na(x)] <- str_split(x[!is.na(x)], ", ")
+            return(z)
+        })) |>
+        filter(if_all(-HOG, \(x) map_lgl(x, \(y) length(y) == 1)))
+
+    write_hog_seqs(hogdf, ofd("Single_Copy_HOG_Sequences/", node), proteins)
+}
+
+#' Number of single-copy HOGs by node:
+#'
+#' N0 = 1,370
+#' N1 = 1,486
+#' N3 = 2,578
+#' N5 = 3,461
+#'
 
 
