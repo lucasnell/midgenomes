@@ -21,64 +21,109 @@ cd ${OUT_DIR}
 export PROT_FOLDER=chir_proteins
 
 cp -r /staging/lnell/proteins ./ \
-    && cd proteins \
-    && gunzip *.faa.gz \
-    && for f in *.faa; do mv $f ${f/_proteins/_wdups}; done \
-    && export SPECIES_NAMES=($(find . -name "*.faa" | sed 's/_wdups.faa//g' | tr -d './'))
-check_exit_status "moving, renaming proteins" $?
+    && mv proteins ${PROT_FOLDER} \
+    && cd ${PROT_FOLDER}
+check_exit_status "moving, renaming protein folder" $?
 
-# Remove duplicate proteins from each FASTA file:
-R --vanilla << EOF > >(tee -a removing-dups.log)
 
-library(ape)
-
-# Convert raw vector to single string:
-to_str <- function(x) paste(rawToChar(x), collapse = "")
-
-spp_names <- trimws(strsplit("${SPECIES_NAMES[@]}", "\\\\s+")[[1]])
-
-cat("---- duplicates removed ----\n\n")
-
-for (n in spp_names) {
-    rfa <- read.FASTA(paste0(n, "_wdups.faa"), "AA")
-    names(rfa) <-  lapply(strsplit(names(rfa), " "), function(x) x[[1]])
-    stopifnot(!any(duplicated(names(rfa))))
-
-    lens <- as.integer(sapply(rfa, length))
-    # sum(duplicated(lens))
-    # mean(duplicated(lens))
-
-    #' Unique lengths that aren't duplicated:
-    nond_lens <- unique(lens[duplicated(lens)])
-    # length(nond_lens)
-
-    #' Now go through each duplicated length and see if any proteins themselves
-    #' are duplicated.
-    dup_seq <- logical(length(rfa))
-
-    for (len in nond_lens) {
-        len_inds <- which(lens == len)
-        seqs <- do.call(c, lapply(rfa[len_inds], to_str))
-        seq_dups <- duplicated(seqs)
-        if (any(seq_dups)) dup_seq[len_inds[seq_dups]] <- TRUE
-    }
-
-    cat(sprintf("%s\n  total   = %i\n  percent = %.1f\n\n",
-                n, sum(dup_seq), 100 * mean(dup_seq)))
-
-    nond_rfa <- rfa[!dup_seq]
-
-    write.FASTA(nond_rfa, paste0(n, ".faa"))
-
-}
+# Only keep the longest isoform for each gene.
+# It's assumed that the transcript names for the protein sequences
+# are named as <gene name>.<transcript name> or <gene name>-<transcript name>
+# and that the last '.' or '-' separates the gene name from the
+# transcript name.
+# It tests the first FASTA header for whether a '-' or '.' shows up last,
+# and whichever is last in that header is assumed to separate gene from
+# transcript names in all headers.
+# If there are transcript names containing '.' or '-', then this script will
+# fail in ways that may not be obvious.
+#
+# usage:
+#     ./longest-isoforms.py in.faa > out.faa
+#
+cat << EOF > longest-isoform.py
+#!/usr/bin/env python3
+import sys
+import os.path
+import gzip
+if len(sys.argv) > 2:
+    sys.stderr.write("Only one input should be provided. Exiting.\n")
+    sys.exit(1)
+fasta_name = sys.argv[1]
+if not os.path.exists(fasta_name):
+    sys.stderr.write(fasta_name + " not found\n")
+    sys.exit(1)
+fasta_suffs = (".fasta.gz", ".fasta", ".fa.gz", ".fa", ".faa", ".faa.gz")
+if not fasta_name.endswith(fasta_suffs):
+    sys.stderr.write("Strange suffix to input FASTA file (allowed: " +
+                     ", ".join(fasta_suffs) + "). Exiting.\n")
+    sys.exit(1)
+if fasta_name.endswith(".gz"):
+    fasta_file = gzip.open(fasta_name,"rt")
+else:
+    fasta_file = open(fasta_name, "r")
+# Read entire FASTA into memory:
+seq_names = []
+seq_seqs  = []
+for line in fasta_file:
+    if line.startswith(">"):
+        seq_names.append(line.rstrip().split(" ")[0][1:])
+        seq_seqs.append("")
+    else:
+        seq_seqs[-1] += line.rstrip()
+fasta_file.close()
+# Find which type of delimeter to use:
+ppos = seq_names[0].find(".")
+hpos = seq_names[0].find("-")
+if ppos < 0 and hpos < 0:
+    sys.stderr.write("Unknown delimeter between gene and trans. names ('.' " +
+                     "and '-' allowed). Exiting.\n")
+    sys.exit(1)
+if ppos < 0:
+    deli = "-"
+elif ppos > hpos:
+    deli = "."
+else:
+    deli = "-"
+genes = [x.rsplit(deli, 1)[0] for x in seq_names]
+unq_genes = list(set(genes))
+if len(genes) == len(unq_genes):
+    sys.stderr.write("No multi-isoform genes found.")
+else:
+    sys.stderr.write("Removed transcripts = " + str(len(genes) - len(unq_genes)))
+# Find longest isoform and write to stdout
+unq_seq = ""
+for i in range(len(unq_genes)):
+    g = unq_genes[i]
+    g_matches = [j for j, x in enumerate(genes) if x == g]
+    if len(g_matches) == 0:
+        sys.stderr.write("Gene '" + g + "' not found. Exiting.\n")
+        sys.exit(1)
+    elif len(g_matches) == 1:
+        unq_seq = seq_seqs[g_matches[0]]
+    else:
+        g_match_lens = [len(seq_seqs[k]) for k in g_matches]
+        longest = [j for j, z in enumerate(g_match_lens) if z == max(g_match_lens)][0]
+        unq_seq = seq_seqs[g_matches[longest]]
+    sys.stdout.write(">" + g + "\n")
+    sys.stdout.write(unq_seq + "\n")
+sys.exit(0)
 EOF
-check_exit_status "creating sets of non-duplicate proteins" $?
+check_exit_status "creating longest-isoform.py" $?
+chmod +x longest-isoform.py
 
-rm *_wdups.faa \
-    && cd .. \
-    && mv proteins ${PROT_FOLDER}
-check_exit_status "removing duplicate proteins" $?
 
+for f in *.faa.gz; do
+    g=$(echo ${f%.gz} | sed 's/_proteins//g')
+    echo ${f/_proteins.faa.gz/} >> longest-isoform.log
+    ./longest-isoform.py $f 1> ${g} 2>> longest-isoform.log
+    status=$?
+    echo -e "\n\n" >> longest-isoform.log
+    if (( status != 0 )); then break; fi
+    rm $f
+done
+check_exit_status "removing duplicate proteins" $status
+
+cd ..
 
 
 #' Create simplified time tree from MCMCTree output.
