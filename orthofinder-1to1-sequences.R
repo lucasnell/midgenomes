@@ -5,21 +5,24 @@ library(ape)
 
 
 #' OrthoFinder directory. It's assumed this directory is unchanged from the
-#' output from OrthoFinder.
+#' output from OrthoFinder, except for separate folders added to the parent
+#' directory.
 ofd <- function(...) {
-    base_dir <- "~/_data/chir_orthofinder/orthofinder-output"  ## << change as necessary
-    base_dir <- paste0(str_remove(base_dir, "/$"), "/")
     dots <- list(...)
-    do.call(paste0, c(list(base_dir), dots))
+    base_dir <- "~/_data/chir_orthofinder/orthofinder-output"  ## << change as necessary
+    base_dir <- str_remove(base_dir, "/$")
+    if (length(dots) == 0) return(base_dir)
+    do.call(paste0, c(list(base_dir, "/"), dots))
 }
 #' Protein sequence directory. It's assumed the names within follow the pattern:
 #' <species name>.faa
 #' and that they have duplicated proteins removed
 psd <- function(...) {
-    base_dir <- "~/_data/chir_orthofinder/chir_proteins"  ## << change as necessary
-    base_dir <- paste0(str_remove(base_dir, "/$"), "/")
     dots <- list(...)
-    do.call(paste0, c(list(base_dir), dots))
+    base_dir <- "~/_data/chir_orthofinder/chir_proteins"  ## << change as necessary
+    base_dir <- str_remove(base_dir, "/$")
+    if (length(dots) == 0) return(base_dir)
+    do.call(paste0, c(list(base_dir, "/"), dots))
 }
 
 orig_gnames <- read_tsv(ofd("Phylogenetic_Hierarchical_Orthogroups/N0.tsv"),
@@ -213,8 +216,32 @@ write_hog_seqs(gnames11, ofd("Single_Copy_HOG_Sequences/N0"), proteins)
 #' ============================================================================
 
 # Species tree with node labels:
-read.tree(ofd("Species_Tree/SpeciesTree_rooted_node_labels.txt")) |>
-    plot(show.node.label = TRUE, no.margin = TRUE)
+tr <- read.tree(ofd("Species_Tree/SpeciesTree_rooted_node_labels.txt"))
+
+#' To convert back to full names:
+spp_name_map <- list("Aaegyp" = "Aedes aegypti",
+                     "Asteph" = "Anopheles stephensi",
+                     "Bantar" = "Belgica antarctica",
+                     "Cripar" = "Chironomus riparius",
+                     "Ctenta" = "Chironomus tentans",
+                     "Cmarin" = "Clunio marinus",
+                     "Cquinq" = "Culex quinquefasciatus",
+                     "Csonor" = "Culicoides sonorensis",
+                     "Mdomes" = "Musca domestica",
+                     "Pstein" = "Parochlus steinenii",
+                     "Ppemba" = "Polypedilum pembai",
+                     "Pvande" = "Polypedilum vanderplanki",
+                     "Pakamu" = "Propsilocerus akamusi",
+                     "Tgraci" = "Tanytarsus gracilentus")
+
+tr$tip.label <- map_chr(tr$tip.label, \(a) spp_name_map[[a]])
+
+plot(tr, show.node.label = TRUE, no.margin = TRUE, label.offset = 0.1)
+
+pdf("orthofinder-species-tree.pdf", width = 8, height = 5)
+plot(tr, show.node.label = TRUE, no.margin = TRUE, label.offset = 0.1)
+dev.off()
+
 
 #'
 #' From this, other nodes that may be of interest, in order from most to least
