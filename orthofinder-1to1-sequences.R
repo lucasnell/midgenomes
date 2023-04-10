@@ -52,17 +52,6 @@ gnums11 <- orig_gnums |>
     filter(if_all(Aaegyp:Tgraci, \(x) x == 1))
 
 
-#' When we filter for exactly 1 gene for all species, 3 OGs are repeated.
-#' Other OGs are unique.
-gnums11 |> nrow()
-gnums11 |>
-    distinct(OG, .keep_all = TRUE) |>
-    nrow()
-gnums11 |>
-    filter(OG %in% OG[duplicated(OG)]) |>
-    select(HOG, OG, starts_with("Gene"))
-
-
 
 #' ===========================================================================
 #' ===========================================================================
@@ -77,6 +66,17 @@ gnums11 |>
 #' these sequences might be from the "normal" orthogroups, not the
 #' "Phylogenetic Hierarchical Orthogroups" that OrthoFinder now recommends
 #' using because they're more accurate.
+
+#' When we filter for exactly 1 gene for all species, 3 OGs are repeated.
+#' Other OGs are unique.
+gnums11 |> nrow()
+gnums11 |>
+    distinct(OG, .keep_all = TRUE) |>
+    nrow()
+gnums11 |>
+    filter(OG %in% OG[duplicated(OG)]) |>
+    select(HOG, OG, starts_with("Gene"))
+
 
 #' Number of sequences and sequence names for each OG from the
 #' Orthogroup_Sequences folder
@@ -176,6 +176,8 @@ write_hog_seqs <- function(hog_df, hog_seq_dir, proteins) {
 
     }
 
+    cat(sprintf("Finished writing to %s\n", hog_seq_dir))
+
     invisible(NULL)
 
 }
@@ -238,9 +240,9 @@ tr$tip.label <- map_chr(tr$tip.label, \(a) spp_name_map[[a]])
 
 plot(tr, show.node.label = TRUE, no.margin = TRUE, label.offset = 0.1)
 
-pdf("orthofinder-species-tree.pdf", width = 8, height = 5)
-plot(tr, show.node.label = TRUE, no.margin = TRUE, label.offset = 0.1)
-dev.off()
+# pdf("orthofinder-species-tree.pdf", width = 8, height = 5)
+# plot(tr, show.node.label = TRUE, no.margin = TRUE, label.offset = 0.1)
+# dev.off()
 
 
 #'
@@ -272,12 +274,66 @@ for (node in c("N1", "N3", "N5")) {
     write_hog_seqs(hogdf, ofd("Single_Copy_HOG_Sequences/", node), proteins)
 }
 
+
+
+
+
+#' ------------------------------------------------------
+#' ------------------------------------------------------
+#'
 #' Number of single-copy HOGs by node:
 #'
-#' N0 = 1,370
-#' N1 = 1,486
-#' N3 = 2,578
-#' N5 = 3,461
+#' N0 = 1,735
+#' N1 = 1,922
+#' N3 = 2,460
+#' N5 = 3,443
 #'
 
+for (node in c("N0", "N1", "N3", "N5")) {
+    hogdf <- read_tsv(ofd("Phylogenetic_Hierarchical_Orthogroups/", node, ".tsv"),
+                      col_types = cols()) |>
+        #' Remove species not represented by this node:
+        select(\(x) any(!is.na(x))) |>
+        #' This species only had ~58% of genes match to orthogroups, so
+        #' I'm removing it from the analyses:
+        select(-Cmarin) |>
+        select(-OG, -starts_with("Gene")) |>
+        mutate(across(-HOG, \(x) {
+            z <- rep(list(character(0)), length(x))
+            z[!is.na(x)] <- str_split(x[!is.na(x)], ", ")
+            return(z)
+        })) |>
+        filter(if_all(-HOG, \(x) map_lgl(x, \(y) length(y) == 1)))
+    cat(sprintf("%s = %s\n", node, prettyNum(nrow(hogdf), big.mark = ",")))
+}
+
+#' ------------------------------------------------------
+#' ------------------------------------------------------
+#'
+#' Number of total HOGs by node:
+#'
+#' N0 = 19,575
+#' N1 = 19,534
+#' N3 = 17,918
+#' N5 = 16,794
+#'
+#'
+
+for (node in c("N0", "N1", "N3", "N5")) {
+    hogdf <- read_tsv(ofd("Phylogenetic_Hierarchical_Orthogroups/", node, ".tsv"),
+                      col_types = cols()) |>
+        #' This species only had ~58% of genes match to orthogroups, so
+        #' I'm removing it from all analyses.
+        select(-Cmarin) |>
+        #' The rest of this section is to remove HOGs only containing genes
+        #' from Cmarin:
+        select(-OG, -starts_with("Gene")) |>
+        mutate(across(-HOG, \(x) {
+            z <- integer(length(x))
+            z[!is.na(x)] <- str_count(x[!is.na(x)], ", ") + 1L
+            return(z)
+        })) |>
+        filter(if_any(-HOG, \(x) x > 0))
+    cat(sprintf("%s = %s\n", node, prettyNum(nrow(hogdf), big.mark = ",")))
+}
 

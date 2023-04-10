@@ -78,9 +78,7 @@ if ppos < 0 and hpos < 0:
     sys.stderr.write("Unknown delimeter between gene and trans. names ('.' " +
                      "and '-' allowed). Exiting.\n")
     sys.exit(1)
-if ppos < 0:
-    deli = "-"
-elif ppos > hpos:
+if ppos > hpos:
     deli = "."
 else:
     deli = "-"
@@ -92,8 +90,7 @@ else:
     sys.stderr.write("Removed transcripts = " + str(len(genes) - len(unq_genes)))
 # Find longest isoform and write to stdout
 unq_seq = ""
-for i in range(len(unq_genes)):
-    g = unq_genes[i]
+for g in unq_genes:
     g_matches = [j for j, x in enumerate(genes) if x == g]
     if len(g_matches) == 0:
         sys.stderr.write("Gene '" + g + "' not found. Exiting.\n")
@@ -112,18 +109,20 @@ check_exit_status "creating longest-isoform.py" $?
 chmod +x longest-isoform.py
 
 
+# Takes just a couple of minutes
 for f in *.faa.gz; do
     g=$(echo ${f%.gz} | sed 's/_proteins//g')
-    echo ${f/_proteins.faa.gz/} >> longest-isoform.log
+    spp=${f/_proteins.faa.gz/}
+    echo $spp >> longest-isoform.log
     ./longest-isoform.py $f 1> ${g} 2>> longest-isoform.log
-    status=$?
+    check_exit_status "only longest isoforms - $spp" $?
     echo -e "\n\n" >> longest-isoform.log
-    if (( status != 0 )); then break; fi
     rm $f
 done
-check_exit_status "removing duplicate proteins" $status
 
+mv longest-isoform.* ../
 cd ..
+
 
 
 #' Create simplified time tree from MCMCTree output.
@@ -158,9 +157,9 @@ check_exit_status "move, rename OrthoFinder output" $?
 
 
 cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-
-mv ${OUT_DIR}.tar.gz ${TARGET}/
+tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR} \
+    && mv ${OUT_DIR}.tar.gz ${TARGET}/
+check_exit_status "move output to target directory" $?
 
 rm -r ${OUT_DIR}
 
