@@ -190,6 +190,8 @@ get_one_intron_set <- function(exon_mat, trans_row, .label_format) {
     }
     ibounds <- ibounds[ibounds[,1] > 0,,drop=FALSE]
     if (nrow(ibounds) == 0) return(NULL)
+    ibounds <- ibounds[ibounds[,2] >= ibounds[,1],,drop=FALSE]
+    if (nrow(ibounds) == 0) return(NULL)
 
     intron_df_i <- trans_row[,c("seqid", "gene", "trans")] |>
         mutate(start = list(ibounds[,"start"]),
