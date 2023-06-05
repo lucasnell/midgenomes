@@ -10,7 +10,7 @@ error = repeats-$(species).err
 output = repeats-$(species).out
 
 executable = repeats.sh
-arguments = -p $(species) /staging/lnell/assemblies/$(species)_contigs.fasta.gz
+arguments = -p $(species) /staging/lnell/assemblies/$(species)_assembly.fasta.gz
 
 batch_name = "repeats-$(species)"
 

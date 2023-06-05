@@ -222,7 +222,7 @@ cat ${REPEATS_LIB} \
 
 
 RepeatMasker \
-    -s -xsmall -gff \
+    -a -s -xsmall -gff \
     -lib diptera_and_${REPEATS_LIB} \
     -pa $(( THREADS / 4 )) \
     ${ASSEMBLY} \
