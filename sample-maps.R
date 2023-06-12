@@ -40,16 +40,16 @@ to_utm <- function(.df, .lat = "lat", .lon = "lon") {
 # -------------`
 myvatn_df <- readOGR(dsn = paste0("~/Box Sync/midgenomics/location_data/",
                                   "shapefiles/myvatn"),
-                  layer = "Myvatn_WSGUTM28") %>%
-    tidy() %>%
+                  layer = "Myvatn_WSGUTM28") |>
+    tidy() |>
     rename(lon = long)
 # Iceland outline is from GADM data (version 3.6; https://gadm.org/)
 iceland_df <- readOGR(dsn = paste0("~/Box Sync/midgenomics/location_data/",
                                    "shapefiles/iceland"),
-                 layer = "gadm36_ISL_0") %>%
-    tidy() %>%
-    rename(lon = long) %>%
-    to_utm() %>%
+                 layer = "gadm36_ISL_0") |>
+    tidy() |>
+    rename(lon = long) |>
+    to_utm() |>
     # -----------`
     # Shown below are two ways to filter this dataset, to avoid
     # plotting islands far from shore:
@@ -57,7 +57,7 @@ iceland_df <- readOGR(dsn = paste0("~/Box Sync/midgenomics/location_data/",
     # 1. You can filter out islands that are very far from shore:
     # filter(!piece %in% c(90, 133, 143, 157, 215, 244, 257, 258, 260, 262))
     # 2. Filter for just the mainland:
-    filter(piece == 1) %>%
+    filter(piece == 1) |>
     identity()
 
 
@@ -66,18 +66,18 @@ iceland_df <- readOGR(dsn = paste0("~/Box Sync/midgenomics/location_data/",
 # Sample location data
 # -------------`
 samp_df <- read_csv("~/Box Sync/midgenomics/full-DNA-info.csv",
-                    col_types = "cfcddidcccddidiDccldd") %>%
-    filter(to_use == 1) %>%
-    filter(!is.na(site)) %>%
-    filter(site %in% c("KS", "BR")) %>%
-    group_by(site) %>%
-    summarize(lat = mean(lat), lon = mean(lon), .groups = "drop") %>%
-    add_row(site = "E5", lat = 65.597006, lon = -16.957340) %>%
+                    col_types = "cfcddidcccddidiDccldd") |>
+    filter(to_use == 1) |>
+    filter(!is.na(site)) |>
+    filter(site %in% c("KS", "BR")) |>
+    group_by(site) |>
+    summarize(lat = mean(lat), lon = mean(lon), .groups = "drop") |>
+    add_row(site = "E5", lat = 65.597006, lon = -16.957340) |>
     # Convert to more accurate site names:
     mutate(site = case_when(site == "E5" ~ "Bolir",
                             site == "KS" ~ "Kálfaströnd",
                             site == "BR" ~ "Fellshóll",
-                            TRUE ~ NA_character_)) %>%
+                            TRUE ~ NA_character_)) |>
     to_utm()
 
 
@@ -87,7 +87,7 @@ samp_df <- read_csv("~/Box Sync/midgenomics/full-DNA-info.csv",
 
 # Iceland map ----
 
-iceland_p <- iceland_df %>%
+iceland_p <- iceland_df |>
     ggplot(aes(x = lon, y = lat)) +
     geom_polygon(aes(group = group), color = "gray20", size = 0.25,
                  fill = "gray80") +
@@ -108,7 +108,7 @@ save_plot("iceland_map", iceland_p, 4, 3)
 
 # Myvatn map ----
 
-myvatn_p <- myvatn_df %>%
+myvatn_p <- myvatn_df |>
     ggplot(aes(x = lon, y = lat)) +
     geom_rect(data = tibble(x = 403118.1 - 100, xe = 411932.0 + 100,
                             y = 7271491 - 100, ye = 7282704 + 100),

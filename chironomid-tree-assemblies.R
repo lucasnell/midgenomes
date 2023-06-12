@@ -21,8 +21,8 @@ prev_spp <- c("Chironomus riparius", "Chironomus tentans",
               "Belgica antarctica", "Clunio marinus",
               "Propsilocerus akamusi")
 #' Unique genera
-prev_gen <- str_split(prev_spp, " ") %>%
-    map_chr(~ .x[[1]]) %>%
+prev_gen <- str_split(prev_spp, " ") |>
+    map_chr(~ .x[[1]]) |>
     unique()
 
 #' Phylogeny of family Chironomidae to genus level from timetree.org
@@ -41,7 +41,7 @@ cols <- turbo(101)[c(15, 80, 5, 25, 90, 35)]
 # Make Tanytarsus stand out a bit:
 cols[3] <- "gold"
 
-chir_tr_p <- full_join(chir_tr, d, by = "label") %>%
+chir_tr_p <- full_join(chir_tr, d, by = "label") |>
     ggtree() +
     geom_tippoint(aes(color = trait), size = 1) +
     geom_tiplab(aes(color = trait), size = 3, offset = 1, fontface = "bold") +

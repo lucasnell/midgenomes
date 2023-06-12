@@ -36,11 +36,11 @@ cyto_mb <- tibble(# From Cornette et al. (2015)
         "Chironomus plumosus", "Chironomus fusciceps", "Chironomus acerbiphilus",
         "Glyptotendipes tokunagai", "Dicrotendipes pelochloris"),
     pg = c(0.10, 0.11, 0.10, 0.10, 0.10, 0.09, 0.20, 0.13, 0.12, 0.15, 0.16,
-           0.15, 0.16, 0.17, 0.16, 0.12)) %>%
-    mutate(mb = pg * mb_per_pg) %>%
-    select(-pg) %>%
+           0.15, 0.16, 0.17, 0.16, 0.12)) |>
+    mutate(mb = pg * mb_per_pg) |>
+    select(-pg) |>
     # From doi: 10.1007/s00427-009-0281-0:
-    add_row(spp = "Chironomus riparius", mb = (196.2 + 194.3) / 2) %>%
+    add_row(spp = "Chironomus riparius", mb = (196.2 + 194.3) / 2) |>
     mutate(method = "cyto")
 
 
@@ -61,22 +61,22 @@ genome_mb <- list(list("Tanytarsus gracilentus", 184 / (1 - 0.098)), # My newest
         # From doi: 10.1038/ncomms5611
         list("Belgica antarctica", 99),
         # From doi: 10.1534/g3.119.400710
-        list("Chironomus riparius", 178)) %>%
-    map_dfr(~ tibble(spp = .x[[1]], mb = .x[[2]])) %>%
+        list("Chironomus riparius", 178)) |>
+    map_dfr(~ tibble(spp = .x[[1]], mb = .x[[2]])) |>
     mutate(method = "genome")
 
 
 
-mb_df <- bind_rows(cyto_mb, genome_mb) %>%
-    spread(method, mb) %>%
+mb_df <- bind_rows(cyto_mb, genome_mb) |>
+    spread(method, mb) |>
     mutate(species = spp,
            spp = str_split(spp, " "),
-           genus = map_chr(spp, ~ .x[[1]])) %>%
+           genus = map_chr(spp, ~ .x[[1]])) |>
     select(-spp)
 
 
-mb_df %>%
-    group_by(genus) %>%
+mb_df |>
+    group_by(genus) |>
     summarize(N = n())
 
 
@@ -115,11 +115,11 @@ plot(tree, cex = 0.5, no.margin = TRUE)
 
 
 
-g_df <- mb_df %>%
-    gather("method", "mb", cyto:genome) %>%
-    filter(!is.na(mb)) %>%
-    select(-genus) %>%
-    rename(taxon = species) %>%
+g_df <- mb_df |>
+    gather("method", "mb", cyto:genome) |>
+    filter(!is.na(mb)) |>
+    select(-genus) |>
+    rename(taxon = species) |>
     add_row(taxon = "Buchonomyia", mb = NA)
 
 p <- ggtree(tree) +

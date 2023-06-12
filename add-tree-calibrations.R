@@ -75,37 +75,37 @@ write_file(paste0(calib_tr_str, "\n"), calib_tr_file, append = TRUE)
 # ((((((((Chironomus_tentans: 0.225825, (Chironomus_riparius: 0.191673, Chironomus_tepperi: 0.191673) [&95%={0.167724, 0.231869}]: 0.034152) [&95%={0.197619, 0.273171}]: 0.737943, (Polypedilum_vanderplanki: 0.234349, Polypedilum_pembai: 0.234349) [&95%={0.205083, 0.283425}]: 0.729419) [&95%={0.843625, 1.16573}]: 0.169057, Tanytarsus_gracilentus: 1.132824) [&95%={0.991739, 1.37068}]: 0.361535, (Clunio_marinus: 1.010433, Belgica_antarctica: 1.010433) [&95%={0.884667, 1.2226}]: 0.483926) [&95%={1.30827, 1.80844}]: 0.058194, Propsilocerus_akamusi: 1.552554) [&95%={1.35938, 1.87877}]: 0.697730, Parochlus_steinenii: 2.250284) [&95%={1.97052, 2.72394}]: 0.670012, Culicoides_sonorensis: 2.920296) [&95%={2.55699, 3.53357}]: 0.000076, Anopheles_stephensi: 2.920372) [&95%={2.55702, 3.53366}];
 
 
-read_lines("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_1/FigTree.tre") %>%
+read_lines("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_1/FigTree.tre") |>
     keep(~ grepl("^\tUTREE", .x))
 
 
 mcmc <- read_tsv("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_1/chir_mcmctree_mcmc.txt")
 
 
-mcmc %>%
-    select(starts_with("t_n")) %>%
+mcmc |>
+    select(starts_with("t_n")) |>
     summarize_all(list(mean = mean, median = median,
                        low = ~ quantile(.x, 0.025),
-                       high = ~ quantile(.x, 0.975))) %>%
-    pivot_longer(everything()) %>%
-    mutate(variable = str_split(name, "_") %>%
+                       high = ~ quantile(.x, 0.975))) |>
+    pivot_longer(everything()) |>
+    mutate(variable = str_split(name, "_") |>
                map_chr(~ paste(.x[[1]], .x[[2]], sep = "_")),
-           measure = str_split(name, "_") %>%
-               map_chr(~ .x[[3]])) %>%
-    select(variable, measure, value) %>%
-    pivot_wider(names_from = measure, values_from = value) %>%
-    mutate(summary = sprintf("%.4f %.4f (%.4f, %.4f)", mean, median, low, high)) %>%
+           measure = str_split(name, "_") |>
+               map_chr(~ .x[[3]])) |>
+    select(variable, measure, value) |>
+    pivot_wider(names_from = measure, values_from = value) |>
+    mutate(summary = sprintf("%.4f %.4f (%.4f, %.4f)", mean, median, low, high)) |>
     select(variable, summary)
 
 
-mcmc %>%
-    filter(lnL == max(lnL)) %>%
+mcmc |>
+    filter(lnL == max(lnL)) |>
     .[["t_n13"]]
 
 
-mcmc %>%
-    select(Gen, starts_with("t_n")) %>%
-    pivot_longer(starts_with("t_n")) %>%
+mcmc |>
+    select(Gen, starts_with("t_n")) |>
+    pivot_longer(starts_with("t_n")) |>
     ggplot(aes(Gen, value, color = name)) +
     geom_line() +
     scale_color_viridis_d(guide = "none") +
@@ -120,7 +120,7 @@ mcmc_ests <- map(1:4, function(i) {
     fn <- paste0("~/_data/zzz-pre-2023/phylo/chir_mcmctree/mcmc_", i, "/chir_mcmctree.out")
     lns <- read_lines(fn)
     lns <- lns[(which(grepl("^Posterior mean", lns))+2):length(lns)]
-    cis <- str_split(lns, "\\s+") %>%
+    cis <- str_split(lns, "\\s+") |>
         map_dbl(~ as.numeric(.x[[2]]))
     return(cis)
 })
@@ -143,12 +143,12 @@ map(1:nrow(mcmc_cis[[1]]),
        function(i) {
            # z <- function(x) diff(range(x))
            z <- function(x) diff(range(x)) / abs(mean(x))
-           a <- map_dbl(1:4, ~ mcmc_cis[[.x]][i,1]) %>%
+           a <- map_dbl(1:4, ~ mcmc_cis[[.x]][i,1]) |>
                z()
-           b <- map_dbl(1:4, ~ mcmc_cis[[.x]][i,2]) %>%
+           b <- map_dbl(1:4, ~ mcmc_cis[[.x]][i,2]) |>
                z()
            return(c(a, b))
-       }) %>%
+       }) |>
     do.call(what = rbind)
 
 #'
@@ -189,6 +189,6 @@ rbind(c(3.016680e-03, 4.227490e-03),
       c(3.510659e-03, 4.838743e-03),
       c(4.039384e-03, 2.192982e-03),
       c(2.322206e-02, 7.848523e-03),
-      c(1.471054e-06, 6.347454e-07)) %>%
+      c(1.471054e-06, 6.347454e-07)) |>
     mean()
 

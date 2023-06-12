@@ -24,11 +24,11 @@ lab_dbs <- function(x) {
 tany_anno_df <- read_tsv("~/_data/annotation/tany_mantis_new/output_annotation.tsv")
 
 # Total number of proteins annotated:
-tany_anno_df[["Query"]] %>% unique() %>% length()
+tany_anno_df[["Query"]] |> unique() |> length()
 
-tany_anno_df %>%
-    mutate(db = lab_dbs(Ref_file)) %>%
-    group_by(db) %>%
+tany_anno_df |>
+    mutate(db = lab_dbs(Ref_file)) |>
+    group_by(db) |>
     summarize(n_proteins= length(unique(Query)))
 # 1 eggNOG      10242
 # 2 KOfam       12225
@@ -40,11 +40,11 @@ tany_anno_df %>%
 pstein_anno_df <- read_tsv("~/_data/annotation/Pstein_mantis/output_annotation.tsv")
 
 # Total number of proteins annotated:
-pstein_anno_df[["Query"]] %>% unique() %>% length()
+pstein_anno_df[["Query"]] |> unique() |> length()
 
-pstein_anno_df %>%
-    mutate(db = lab_dbs(Ref_file)) %>%
-    group_by(db) %>%
+pstein_anno_df |>
+    mutate(db = lab_dbs(Ref_file)) |>
+    group_by(db) |>
     summarize(n_proteins= length(unique(Query)))
 # 1 eggNOG      10731
 # 2 KOfam       12517
@@ -65,20 +65,20 @@ tag_interest <- c("go", "kegg_ko", "cog", "enzyme_ec", "kegg_pathway")
 
 
 tany_anno_tags <- read_lines(paste0("~/_data/annotation/tany_mantis_new/",
-                                     "consensus_annotation.tsv")) %>%
-    str_split("\t") %>%
-    .[-1] %>%
+                                     "consensus_annotation.tsv")) |>
+    str_split("\t") |>
+    .[-1] |>
     map(function(x) {
-        x[-1:-6] %>%
-            str_split(":") %>%
-            map_chr(~ .x[[1]]) %>%
+        x[-1:-6] |>
+            str_split(":") |>
+            map_chr(~ .x[[1]]) |>
             unique()
     })
 
-tibble(term = do.call(c, tany_anno_tags)) %>%
-    filter(term %in% tag_interest) %>%
-    group_by(term) %>%
-    summarize(n_proteins = n()) %>%
+tibble(term = do.call(c, tany_anno_tags)) |>
+    filter(term %in% tag_interest) |>
+    group_by(term) |>
+    summarize(n_proteins = n()) |>
     arrange(desc(n_proteins))
 # 1 kegg_ko            9804
 # 2 go                 6855
@@ -88,20 +88,20 @@ tibble(term = do.call(c, tany_anno_tags)) %>%
 
 
 pstein_anno_tags <- read_lines(paste0("~/_data/annotation/Pstein_mantis/",
-                                    "consensus_annotation.tsv")) %>%
-    str_split("\t") %>%
-    .[-1] %>%
+                                    "consensus_annotation.tsv")) |>
+    str_split("\t") |>
+    .[-1] |>
     map(function(x) {
-        x[-1:-6] %>%
-            str_split(":") %>%
-            map_chr(~ .x[[1]]) %>%
+        x[-1:-6] |>
+            str_split(":") |>
+            map_chr(~ .x[[1]]) |>
             unique()
     })
 
-tibble(term = do.call(c, pstein_anno_tags)) %>%
-    filter(term %in% tag_interest) %>%
-    group_by(term) %>%
-    summarize(n_proteins = n()) %>%
+tibble(term = do.call(c, pstein_anno_tags)) |>
+    filter(term %in% tag_interest) |>
+    group_by(term) |>
+    summarize(n_proteins = n()) |>
     arrange(desc(n_proteins))
 # 1 kegg_ko            9660
 # 2 go                 7011

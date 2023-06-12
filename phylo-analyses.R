@@ -26,23 +26,23 @@ Polypedilum pembai\t122.92\t15068\tNA\tNA
 Belgica antarctica\t89.58\t13517\t0.4\t333
 Clunio marinus\t85.49\t22620\t6.86\t383.5
 Propsilocerus akamusi\t85.84\t11942\t6.38\t528.6
-Parochlus steinenii\t143.57\t14838\t12.38\t567.1" %>%
-    read_tsv(col_types = "cdddd") %>%
-    set_names(c("species", "length", "genes", "repeats", "intron_len")) %>%
+Parochlus steinenii\t143.57\t14838\t12.38\t567.1" |>
+    read_tsv(col_types = "cdddd") |>
+    set_names(c("species", "length", "genes", "repeats", "intron_len")) |>
     filter(!is.na(genes) | !is.na(repeats) | !is.na(intron_len))
 
 #' Version without Polypedilum pembai bc it doesn't have repeats or intron data
-chir_df2 <- chir_df %>%
+chir_df2 <- chir_df |>
     filter(!is.na(repeats) & !is.na(intron_len))
 
 #' A third one also without Chironomus tentans to see how much it affects
 #' the intron analysis bc it has such a high value.
-chir_df3 <- chir_df2 %>%
+chir_df3 <- chir_df2 |>
     filter(species != "Chironomus tentans")
 
 
 #' time tree:
-chir_tr <- read.mcmctree("~/_data/phylo/chir_mcmctree/mcmc_1/FigTree.tre") %>%
+chir_tr <- read.mcmctree("~/_data/phylo/chir_mcmctree/mcmc_1/FigTree.tre") |>
     .@phylo
 chir_tr$tip.label <- gsub("_", " ", chir_tr$tip.label)
 chir_tr <- keep.tip(chir_tr, chir_df$species)
@@ -86,19 +86,19 @@ m_li$d
 
 
 
-lg_p <- chir_df %>%
+lg_p <- chir_df |>
     ggplot(aes(length, genes / 1000)) +
     geom_point() +
     xlab(NULL) +
     ylab("Thousands of genes")
 
-lr_p <- chir_df %>%
+lr_p <- chir_df |>
     ggplot(aes(length, repeats)) +
     geom_point(na.rm = TRUE) +
     xlab("Genome size (Mb)") +
     ylab("Repeats (%)")
 
-li_p <- chir_df %>%
+li_p <- chir_df |>
     ggplot(aes(length, intron_len)) +
     geom_point(na.rm = TRUE) +
     xlab(NULL) +
@@ -120,15 +120,15 @@ save_plot(n = "size_structure", p = length_p, w = 6.5, h = 2.5)
 
 library(phylolm)
 
-pl_chir_df <- chir_df %>% as.data.frame()
+pl_chir_df <- chir_df |> as.data.frame()
 rownames(pl_chir_df) <- pl_chir_df$species
 
-pl_chir_df2 <- chir_df2 %>% as.data.frame()
+pl_chir_df2 <- chir_df2 |> as.data.frame()
 rownames(pl_chir_df2) <- pl_chir_df2$species
 
-phylolm(genes ~ length, pl_chir_df, chir_tr, model = "OUfixedRoot") %>% summary()
-phylolm(repeats ~ length, pl_chir_df2, chir_tr2) %>% summary()
-phylolm(intron_len ~ length, pl_chir_df2, chir_tr2) %>% summary()
+phylolm(genes ~ length, pl_chir_df, chir_tr, model = "OUfixedRoot") |> summary()
+phylolm(repeats ~ length, pl_chir_df2, chir_tr2) |> summary()
+phylolm(intron_len ~ length, pl_chir_df2, chir_tr2) |> summary()
 
 
 

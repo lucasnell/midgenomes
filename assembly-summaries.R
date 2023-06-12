@@ -19,19 +19,19 @@ save_plot <- function(n, p, w, h, ...) {
 
 # Adjust data frame to use for plotting BUSCO info.
 prep_busco <- function(.df) {
-    .df %>%
+    .df |>
         mutate(across(all_of(c("BUSCO_C-S", "BUSCO_C-D", "BUSCO_F", "BUSCO_M")),
-                      ~ 100 * .x / BUSCO_n)) %>%
-        select(-busco_text, -BUSCO_C, -BUSCO_n) %>%
-        pivot_longer(starts_with("BUSCO"), names_to = "b_class") %>%
+                      ~ 100 * .x / BUSCO_n)) |>
+        select(-busco_text, -BUSCO_C, -BUSCO_n) |>
+        pivot_longer(starts_with("BUSCO"), names_to = "b_class") |>
         mutate(b_class = case_when(b_class == "BUSCO_C-S" ~ "complete (C) and single-copy (S)",
                                    b_class == "BUSCO_C-D" ~ "complete (C) and duplicated (D)",
                                    b_class == "BUSCO_F" ~ "fragmented (F)",
                                    b_class == "BUSCO_M" ~ "missing (M)",
-                                   TRUE ~ NA_character_) %>%
+                                   TRUE ~ NA_character_) |>
                    factor(levels = c("complete (C) and single-copy (S)",
                                      "complete (C) and duplicated (D)",
-                                     "fragmented (F)", "missing (M)") %>%
+                                     "fragmented (F)", "missing (M)") |>
                               rev()))
 }
 # Fill scale for BUSCO classes
@@ -95,10 +95,10 @@ Flye,> medaka,97.873717,1052,0.939342,92,3.738528,0,2987,2907,80,59,239,3285
 Flye,> purge_dups,91.893637,333,0.993865,203,3.738528,0,2987,2946,41,59,239,3285
 quickmerge,quickmerge,92.331558,45,7.052781,16049,12.427199,0,2991,2959,32,57,237,3285
 quickmerge,> medaka,92.029278,45,7.024462,16040,12.399045,0,2993,2963,30,57,235,3285
-quickmerge,> NextPolish,91.827299,45,7.014169,16039,12.374712,0,3009,2974,35,49,227,3285" %>%
-    read_csv(col_types = "ccdididiiiiiii") %>%
-    # mutate(step = ifelse(step %in% assembler, "assemble", step) %>%
-    #            str_remove("^> ") %>%
+quickmerge,> NextPolish,91.827299,45,7.014169,16039,12.374712,0,3009,2974,35,49,227,3285" |>
+    read_csv(col_types = "ccdididiiiiiii") |>
+    # mutate(step = ifelse(step %in% assembler, "assemble", step) |>
+    #            str_remove("^> ") |>
     #            # factor(levels = c("assemble", "Racon", "medaka", "purge_dups")),
     #            factor(levels = c("purge_dups", "medaka", "Racon", "assemble")),
     #        busco_text = sprintf("C:%i [S:%i, D:%i], F:%i, M:%i, n:%i",
@@ -118,8 +118,8 @@ busco_labeller <- function(x, .width = 15) {
     str_pad(newx, .width, side = "right")
 }
 
-busco_p <- summ_df %>%
-    prep_busco() %>%
+busco_p <- summ_df |>
+    prep_busco() |>
     ggplot(aes(step_id, value)) +
     geom_col(aes(fill = b_class)) +
     geom_text(data = summ_df,
@@ -141,10 +141,10 @@ busco_p <- summ_df %>%
 save_plot("busco", busco_p, 5, 4.5)
 
 
-summ_df %>%
-    select(step, size, n_seqs, N50, min, max) %>%
-    mutate(across(where(is.double), ~ sprintf("%.2f", .x))) %>%
-    format_csv() %>%
+summ_df |>
+    select(step, size, n_seqs, N50, min, max) |>
+    mutate(across(where(is.double), ~ sprintf("%.2f", .x))) |>
+    format_csv() |>
     cat()
 
 
@@ -186,8 +186,8 @@ smart + next,92.111530,56,5.384500,6612,11.627627,0,2987,2954,33,56,242,3285
 (next + flye) + (smart + necat),93.060578,40,7.052781,17544,13.245146,0,2977,2902,75,59,249,3285
 (smart + necat) + (next + flye),90.208033,41,8.576887,6612,14.248256,0,2907,2854,53,56,322,3285
 (next + flye) + (smart + next),92.331558,45,7.052781,16049,12.427199,0,2991,2959,32,57,237,3285
-(smart + next) + (next + flye),92.008947,46,7.052781,6612,12.428575,0,2988,2953,35,55,242,3285" %>%
-    read_csv(col_types = "cdididiiiiiii") %>%
+(smart + next) + (next + flye),92.008947,46,7.052781,6612,12.428575,0,2988,2953,35,55,242,3285" |>
+    read_csv(col_types = "cdididiiiiiii") |>
     mutate(busco_text = sprintf("C:%i [S:%i, D:%i], F:%i, M:%i, n:%i",
                                 BUSCO_C,`BUSCO_C-S`,`BUSCO_C-D`,BUSCO_F,
                                 BUSCO_M,BUSCO_n))
@@ -198,17 +198,17 @@ smart + next,92.111530,56,5.384500,6612,11.627627,0,2987,2954,33,56,242,3285
 #' final assembly.
 besties <- c("next + flye", "next + smart", "smart + necat", "smart + next",
              "(next + flye) + (smart + next)")
-merge_summ_df <- merge_summ_df %>%
+merge_summ_df <- merge_summ_df |>
     mutate(perm = ifelse(perm %in% besties, paste("*", perm), paste(" ", perm)),
            # Change all to 4 characters:
-           perm = str_replace_all(perm, "necat", "neca") %>%
+           perm = str_replace_all(perm, "necat", "neca") |>
                str_replace_all("smart", "smar"),
            # Order in CSV is reverse from what should be plotted:
            perm = factor(perm, levels = rev(perm)))
 
 
-merge_busco_p <- merge_summ_df %>%
-    prep_busco() %>%
+merge_busco_p <- merge_summ_df |>
+    prep_busco() |>
     ggplot(aes(perm, value)) +
     geom_col(aes(fill = b_class)) +
     geom_text(data = merge_summ_df, aes(y = 5, label = busco_text), hjust = 0,
