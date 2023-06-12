@@ -19,11 +19,11 @@ export PREFIX=chir_phy
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
-cp ${TARGET}/${ML_TREE_NAME}.gz ./ && gunzip ${ML_TREE_NAME}
+cp ${TARGET}/${ML_TREE_NAME} ./
 
 #' combine bootstrapped trees:
 export ALL_BOOTS=chir_phy_all.raxml.bootstraps
-for t in ${TARGET}/chir_raxml_boot_*; do
+for t in ${TARGET}/chir_raxml_boot_*.tar.gz; do
     tar -xzf ${t} -C ./
     boot_dir=$(basename ${t} | sed 's/\.tar\.gz//g')
     cat ${boot_dir}/chir_phy.raxml.bootstraps >> ${ALL_BOOTS}
@@ -34,7 +34,7 @@ done
 
 #' Did the boostraps converge? (--bs-cutoff 0.01 is extra strict)
 raxml-ng --bsconverge --bs-trees ${ALL_BOOTS} --prefix chir_bsconverge \
-    --seed 685724815 --threads ${THREADS} --bs-cutoff 0.01
+    --seed 1171609222 --threads ${THREADS} --bs-cutoff 0.01
 
 
 

@@ -49,6 +49,7 @@ check_exit_status "move, extract alignments" $?
 raxml-ng --bootstrap --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} \
     --bs-trees 100 \
     --threads ${THREADS} --extra thread-pin \
+    --force perf_threads \
     --outgroup Mdomes \
     --data-type AA \
     --model LG+I+G \

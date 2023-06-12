@@ -30,8 +30,9 @@ spp_name_map <- list("Aaegyp" = "Aedes aegypti",
                      "Tgraci" = "Tanytarsus gracilentus")
 
 
-#' Tree from RAxML-NG with bootstrap (n = 100) branch support
-boot_tr <- read.tree("~/_data/_phylo/chir_raxml_boot_0/chir_phy_support_0.raxml.support")
+#' Tree from RAxML-NG with bootstrap (n = 1000) branch support
+#' using Felsenstein bootstrap
+boot_tr <- read.tree("~/_data/_phylo/chir_raxml_supp/chir_supp.raxml.supportFBP")
 ml_tr <- read.tree("~/_data/_phylo/chir_ml.tree")
 ml_tr$node.label <- boot_tr$node.label
 ml_tr$tip.label <- map_chr(ml_tr$tip.label, ~ spp_name_map[[.x]])
