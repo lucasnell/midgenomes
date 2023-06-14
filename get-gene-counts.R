@@ -7,11 +7,11 @@ library(tidyverse)
 #'
 
 
-spp_df <- tibble(spp = c("Aaegyp", "Asteph", "Bantar", "Cquinq",
+spp_df <- tibble(spp = c("Aaegyp", "Asteph", "Bantar", "Cmarin", "Cquinq",
                          "Cripar", "Csonor", "Ctenta", "Mdomes",
                          "Pakamu", "Ppemba", "Pstein", "Pvande",
                          "Tgraci"),
-                 source = c("VectorBase", "VectorBase", "InsectBase", "VectorBase",
+                 source = c("VectorBase", "VectorBase", "InsectBase", "InsectBase", "VectorBase",
                             "GenBank", "here", "InsectBase", "InsectBase",
                             "InsectBase", "InsectBase", "here", "InsectBase",
                             "here"))
@@ -60,10 +60,11 @@ for (i in 1:nrow(spp_df)) {
 }
 
 
-# Run on 2023-06-06
+# Run on 2023-06-12
 # Aaegyp	14718
 # Asteph	12705
 # Bantar	10853
+# Cmarin	21259
 # Cquinq	15094
 # Cripar	16522
 # Csonor	18080
