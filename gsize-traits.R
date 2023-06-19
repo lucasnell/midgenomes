@@ -203,33 +203,6 @@ map(rep_mods, \(z) z$bootconfint95)
 
 
 
-#' ===========================================================================
-#' ===========================================================================
-#  Ancestral reconstructions ----
-#' ===========================================================================
-#' ===========================================================================
-
-
-recon_df <- map_dfr(c("log_gsize", "log_intron_len", "n_introns", "n_prots",
-                      levels(rep_df$class)),
-        \(x) {
-            if (x %in% levels(rep_df$class)) {
-                xd <- rep_prop_df[dip_tr$tip.label, x]
-            } else {
-                xd <- gstat_df[dip_tr$tip.label, x]
-            }
-            names(xd) <- dip_tr$tip.label
-            n <- length(xd)
-            xr <- reconstruct(xd, dip_tr, method = "GLS_OUS", CI = TRUE)
-            tibble(trait = x,
-                   node = c(1:n, as.integer(names(xr$ace))),
-                   est = c(xd, unname(xr$ace)),
-                   lo = c(rep(NA, n), xr$CI95[,"lower"]),
-                   hi = c(rep(NA, n), xr$CI95[,"upper"]))
-        }) |>
-    mutate(trait = factor(trait, levels = unique(recon_df$trait)))
-
-
 
 
 #' ===========================================================================
@@ -347,33 +320,6 @@ rep_p <- rep_df |>
     plot_layout(widths = c(0.5, 1), nrow = 1)
 
 
-
-
-#' ===========================================================================
-#' ===========================================================================
-#  Plots - node traits ----
-#' ===========================================================================
-#' ===========================================================================
-
-
-trt <- levels(recon_df$trait)[1]
-
-td <- recon_df |>
-    filter(trait == trt) |>
-    select(-trait)
-
-p_dip_tr |>
-    ggtree() %<+% td +
-    geom_rootedge(0.04) +
-    geom_tippoint(aes(color = est), size = 3) +
-    scale_color_distiller("Genome\nsize (Mb)",
-                       # option = "rocket", end = 0.9,
-                        palette = "RdBu",
-                          breaks = log10(100 * 2^(0:3)) + 6,
-                          labels = 100 * 2^(0:3))
-
-
-ggtree(tree, aes(color=est), continuous = "colour", size = 2)
 
 
 
