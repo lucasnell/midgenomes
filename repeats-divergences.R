@@ -89,7 +89,7 @@ ds_df <- species |>
 ds_df |>
     filter(Div <= 50) |>
     # Remove non-TE elements:
-    filter(!class %in% c("RC", "Small_RNA", "Satellite", "Simple_repeat")) |>
+    filter(!class %in% c("RC", "Small_RNA", "Satellite", "Simple_repeat", "Low_complexity")) |>
     ggplot(aes(Div, perc, fill = plot_class)) +
     geom_bar(stat = "identity") +
     # scale_fill_brewer(NULL, palette = "Dark2") +

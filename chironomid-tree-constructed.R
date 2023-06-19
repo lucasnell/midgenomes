@@ -70,10 +70,18 @@ time_tr@phylo$tip.label <- map_chr(time_tr@phylo$tip.label, ~ spp_name_map[[.x]]
 
 
 
+# Use this to find nodes you want to label:
+ggtree(time_tr) + geom_text(aes(label=node), hjust=-.3)
+
+# then to label the nodes, use...
+# geom_cladelabel(node = X, label = "CLADE NAME", offset = 0.8, align = TRUE)
+# OR
+# geom_hilight(node = X, fill = "COLOR")
+
+
 time_tr_p0 <- ggtree(time_tr) +
     geom_rootedge(0.04) +
     geom_tiplab(size = 10 / 2.83465, fontface = "italic") +
-    geom_nodelab(size = 8 / 2.83465, nudge_x = -0.025, nudge_y = 0.25) +
     geom_range("CI", color = "dodgerblue", size = 3, alpha = 0.5,
                center = "reltime") +
     theme_tree2()

@@ -25,17 +25,17 @@ spp_df  <- tibble(species = c("Aaegyp", "Asteph", "Bantar", "Cquinq", "Cripar",
                                        "Pstein", "Csonor", "Cquinq", "Aaegyp",
                                        "Asteph", "Mdomes")))
 
-spp_pal <- viridisLite::turbo(100, begin = 0, end = 1)[rev(c(45, 15+4*0:2, 60, 70+4*0:7))]
+spp_pal <- turbo(100)[c(70+4*0:7, 60, 15+4*2:0, 30)]
 
 
 intron_df <- map_dfr(spp_df$species, \(.spp) {
     sprintf("_data/introns-%s.csv.xz", .spp) |>
         read_csv(col_types = cols(), progress = FALSE) |>
         mutate(species = .spp, family = spp_df$family[spp_df$species == .spp],
-               length = as.integer(end - start + 1)) |>
-        select(family, species, gene, id, length)
+               intron_len = as.integer(end - start + 1)) |>
+        select(family, species, gene, id, intron_len)
 }) |>
-    mutate(loglen = log10(length))
+    mutate(log_intron_len = log10(intron_len))
 
 
 
@@ -49,7 +49,7 @@ intron_df <- map_dfr(spp_df$species, \(.spp) {
 
 
 intron_df |>
-    ggplot(aes(x = loglen, y = species, fill = species)) +
+    ggplot(aes(x = log_intron_len, y = species, fill = species)) +
     geom_density_ridges2(size = 0.25, vline_size = 1,
                          quantile_lines = TRUE, quantile_fun = mean) +
     scale_x_continuous("Intron length (bp)", breaks = 0:3*2,
@@ -108,7 +108,7 @@ n_intron_df |>
 
 sum_intron_df <- intron_df |>
     group_by(family, species, gene) |>
-    summarize(sum_introns = sum(length), .groups = "drop")
+    summarize(sum_introns = sum(intron_len), .groups = "drop")
 
 #' Showing entire distributions with high values (> 15) shown with points.
 sum_intron_df |>
