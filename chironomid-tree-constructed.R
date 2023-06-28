@@ -53,8 +53,38 @@ ml_tr_p
 # save_plot("tree_ML", ml_tr_p, 6, 3.5)
 
 
+#' Force tree to be ultrametric. Taken from
+#' https://github.com/PuttickMacroevolution/MCMCtreeR/blob/2330e7a9916c3929513ee217d3854be993965f6b/R/readMCMCTree.R#L53-L70
+#'
+force_ultrametric <- function(phy_file) {
+    phy <- read.tree(phy_file)
+    outer <- phy$edge[,2]
+    inner <- phy$edge[,1]
+    totalPath <- c()
+    for(i in which(outer<=Ntip(phy))) {
+        start <- i
+        end <- inner[start]
+        edgeTimes <- phy$edge.length[start]
+        while(end != inner[1]) {
+            start <- which(outer == end)
+            end <- inner[start]
+            edgeTimes <- c(edgeTimes, phy$edge.length[start])
+        }
+        totalPath <- c(totalPath, sum(edgeTimes))
+    }
+    addLength <- max(totalPath) - totalPath
+    phy$edge.length[which(outer <= Ntip(phy))] <- phy$edge.length[
+        which(outer <= Ntip(phy))] + addLength
+    return(phy)
+}
+
 #' I plotted all 4 reps, and they produce the same tree (14 March 2023)
-time_tr <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_1/FigTree.tre")
+time_tr <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_1/FigTree.tre") |>
+    force_ultrametric()
+
+# write.tree(time_tr@phylo, "~/_data/_phylo/chir_mcmctree.nwk")
+
+
 
 
 # map(1:4, function(i) {
