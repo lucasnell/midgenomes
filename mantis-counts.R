@@ -1,5 +1,7 @@
 
 #' Summarize output from mantis
+#' Updated on 2023-06-23
+
 
 library(tidyverse)
 
@@ -21,37 +23,38 @@ lab_dbs <- function(x) {
         TRUE ~ NA_character_)
 }
 
-tany_anno_df <- read_tsv("~/_data/annotation/tany_mantis_new/output_annotation.tsv")
+tany_anno_df <- read_tsv("~/_data/_go-terms/zzz-mantis-full/Tgraci_mantis/output_annotation.tsv")
 
 # Total number of proteins annotated:
 tany_anno_df[["Query"]] |> unique() |> length()
+# [1] 13424
+
 
 tany_anno_df |>
     mutate(db = lab_dbs(Ref_file)) |>
     group_by(db) |>
     summarize(n_proteins= length(unique(Query)))
-# 1 eggNOG      10242
-# 2 KOfam       12225
-# 3 NPFM         3764
-# 4 Pfam        12163
-# 5 TCDB         1551
+# 1 KOfam       12161
+# 2 NPFM         3772
+# 3 Pfam        12090
+# 4 TCDB         1543
+# 5 eggNOG      10182
 
-
-pstein_anno_df <- read_tsv("~/_data/annotation/Pstein_mantis/output_annotation.tsv")
+pstein_anno_df <- read_tsv("~/_data/_go-terms/zzz-mantis-full/Pstein_mantis/output_annotation.tsv")
 
 # Total number of proteins annotated:
 pstein_anno_df[["Query"]] |> unique() |> length()
+# [1] 14003
 
 pstein_anno_df |>
     mutate(db = lab_dbs(Ref_file)) |>
     group_by(db) |>
     summarize(n_proteins= length(unique(Query)))
-# 1 eggNOG      10731
-# 2 KOfam       12517
-# 3 NPFM         3851
-# 4 Pfam        12443
-# 5 TCDB         1710
-
+# 1 KOfam       12592
+# 2 NPFM         3851
+# 3 Pfam        12516
+# 4 TCDB         1756
+# 5 eggNOG      11024
 
 
 #' -------------------------------------------------
@@ -64,10 +67,10 @@ pstein_anno_df |>
 tag_interest <- c("go", "kegg_ko", "cog", "enzyme_ec", "kegg_pathway")
 
 
-tany_anno_tags <- read_lines(paste0("~/_data/annotation/tany_mantis_new/",
+tany_anno_tags <- read_lines(paste0("~/_data/_go-terms/zzz-mantis-full/Tgraci_mantis/",
                                      "consensus_annotation.tsv")) |>
     str_split("\t") |>
-    .[-1] |>
+    base::`[`(-1) |>
     map(function(x) {
         x[-1:-6] |>
             str_split(":") |>
@@ -80,17 +83,17 @@ tibble(term = do.call(c, tany_anno_tags)) |>
     group_by(term) |>
     summarize(n_proteins = n()) |>
     arrange(desc(n_proteins))
-# 1 kegg_ko            9804
-# 2 go                 6855
-# 3 cog                3800
-# 4 enzyme_ec          3555
-# 5 kegg_pathway       2946
+# 1 kegg_ko            9753
+# 2 go                 6834
+# 3 cog                3785
+# 4 enzyme_ec          3566
+# 5 kegg_pathway       2927
 
 
-pstein_anno_tags <- read_lines(paste0("~/_data/annotation/Pstein_mantis/",
+pstein_anno_tags <- read_lines(paste0("~/_data/_go-terms/zzz-mantis-full/Pstein_mantis/",
                                     "consensus_annotation.tsv")) |>
     str_split("\t") |>
-    .[-1] |>
+    base::`[`(-1) |>
     map(function(x) {
         x[-1:-6] |>
             str_split(":") |>
@@ -103,11 +106,11 @@ tibble(term = do.call(c, pstein_anno_tags)) |>
     group_by(term) |>
     summarize(n_proteins = n()) |>
     arrange(desc(n_proteins))
-# 1 kegg_ko            9660
-# 2 go                 7011
-# 3 cog                3933
-# 4 enzyme_ec          3505
-# 5 kegg_pathway       2962
+# 1 kegg_ko            9675
+# 2 go                 7095
+# 3 cog                4009
+# 4 enzyme_ec          3517
+# 5 kegg_pathway       3074
 
 
 

@@ -56,60 +56,6 @@ gnums11 <- orig_gnums |>
 #' ===========================================================================
 #' ===========================================================================
 #'
-#' Can I use the Orthogroup_Sequences folder?
-#'
-#' ===========================================================================
-#' ===========================================================================
-
-
-#' The Orthogroup_Sequences contains sequences for orthogroups, but I *think*
-#' these sequences might be from the "normal" orthogroups, not the
-#' "Phylogenetic Hierarchical Orthogroups" that OrthoFinder now recommends
-#' using because they're more accurate.
-
-#' When we filter for exactly 1 gene for all species, 3 OGs are repeated.
-#' Other OGs are unique.
-gnums11 |> nrow()
-gnums11 |>
-    distinct(OG, .keep_all = TRUE) |>
-    nrow()
-gnums11 |>
-    filter(OG %in% OG[duplicated(OG)]) |>
-    select(HOG, OG, starts_with("Gene"))
-
-
-#' Number of sequences and sequence names for each OG from the
-#' Orthogroup_Sequences folder
-os_df <- gnums11 |>
-    distinct(OG) |>
-    mutate(os_names = map(OG,
-                       \(og) {
-                           fn <- ofd("Orthogroup_Sequences/", og, ".fa")
-                           read_lines(fn) |>
-                               keep(\(x) grepl("^>", x)) |>
-                               str_remove_all("^>")
-                       }),
-           os_n = map_int(os_names, length))
-
-#' I could go on, but we can see here that many of the Orthogroups from
-#' Orthogroup_Sequences that should be 1-to-1 based on the HOG categorization
-#' contain a number of sequences (i.e., genes) that are not equal to
-#' the number of species:
-
-# Numbers of genes:
-os_df |>
-    arrange(desc(os_n))
-# Number of species:
-orig_gnames |>
-    select(Aaegyp:Tgraci) |>
-    ncol()
-
-
-
-
-#' ===========================================================================
-#' ===========================================================================
-#'
 #' Extracting sequences for 1-to-1 HOGs:
 #'
 #' ===========================================================================
@@ -283,10 +229,10 @@ for (node in c("N1", "N3", "N5")) {
 #'
 #' Number of single-copy HOGs by node:
 #'
-#' N0 = 1,735
-#' N1 = 1,922
-#' N3 = 2,460
-#' N5 = 3,443
+#' N0 = 1,736
+#' N1 = 1,925
+#' N3 = 2,463
+#' N5 = 3,441
 #'
 
 for (node in c("N0", "N1", "N3", "N5")) {
@@ -312,10 +258,10 @@ for (node in c("N0", "N1", "N3", "N5")) {
 #'
 #' Number of total HOGs by node:
 #'
-#' N0 = 19,575
-#' N1 = 19,534
-#' N3 = 17,918
-#' N5 = 16,794
+#' N0 = 19,565
+#' N1 = 19,516
+#' N3 = 17,880
+#' N5 = 16,760
 #'
 #'
 
