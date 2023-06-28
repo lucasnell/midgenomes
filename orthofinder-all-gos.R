@@ -39,12 +39,6 @@ trans2genes <- function(trans) {
 }
 
 
-#' Species with especially good annotations that we want to use for GO terms
-spp_priority <- c("Aaegyp", "Mdomes", "Asteph", "Cquinq", "Pvande", "Pakamu",
-                  "Cripar", "Ppemba", "Ctenta", "Bantar",
-                  "Pstein", "Tgraci", "Csonor", "Cmarin")
-
-
 for (.node in c("N0", "N1", "N3", "N5")) {
 
     node_df <- ofd("Phylogenetic_Hierarchical_Orthogroups/", .node, ".tsv") |>
@@ -136,31 +130,17 @@ for (.node in c("N0", "N1", "N3", "N5")) {
         dir.create(ofd("All_HOG_GO"), recursive = TRUE)
     }
 
-    # LEFT OFF ----
-    # use `spp_priority` to search GO terms, instead of using all species
-
     #' summarize by just HOG, not species:
-    # node_go_hog_df <-
-    x = node_go_df |>
+    node_go_hog_df <- node_go_df |>
         mutate(go = str_split(go, ";"),
                go = map(go, \(x) {
                    if (all(is.na(x))) return(NULL) else return(x)
                })) |>
-        split(~ hog) |>
-        getElement(1)
-
-
-    node_go_df |>
         group_by(hog) |>
-
-
-    x$go[x$species == spp_priority[1]]
-
-    # |>
-    #     summarize(go = do.call(c, go) |>
-    #                   unique() |>
-    #                   paste(collapse = ";"),
-    #               .groups = "drop")
+        summarize(go = do.call(c, go) |>
+                      unique() |>
+                      paste(collapse = ";"),
+                  .groups = "drop")
 
 
     fn1 <- paste0(.node, "-GO-by-species-genes.tsv")
