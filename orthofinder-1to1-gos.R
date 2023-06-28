@@ -25,12 +25,18 @@ god <- function(...) {
 #' This removes transcript id that's an extension separated by
 #' either the last '-' or '.'
 #' This converts the transcript id to a gene id.
-tran2gene <- function(tran) {
-    loc <- tail(str_locate_all(tran, "\\.|-")[[1]][,"end"], 1)
-    if (length(loc) == 0) return(tran)
-    return(str_sub(tran, 1, loc-1))
+trans2genes <- function(trans) {
+    locs <- str_locate_all(trans, "\\.|-") |>
+        map_int(\(x) {
+            if (nrow(x) == 0) return(NA_integer_)
+            x[nrow(x),"end"]
+        })
+    out <- character(length(trans))
+    out[is.na(locs)] <- trans[is.na(locs)]
+    out[!is.na(locs)] <- str_sub(trans[!is.na(locs)], 1,
+                                 locs[!is.na(locs)]-1)
+    return(out)
 }
-
 
 for (.node in c("N0", "N1", "N3", "N5")) {
 
@@ -47,7 +53,7 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                       gene = hog_lines |>
                           map(\(x) {
                               str_remove_all(x, ".*__") |>
-                                  map_chr(tran2gene)
+                                  trans2genes()
                           })) |>
         select(-hog_files, -hog_lines) |>
         unnest(species:gene) |>
@@ -77,7 +83,8 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                                             "DB Object Type", "Taxon(|taxon)",
                                             "Date", "Assigned By",
                                             "Annotation Extension",
-                                            "Gene Product Form ID")) |>
+                                            "Gene Product Form ID"),
+                              progress = FALSE) |>
                 select(`DB Object ID`, `GO ID`) |>
                 set_names(c("gene", "go")) |>
                 filter(gene %in% sp_genes) |>
@@ -88,16 +95,17 @@ for (.node in c("N0", "N1", "N3", "N5")) {
 
             go_df <- read_tsv(go_file, col_types = cols(),
                               col_names = c("gene", "desc", "uniprot",
-                                            "go", "kegg", "pfam")) |>
+                                            "go", "kegg", "pfam"),
+                              progress = FALSE) |>
                 # These ones use transcript IDs instead of genes:
-                mutate(gene = tran2gene(gene),
+                mutate(gene = trans2genes(gene),
                        go = tolower(go) |> str_replace_all(", ", ";")) |>
                 select(gene, go) |>
                 filter(!is.na(go))
 
         } else if (grepl(".tsv$", go_file)) {
 
-            go_df <- read_lines(go_file) |>
+            go_df <- read_lines(go_file, progress = FALSE) |>
                 base::`[`(-1) |>
                 str_split("\t") |>
                 mclapply(\(x) {
@@ -107,7 +115,7 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                                        tolower(paste(gox, collapse = ";"))))
                 }) |>
                 do.call(what = bind_rows) |>
-                mutate(gene = tran2gene(gene)) |>
+                mutate(gene = trans2genes(gene)) |>
                 filter(!is.na(go))
 
         } else {

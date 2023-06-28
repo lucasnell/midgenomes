@@ -23,10 +23,17 @@ god <- function(...) {
 #' This removes transcript id that's an extension separated by
 #' either the last '-' or '.'
 #' This converts the transcript id to a gene id.
-tran2gene <- function(tran) {
-    loc <- tail(str_locate_all(tran, "\\.|-")[[1]][,"end"], 1)
-    if (length(loc) == 0) return(tran)
-    return(str_sub(tran, 1, loc-1))
+trans2genes <- function(trans) {
+    locs <- str_locate_all(trans, "\\.|-") |>
+        map_int(\(x) {
+            if (nrow(x) == 0) return(NA_integer_)
+            x[nrow(x),"end"]
+        })
+    out <- character(length(trans))
+    out[is.na(locs)] <- trans[is.na(locs)]
+    out[!is.na(locs)] <- str_sub(trans[!is.na(locs)], 1,
+                                 locs[!is.na(locs)]-1)
+    return(out)
 }
 
 
