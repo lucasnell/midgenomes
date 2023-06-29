@@ -102,9 +102,12 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                 str_split("\t") |>
                 mclapply(\(x) {
                     gox <- x[startsWith(x, "go")]
-                    tibble(gene = x[[1]],
-                           go = ifelse(length(gox) == 0, NA_character_,
-                                       tolower(paste(gox, collapse = ";"))))
+                    # Some weird ones were "go:GO" for some reason:
+                    gox <- gox[gsub("[0-9]+", "", gox) == "go:"]
+                    if (length(gox) > 0) {
+                        goxx <- tolower(paste(gox, collapse = ";"))
+                    } else goxx <- NA_character_
+                    tibble(gene = x[[1]], go = goxx)
                 }) |>
                 do.call(what = bind_rows) |>
                 mutate(gene = trans2genes(gene)) |>
@@ -115,7 +118,21 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                  basename(go_file), "' not recognized")
         }
 
-        go_df$species <- sp
+        # Make sure all GO terms are sensible:
+        go_df$go <- go_df$go |>
+            str_remove_all("go:") |>
+            str_split(";") |>
+            map_chr(\(x) {
+                # GO terms are 7 digits:
+                x <- x[!grepl("\\D", x) & nchar(x) == 7]
+                if (length(x) == 0) return(NA_character_)
+                x <- paste0("go:", x, collapse = ";")
+                return(x)
+            })
+
+        go_df <- go_df |>
+            filter(!is.na(go)) |>
+            mutate(species = sp)
 
         return(go_df)
 
@@ -141,7 +158,6 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                       unique() |>
                       paste(collapse = ";"),
                   .groups = "drop")
-
 
     fn1 <- paste0(.node, "-GO-by-species-genes.tsv")
     fn2 <- paste0(.node, "-GO-by-HOG.tsv")
