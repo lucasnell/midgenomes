@@ -30,7 +30,7 @@ cp ${TARGET}/${HOG_FILE}.gz ./  && gunzip ${HOG_FILE}.gz
 check_exit_status "moving, ungzipping HOG file" $?
 
 #' Counts file for input to CAFE
-export COUNTS_FILE=orthofinder-counts-n0.tsv
+export COUNTS_FILE=${HOG_FILE/hogs/counts}
 
 #' Convert HOG file to count file for CAFE input:
 R --vanilla << EOF
@@ -41,6 +41,12 @@ count_df <- count_df[,-which(colnames(count_df) %in%
 #' This species only had ~58% of genes match to orthogroups, so
 #' I'm removing it from the analyses:
 count_df <- count_df[,-which(colnames(count_df) == "Cmarin")]
+
+# If you want to use a node other than N0:
+# count_df <- count_df[,-which(colnames(count_df) == "Mdomes")]
+# cul_spp <- c("Aaegyp","Asteph","Cquinq")
+# count_df <- count_df[,-which(colnames(count_df) %in% c("", cul_spp))]
+
 
 spp_names <- colnames(count_df)[-1]
 
@@ -66,6 +72,13 @@ R --vanilla << EOF
 library(ape)
 phy <- read.tree("${FULL_SPECIES_TREE}")
 phy <- drop.tip(phy, "Cmarin")
+
+# If you want to use a node other than N0:
+# phy <- drop.tip(phy, "Mdomes")
+# cul_spp <- c("Aaegyp","Asteph","Cquinq")
+# phy <- drop.tip(phy, cul_spp)
+
+
 write.tree(phy, "${SPECIES_TREE}")
 EOF
 check_exit_status "Remove Cmarin from phy" $?
@@ -92,6 +105,12 @@ rm $FULL_SPECIES_TREE
 ## write.tree(phy, "${LAMBDA_TREE_CHIR_CERAT}")
 ## EOF
 
+
+
+CAFE_OUT=cafe_k0
+cafe5 -t ${SPECIES_TREE} -i ${COUNTS_FILE} -c ${THREADS} -p \
+    -o ${CAFE_OUT} \
+    | tee ${CAFE_OUT}.out
 
 
 # echo -e "k\t-lnL" >> nLL.txt
