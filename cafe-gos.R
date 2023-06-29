@@ -27,11 +27,6 @@ gc_df <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_change.tab" |>
     # change in count from node 20 to 17 (i.e., to chironomidae):
     mutate(chir_d = `<17>`, hog = FamilyID) |>
     select(hog, chir_d)
-# gc_df <- "~/_data/chir_cafe_test/cafe_k0/Base_change.tab" |>
-#     read_tsv(col_types = paste0(c("c", rep("d", 25)), collapse = "")) |>
-#     # change in count from node 16 to 15 (i.e., to chironomidae):
-#     mutate(chir_d = `<15>`, hog = FamilyID) |>
-#     select(hog, chir_d)
 
 
 #' Start by reading branch probabilities, to get p-value (at node 17),
@@ -40,7 +35,6 @@ gc_df <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_change.tab" |>
 #' I had to do the column names this way because it has a weird extra
 #' tab at the end of the line.
 bp_file <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_branch_probabilities.tab"
-# bp_file <- "~/_data/chir_cafe_test/cafe_k0/Base_branch_probabilities.tab"
 hog_pd_df <- read_tsv(bp_file,
                          na = "N/A", col_types =
                              paste0(c("c", rep("d", 25),"c"), collapse = ""),
@@ -48,7 +42,6 @@ hog_pd_df <- read_tsv(bp_file,
                       col_names = str_split(read_lines(bp_file)[1], "\t")[[1]] |>
                           head(-1)) |>
     rename(hog = `#FamilyID`, pval = `<17>`) |>
-    # rename(hog = `#FamilyID`, pval = `<15>`) |>
     select(hog, pval) |>
     left_join(gc_df, by = "hog")
 
@@ -63,9 +56,6 @@ hog_pd_df |>
 # GO terms for all HOGs:
 hog_gos <- "~/_data/chir_orthofinder/orthofinder-output/All_HOG_GO/N0-GO-by-HOG.tsv" |>
     read_tsv(col_types = cols())
-# hog_gos <- "~/_data/chir_orthofinder/orthofinder-output/All_HOG_GO/N3-GO-by-HOG.tsv" |>
-#     read_tsv(col_types = cols())
-
 
 
 
