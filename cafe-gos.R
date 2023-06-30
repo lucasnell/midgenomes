@@ -53,16 +53,49 @@ hog_pd_df |>
 
 
 
-# GO terms for all HOGs:
-hog_gos <- "~/_data/chir_orthofinder/orthofinder-output/All_HOG_GO/N0-GO-by-HOG.tsv" |>
-    read_tsv(col_types = cols())
+hog_gos <- "~/_data/chir_orthofinder/orthofinder-output/All_HOG_GO/N0-GO-by-species-genes.tsv" |>
+    read_tsv(col_types = cols()) |>
+    filter(!is.na(go)) |>
+    group_by(hog, species) |>
+    summarize(go = go |>
+                  str_split(";") |>
+                  do.call(what = c) |>
+                  unique() |>
+                  toupper() |>
+                  list(),
+              .groups = "drop") |>
+    unnest(go)
+
+
+
+#'
+#' Species with especially good annotations that we want to use for GO terms,
+#' in order from best to worst quality, based on my perception.
+#' I will only take GO terms from the single highest-quality species
+#' (earliest in this list) for each HOG.
+#' If GO terms are not from one of these, I'm not considering them.
+#'
+spp_priority <- c("Aaegyp", "Mdomes", "Asteph", "Cquinq",
+                  "Pvande", "Pakamu", "Cripar")
+# , "Ppemba", "Ctenta", "Bantar",
+# "Pstein", "Tgraci", "Csonor", "Cmarin")
+
+
 
 
 
 #' All N0 HOGs with GO terms and descriptions.
 #' No filtering for whether they rapidly evolved at node 17 yet!
 chir_hogs <- hog_pd_df |>
-    mutate(go = map_chr(hog, \(h) hog_gos$go[hog_gos$hog == h]) |> toupper()) |>
+    mutate(go = map_chr(hog, \(h) {
+        hog_gos_h <- hog_gos[hog_gos$hog == h & hog_gos$species %in% spp_priority,]
+        all_gos_h <- hog_gos_h$go
+        if (length(all_gos_h) == 0) return(NA_character_)
+        if (length(all_gos_h) == 1) return(all_gos_h)
+        hog_gos_h$species <- factor(hog_gos_h$species, levels = spp_priority)
+        go <- toupper(arrange(hog_gos_h, species)[["go"]][[1]])
+        return(go)
+    })) |>
     filter(!is.na(go)) |>
     mutate(go = str_split(go, ";")) |>
     unnest(go) |>
@@ -70,6 +103,7 @@ chir_hogs <- hog_pd_df |>
     # remove GO terms that weren't found in DB bc they're obsolete:
     filter(!is.na(term)) |>
     mutate(phred = -log(pval))
+
 
 
 term2gene <- chir_hogs |>
