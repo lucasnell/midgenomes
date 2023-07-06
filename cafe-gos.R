@@ -1,7 +1,11 @@
 
+
+
 library(clusterProfiler)
 library(GO.db)
 # ^^ make sure these are loaded before tidyverse ^^
+library(rrvgo)
+library(org.Dm.eg.db)
 library(tidyverse)
 
 #' #' Show node names of cafe tree:
@@ -19,13 +23,14 @@ library(tidyverse)
 #' ```
 #' #' from this, I can see that Chironomidae starts at node 17 (from node 20)
 
+.node <- rlang::sym("<17>")
 
 
 #' Gene count changes:
 gc_df <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_change.tab" |>
     read_tsv(col_types = paste0(c("c", rep("d", 25)), collapse = "")) |>
     # change in count from node 20 to 17 (i.e., to chironomidae):
-    mutate(chir_d = `<17>`, hog = FamilyID) |>
+    mutate(chir_d = !!.node, hog = FamilyID) |>
     select(hog, chir_d)
 
 
@@ -41,14 +46,14 @@ hog_pd_df <- read_tsv(bp_file,
                       skip = 1,
                       col_names = str_split(read_lines(bp_file)[1], "\t")[[1]] |>
                           head(-1)) |>
-    rename(hog = `#FamilyID`, pval = `<17>`) |>
+    rename(hog = `#FamilyID`, pval = !!.node) |>
     select(hog, pval) |>
     left_join(gc_df, by = "hog")
 
 #' Relationship between change in gene count and p-value:
 hog_pd_df |>
     ggplot(aes(abs(chir_d), -log(pval))) +
-    geom_vline(xintercept = -log(0.05)) +
+    geom_hline(yintercept = -log(0.05)) +
     geom_jitter(height = 0, width = 0.05, alpha = 0.5, shape = 1)
 
 
@@ -72,21 +77,39 @@ chir_hogs <- hog_pd_df |>
     mutate(phred = -log(pval))
 
 
+
+
+
+# =============================================================================*
+# =============================================================================*
+# Over-representation test:
+# =============================================================================*
+# =============================================================================*
+
+
+
 term2gene <- chir_hogs |>
     select(go, hog)
 term2name <- chir_hogs |>
     select(go, term)
 
 genes <- chir_hogs |>
-    filter(pval < 0.01, chir_d > 0) |>
-    getElement("hog")
+    distinct(hog, pval, chir_d) |>
+    arrange(pval) |>
+    filter(pval < 0.001, chir_d > 0) |>
+    getElement("hog") |>
+    # base::`[`(1:20) |>
+    identity()
 
-# Over-representation test:
+
+
+
 overrep <- enricher(genes,
                     pvalueCutoff = 0.1, pAdjustMethod = "BH",
                     minGSSize = 1, qvalueCutoff = 0.2,
                     TERM2GENE=term2gene, TERM2NAME=term2name)
-overrep
+overrep |> as_tibble()
+
 
 or_df <- overrep |>
     as_tibble() |>
@@ -96,41 +119,30 @@ or_df <- overrep |>
     #'   * CC - cellular component
     mutate(ont = Ontology(ID))
 
-or_df |>
+or_bp_scores <- or_df |>
     filter(ont == "BP") |>
     mutate(geneID = geneID |> str_split("/")) |>
     unnest(geneID) |>
     mutate(d_chr = map_int(geneID, \(x) hog_pd_df$chir_d[hog_pd_df$hog == x])) |>
     group_by(ID) |>
     summarize(d_chr = sum(d_chr)) |>
-    write_tsv("~/Desktop/GO.tsv")
+    (\(x) {z <- (x$d_chr); names(z) <- x$ID; return(z)})()
+
+#' `org.Dm.eg.db` is the genome wide annotation for *Drosophila melanogaster*
+or_bp_sim_mat <- calculateSimMatrix(names(or_bp_scores),
+                                    "org.Dm.eg.db", ont = "BP")
+
+or_bp_red <- reduceSimMatrix(or_bp_sim_mat,
+                          scores = or_bp_scores,
+                          orgdb = "org.Dm.eg.db") |>
+    as_tibble()
+or_bp_red
+
+treemapPlot(or_bp_red)
+# scatterPlot(or_bp_sim_mat, or_bp_red, onlyParents = TRUE)
+wordcloudPlot(or_bp_red, min.freq=1, colors="black")
 
 
 
 
 
-
-
-
-
-# Enrichment test:
-en_list <- chir_hogs |>
-    distinct(hog, phred) |>
-    arrange(desc(phred)) |>
-    getElement("phred")
-names(en_list) <- chir_hogs |>
-    distinct(hog, phred) |>
-    arrange(desc(phred)) |>
-    getElement("hog")
-
-enrich <- GSEA(en_list,
-               pvalueCutoff = 0.01, pAdjustMethod = "BH",
-               minGSSize = 1,
-               TERM2GENE=term2gene, TERM2NAME=term2name)
-
-enrich@result |>
-    as_tibble() |>
-    # filter(`p.adjust` < 0.001,
-    #        # Filter for biological processes:
-    #        Ontology(ID) == "BP") |>
-    arrange(`p.adjust`)
