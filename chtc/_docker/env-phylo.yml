@@ -7,7 +7,7 @@ dependencies:
   - blast=2.13.0
   - mcl=14.137
   - cafe=5.0.0
-  - hyphy=2.5.48
+  - hyphy=2.5.50
   - mafft=7.515
   - orthofinder=2.5.4
   - paml=4.10.6

@@ -3,7 +3,7 @@
 # Assemble Tanytarsus gracilentus genome using NECAT
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.8
+docker_image = lucasnell/midgenomes:v1.0.9
 
 log = necat.log
 error = necat.err

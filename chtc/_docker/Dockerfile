@@ -211,43 +211,20 @@ RUN cd /opt && \
 ENV PATH="${PATH}:/opt/TSEBRA/bin"
 
 
-# # --------------------------------
-# # install OMA Standalone
-# # --------------------------------
-# RUN cd /opt && \
-#     OMA_URL="https://omabrowser.org/standalone/OMA.2.5.0.tgz" && \
-#     wget -c ${OMA_URL} -O - | tar -xz && \
-#     cd OMA.2.5.0 && \
-#     ./install.sh /opt && \
-#     cd .. && \
-#     rm -r OMA.2.5.0
-# ENV PATH="${PATH}:/opt/OMA/bin"
-#
-#
-# # --------------------------------
-# # install OrthoLoger (OrthoDB Standalone)
-# # note that OrthoLoger scripts themselves are in /opt/orthologer and need to
-# # be run inside orthologer-env
-# # --------------------------------
-# RUN mamba create -q -y -c bioconda -c conda-forge -n orthologer-env \
-#         blast=2.13.0 cd-hit=4.8.1 ete3=3.1.2 mmseqs2=13.45111 numpy=1.23.3 && \
-#     cd /opt && \
-#     ODB_V="2.8.3" && \
-#     BRHCLUS_V="5.1.6" && \
-#     wget -c "https://data.orthodb.org/v11/download/software/orthologer_${ODB_V}.tgz" -O - \
-#         | tar -xz && \
-#     cd orthologer_${ODB_V}/ORTHOLOGER-${ODB_V} && \
-#     cp -r bin /opt/ && \
-#     cd /opt && \
-#     mv bin orthologer && \
-#     cd orthologer_${ODB_V}/BRHCLUS-${BRHCLUS_V} && \
-#     ./create_cmake_build_env.sh && \
-#     cd build/release && \
-#     cmake ../../ && \
-#     make install && \
-#     cp ../../bin/* /opt/conda/envs/orthologer-env/bin/ && \
-#     cd /opt/ && \
-#     rm -r orthologer_${ODB_V}
+
+# --------------------------------
+# install codon-msa from inside hyphy-analyses
+# --------------------------------
+RUN cd /opt && \
+    git clone https://github.com/veg/hyphy-analyses.git hyphy-analyses && \
+    cd hyphy-analyses && \
+    SHA1="4398a388c4349c431cfbb00b00ca358851c6f335" && \
+    git reset --hard $SHA1 && \
+    mv codon-msa /opt/ && \
+    cd .. && \
+    rm -r hyphy-analyses
+
+
 
 
 # --------------------------------
@@ -256,9 +233,10 @@ ENV PATH="${PATH}:/opt/TSEBRA/bin"
 # --------------------------------
 COPY summ-scaffs.py .
 COPY pretty-csv.py .
+COPY longest-isoforms.py .
 COPY helpers.sh .
-RUN chmod +x summ-scaffs.py pretty-csv.py && \
-    mv summ-scaffs.py pretty-csv.py /usr/local/bin/ && \
+RUN chmod +x summ-scaffs.py pretty-csv.py longest-isoforms.py && \
+    mv summ-scaffs.py pretty-csv.py longest-isoforms.py /usr/local/bin/ && \
     echo -e "\n\n" >> ~/.bashrc && \
     cat helpers.sh >> ~/.bashrc && \
     echo -e "\n\n" >> ~/.bashrc && \

@@ -3,7 +3,7 @@
 # Trim RNA reads
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.8
+docker_image = lucasnell/midgenomes:v1.0.9
 
 log = fastp-rna_$(readtar).log
 error = fastp-rna_$(readtar).err

@@ -13,7 +13,7 @@ fail in ways that are not obvious.
 
 
 usage:
-    ./longest-isoforms.py in.faa > out.faa
+    longest-isoforms.py in.faa > out.faa
 
 """
 
@@ -66,9 +66,7 @@ if ppos < 0 and hpos < 0:
                      "and '-' allowed). Exiting.\n")
     sys.exit(1)
 
-if ppos < 0:
-    deli = "-"
-elif ppos > hpos:
+if ppos > hpos:
     deli = "."
 else:
     deli = "-"
@@ -85,8 +83,7 @@ else:
 # Find longest isoform and write to stdout
 
 unq_seq = ""
-for i in range(len(unq_genes)):
-    g = unq_genes[i]
+for g in unq_genes:
     g_matches = [j for j, x in enumerate(genes) if x == g]
     if len(g_matches) == 0:
         sys.stderr.write("Gene '" + g + "' not found. Exiting.\n")
@@ -99,6 +96,5 @@ for i in range(len(unq_genes)):
         unq_seq = seq_seqs[g_matches[longest]]
     sys.stdout.write(">" + g + "\n")
     sys.stdout.write(unq_seq + "\n")
-
 
 sys.exit(0)

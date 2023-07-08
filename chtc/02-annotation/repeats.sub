@@ -3,7 +3,7 @@
 # Create library of repetitive elements using RepeatModeler.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.8
+docker_image = lucasnell/midgenomes:v1.0.9
 
 log = repeats-$(species).log
 error = repeats-$(species).err
