@@ -12,6 +12,15 @@ ofd <- function(...) {
     if (length(dots) == 0) return(base_dir)
     do.call(paste0, c(list(base_dir, "/"), dots))
 }
+#' OrthoFinder Extraction directory. This is where files live that contain
+#' information we extracted from the OrthoFinder information.
+oed <- function(...) {
+    dots <- list(...)
+    base_dir <- "~/_data/_orthofinder-extraction"  ## << change as necessary
+    base_dir <- str_remove(base_dir, "/$")
+    if (length(dots) == 0) return(base_dir)
+    do.call(paste0, c(list(base_dir, "/"), dots))
+}
 #' GO terms directory
 god <- function(...) {
     dots <- list(...)
@@ -231,7 +240,7 @@ names(proteins) <- all_spp_names
 #' ============================================================================
 #' ============================================================================
 
-write_hog_seqs(gnames11, ofd("Single_Copy_HOG_Sequences/N0"), proteins)
+write_hog_seqs(gnames11, oed("Single_Copy_HOG_Sequences/N0"), proteins)
 
 
 
@@ -298,7 +307,7 @@ for (node in c("N1", "N3", "N5")) {
         })) |>
         filter(if_all(-HOG, \(x) map_lgl(x, \(y) length(y) == 1)))
 
-    write_hog_seqs(hogdf, ofd("Single_Copy_HOG_Sequences/", node), proteins)
+    write_hog_seqs(hogdf, oed("Single_Copy_HOG_Sequences/", node), proteins)
 }
 
 #' Number of single-copy HOGs by node:

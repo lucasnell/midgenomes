@@ -14,6 +14,15 @@ ofd <- function(...) {
     if (length(dots) == 0) return(base_dir)
     do.call(paste0, c(list(base_dir, "/"), dots))
 }
+#' OrthoFinder Extraction directory. This is where files live that contain
+#' information we extracted from the OrthoFinder information.
+oed <- function(...) {
+    dots <- list(...)
+    base_dir <- "~/_data/_orthofinder-extraction"  ## << change as necessary
+    base_dir <- str_remove(base_dir, "/$")
+    if (length(dots) == 0) return(base_dir)
+    do.call(paste0, c(list(base_dir, "/"), dots))
+}
 #' GO terms directory
 god <- function(...) {
     dots <- list(...)
@@ -143,8 +152,8 @@ for (.node in c("N0", "N1", "N3", "N5")) {
     node_go_df <- left_join(node_df, go_df, by = c("species", "gene"))
 
 
-    if (!dir.exists(ofd("All_HOG_GO"))) {
-        dir.create(ofd("All_HOG_GO"), recursive = TRUE)
+    if (!dir.exists(oed("All_HOG_GO"))) {
+        dir.create(oed("All_HOG_GO"), recursive = TRUE)
     }
 
     #' summarize by just HOG, not species:
@@ -161,8 +170,8 @@ for (.node in c("N0", "N1", "N3", "N5")) {
 
     fn1 <- paste0(.node, "-GO-by-species-genes.tsv")
     fn2 <- paste0(.node, "-GO-by-HOG.tsv")
-    write_tsv(node_go_df, ofd("All_HOG_GO/", fn1))
-    write_tsv(node_go_hog_df, ofd("All_HOG_GO/", fn2))
+    write_tsv(node_go_df, oed("All_HOG_GO/", fn1))
+    write_tsv(node_go_hog_df, oed("All_HOG_GO/", fn2))
     cat("Wrote to\n", fn1, "\nand\n", fn2, "\ninside\n",
         ofd("All_HOG_GO"), "\n\n")
 

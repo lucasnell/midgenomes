@@ -59,7 +59,7 @@ hog_pd_df |>
 
 
 # GO terms for all HOGs:
-hog_gos <- "~/_data/chir_orthofinder/orthofinder-output/All_HOG_GO/N0-GO-by-HOG.tsv" |>
+hog_gos <- "~/_data/_orthofinder-extraction/All_HOG_GO/N0-GO-by-HOG.tsv" |>
     read_tsv(col_types = cols())
 
 

@@ -31,13 +31,12 @@ write_faa <- function(faa_obj, fn) {
 }
 
 
-hog_gos <- "~/_data/chir_orthofinder/orthofinder-output/Single_Copy_HOG_GO/N0-GO-by-HOG.tsv" |>
+hog_gos <- "~/_data/_orthofinder-extraction/Single_Copy_HOG_GO/N0-GO-by-HOG.tsv" |>
     read_tsv(col_types = cols()) |>
     mutate(go = go |>
                toupper() |>
                str_split(";")) |>
-    unnest(go) |>
-    select(-node)
+    unnest(go)
 
 
 
@@ -150,12 +149,13 @@ all_hogs <- focal_go_df$hogs |>
     do.call(what = c) |>
     unique()
 
-hog_genes <- paste0("~/_data/chir_orthofinder/orthofinder-output/",
+hog_genes <- paste0("~/_data/_orthofinder-extraction/",
                     "Single_Copy_HOG_GO/N0-GO-by-species-genes.tsv") |>
     read_tsv(col_types = cols()) |>
-    select(-node, -go) |>
+    select(-go) |>
     filter(hog %in% all_hogs) |>
-    arrange(species, hog, gene) |>
-    select(species, hog, gene)
+    arrange(species, gene, hog) |>
+    select(species, gene, hog)
 
 write_csv(hog_genes, "_data/hyphy-hog-genes.csv.gz")
+write_csv(hog_genes, "~/_data/hyphy-hog-genes.csv")
