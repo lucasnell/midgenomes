@@ -113,6 +113,20 @@ get_gos <- function(d) {
              basename(go_file), "' not recognized")
     }
 
+    #' Make doubly sure that there aren't duplicate entries for each gene
+    #' or duplicate GO terms:
+    go_df <- go_df |>
+        split(~ gene) |>
+        map_dfr(\(z) {
+            if (nrow(z) == 1) return(z)
+            z |>
+                summarize(go = paste(go, collapse = ";") |>
+                              str_split(";") |>
+                              map_chr(\(x) {
+                                  paste(unique(x), collapse = ";")
+                                  }))
+        })
+
     return(left_join(d, go_df, by = "gene"))
 
 }
@@ -147,7 +161,7 @@ for (.node in all_nodes) {
         #' Filter for just 1-to-1 orthogroups:
         filter(if_all(-hog, \(x) map_lgl(x, \(y) length(y) == 1))) |>
         # Because all species have only 1 gene here, then we can unnest these cols:
-        unnest(-hog) |>
+        mutate(across(-hog, unlist)) |>
         pivot_longer(-hog, names_to = "species", values_to = "gene") |>
         arrange(species, gene, hog) |>
         select(species, gene, hog) |>
