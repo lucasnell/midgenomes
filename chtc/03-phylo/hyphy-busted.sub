@@ -1,0 +1,25 @@
+# hyphy-busted.sub
+
+# Selection tests using HyPhy BUSTED method.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.9
+
+log = hyphy-busted.log
+error = hyphy-busted.err
+output = hyphy-busted.out
+
+executable = hyphy-busted.sh
+
+batch_name = "hyphy-busted"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 32GB
+request_disk = 100GB
+
+queue 1

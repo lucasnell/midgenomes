@@ -1,0 +1,25 @@
+# hyphy-relax.sub
+
+# Selection tests using HyPhy RELAX method.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.9
+
+log = hyphy-relax.log
+error = hyphy-relax.err
+output = hyphy-relax.out
+
+executable = hyphy-relax.sh
+
+batch_name = "hyphy-relax"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 32GB
+request_disk = 100GB
+
+queue 1
