@@ -75,9 +75,9 @@ genes = [x.rsplit(deli, 1)[0] for x in seq_names]
 unq_genes = list(set(genes))
 
 if len(genes) == len(unq_genes):
-    sys.stderr.write("No multi-isoform genes found.")
+    sys.stderr.write("No multi-isoform genes found.\n")
 else:
-    sys.stderr.write("Removed transcripts = " + str(len(genes) - len(unq_genes)))
+    sys.stderr.write("Removed transcripts = " + str(len(genes) - len(unq_genes)) + "\n")
 
 
 # Find longest isoform and write to stdout

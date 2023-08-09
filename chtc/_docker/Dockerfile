@@ -24,7 +24,8 @@ RUN apt-get clean && \
     apt-get update -y && \
     apt-get install -y build-essential && \
     apt-get install -y locales wget rsync unzip nano sudo pv cmake \
-        ocaml-nox zlib1g-dev libbz2-dev liblzma-dev libboost-all-dev && \
+        ocaml-nox zlib1g-dev libbz2-dev liblzma-dev libboost-all-dev \
+        libcurl4-openssl-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Set locale
@@ -210,6 +211,20 @@ RUN cd /opt && \
     mv TSEBRA* TSEBRA
 ENV PATH="${PATH}:/opt/TSEBRA/bin"
 
+
+
+# --------------------------------
+# install newest hyphy
+# --------------------------------
+RUN HYPHY_V="2.5.52" && \
+    HYPHY_URL="https://github.com/veg/hyphy/archive/refs/tags/${HYPHY_V}.tar.gz" && \
+    wget -c ${HYPHY_URL} -O - | tar -xz && \
+    cd hyphy-${HYPHY_V} && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/opt/hyphy/ . && \
+    make install && \
+    cd .. && \
+    rm -r hyphy-${HYPHY_V}
+ENV PATH="${PATH}:/opt/hyphy/bin"
 
 
 # --------------------------------
