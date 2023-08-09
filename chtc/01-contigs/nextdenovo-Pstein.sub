@@ -3,7 +3,7 @@
 # Assemble Parochlus steinenii genome using NextDenovo
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = nextdenovo-Pstein.log
 error = nextdenovo-Pstein.err

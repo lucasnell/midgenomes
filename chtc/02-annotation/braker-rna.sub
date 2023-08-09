@@ -3,7 +3,7 @@
 # Annotate Tanytarsus gracilentus assembly using RNAseq reads
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = braker-rna-$(species).log
 error = braker-rna-$(species).err

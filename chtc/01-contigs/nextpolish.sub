@@ -3,7 +3,7 @@
 # Polish assembly using Illumina reads via NextPolish
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = nextpolish_$(assembly)_r$(rounds).log
 error = nextpolish_$(assembly)_r$(rounds).err

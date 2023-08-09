@@ -3,7 +3,7 @@
 # Assemble Tanytarsus gracilentus genome using SMARTdenovo
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = smartdenovo.log
 error = smartdenovo.err

@@ -3,7 +3,7 @@
 # Mask repetitive elements in Aedes aegypti assembly using RepeatMasker.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = repeats-Aaegyp-mask.log
 error = repeats-Aaegyp-mask.err

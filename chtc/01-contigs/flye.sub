@@ -3,7 +3,7 @@
 # Assemble Tanytarsus gracilentus genome using Flye
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = flye.log
 error = flye.err

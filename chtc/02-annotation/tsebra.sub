@@ -3,7 +3,7 @@
 # Combine 2 BRAKER annotations (RNAseq + OrthoDB proteins) using TSEBRA
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.9
+docker_image = lucasnell/midgenomes:v1.0.10
 
 log = tsebra-$(species).log
 error = tsebra-$(species).err
