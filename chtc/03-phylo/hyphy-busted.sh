@@ -7,7 +7,6 @@
 
 
 . /app/.bashrc
-conda activate phylo-env
 
 export THREADS=$(count_threads)
 

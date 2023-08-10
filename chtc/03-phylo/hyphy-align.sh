@@ -8,7 +8,6 @@
 
 
 . /app/.bashrc
-conda activate phylo-env
 
 export THREADS=$(count_threads)
 
@@ -187,11 +186,19 @@ mkdir ${ALIGNS_DIR}
 
 cd ${HOG_CDS_DIR}
 
+
+
+
+
+
 #' Script to run hyphy's codon-msa and mafft to do alignment on a single HOG.
 #' Usage:
 #'      ./one_align.sh [*_cds.fasta FILE]
 cat << EOF > one_align.sh
 #!/bin/bash
+
+. /app/.bashrc
+
 IN=\$1
 NAME_BASE=\${IN%.fasta}
 
@@ -211,7 +218,9 @@ hyphy /opt/codon-msa/pre-msa.bf --input \${IN} > \${log_file} 2>&1
 mv \${IN}_protein.fas \${prot_fas} \\
     && mv \${IN}_nuc.fas \${nuc_fas}
 
+conda activate phylo-env
 linsi --thread 1 \${prot_fas} > \${prot_msa} 2>> \${log_file}
+conda deactivate
 
 hyphy /opt/codon-msa/post-msa.bf --protein-msa \${prot_msa} \\
     --nucleotide-sequences \${nuc_fas} --output \${nuc_msa} --compress No \\
