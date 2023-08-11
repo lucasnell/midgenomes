@@ -17,9 +17,10 @@ mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 #' Ultrametric species tree without Cmarin (bc of poor matching in OrthoFinder)
-export SPECIES_TREE=chir_mcmctree_noCmarin.nwk
+#' ... and with labels for family Chironomidae:
+export SPECIES_TREE_LABELLED=chir_mcmctree_noCmarin_labelled.nwk
 
-cp ${TARGET}/phylo/${SPECIES_TREE} ./
+cp ${TARGET}/phylo/${SPECIES_TREE_LABELLED} ./
 check_exit_status "moving species tree" $?
 
 
@@ -44,7 +45,8 @@ hog=\$1
 
 align=./${ALIGNS_DIR}/\${hog}/\${hog}.msa
 hyphy CPU=1 busted --alignment \${align} \\
-    --tree ${SPECIES_TREE} \\
+    --tree ${SPECIES_TREE_LABELLED} \\
+    --branches Chironomidae \\
     --output \${hog}.json \\
     --save-fit \${hog}.fit \\
     1> \${hog}.stdout \\
