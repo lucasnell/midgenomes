@@ -68,19 +68,27 @@ rm(all_busted_data, all_relax_data); invisible(gc())
 hyphy_df <- tibble(hog = names(busted_data),
                    busted_pvals = map_dbl(busted_data, \(x) x[["test results"]][["p-value"]]),
                    relax_pvals = map_dbl(relax_data, \(x) x[["test results"]][["p-value"]]),
+                   relax_k = map_dbl(relax_data, \(x) {
+                       n <- "relaxation or intensification parameter"
+                       return(x[["test results"]][[n]])
+                   }),
                    busted_disc = BY_correct(busted_pvals, hog),
-                   relax_disc = BY_correct(relax_pvals, hog),
-                   relax_k = map_dbl(relax_data,
-                                     \(x) {
-                                         z <- paste("relaxation or",
-                                                    "intensification",
-                                                    "parameter")
-                                         return(x[["test results"]][[z]])
-                                     }))
+                   relax_disc = BY_correct(relax_pvals, hog))
 
 sum(hyphy_df$busted_disc)
 sum(hyphy_df$relax_disc)
 sum(hyphy_df$busted_disc & hyphy_df$relax_disc)
+
+#' From docs: "A significant result of k>1 indicates that selection strength
+#' has been intensified along the test branches, and a significant result of
+#' k<1 indicates that selection strength has been relaxed" along the test
+#' branches.
+sum(hyphy_df$relax_disc & hyphy_df$relax_k > 1)
+sum(hyphy_df$relax_disc & hyphy_df$relax_k < 1)
+
+sum(hyphy_df$busted_disc & hyphy_df$relax_disc & hyphy_df$relax_k > 1)
+sum(hyphy_df$busted_disc & hyphy_df$relax_disc & hyphy_df$relax_k < 1)
+
 
 
 

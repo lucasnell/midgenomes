@@ -1,4 +1,5 @@
 library(tidyverse)
+library(parallel)
 
 
 simplify_class <- function(.class) {
@@ -26,7 +27,7 @@ one_spp_repeats <- function(.spp) {
         mutate(species = .spp) |>
         group_by(species, class) |>
         summarize(elements = length(unique(id)),
-                  length = sum((end - begin + 1) * (1 - (p_del+p_ins) / 100)),
+                  length = round(sum((end - begin + 1) * (1 - (p_del+p_ins) / 100))),
                   .groups = "drop") |>
         arrange(class)
     cat(.spp, "finished\n")
@@ -36,18 +37,16 @@ one_spp_repeats <- function(.spp) {
 
 
 
+
 # (The warnings about Mdomes are not an issue)
-repeats_df <- c("Aaegyp", "Asteph", "Bantar", "Cquinq", "Cripar",
+repeats_df <- c("Aaegyp", "Asteph", "Bantar", "Cmarin", "Cquinq", "Cripar",
                 "Csonor", "Ctenta", "Mdomes", "Pakamu", "Ppemba",
                 "Pstein", "Pvande", "Tgraci") |>
-    map_dfr(one_spp_repeats)
+    mclapply(one_spp_repeats, mc.cores = max(detectCores()-2, 1)) |>
+    do.call(what = bind_rows)
 
-
-repeats_df |>
-    group_by(class) |>
-    summarize(n_species = length(unique(species)),
-              species = paste0(sort(unique(species)), collapse = " "))
 
 
 write_csv(repeats_df, "_data/repeats-summary.csv")
+
 

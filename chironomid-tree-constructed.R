@@ -79,9 +79,29 @@ force_ultrametric <- function(treedata_obj) {
     return(treedata_obj)
 }
 
+tt1 <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_1/FigTree.tre")@data
+tt2 <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_2/FigTree.tre")@data
+tt3 <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_3/FigTree.tre")@data
+tt4 <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_4/FigTree.tre")@data
+
+all(tt1$node == tt2$node) && all(tt1$node == tt3$node) && all(tt1$node == tt4$node)
+
+sprintf("%.9f", cor(tt1$reltime, tt2$reltime))
+sprintf("%.9f", cor(tt1$reltime, tt3$reltime))
+sprintf("%.9f", cor(tt1$reltime, tt4$reltime))
+sprintf("%.9f", cor(tt2$reltime, tt3$reltime))
+sprintf("%.9f", cor(tt2$reltime, tt4$reltime))
+sprintf("%.9f", cor(tt3$reltime, tt4$reltime))
+
+
+
+
+
 #' I plotted all 4 reps, and they produce the same tree (14 March 2023)
-time_tr <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_1/FigTree.tre") |>
-    force_ultrametric()
+time_tr <- read.mcmctree("~/_data/_phylo/chir_mcmctree/mcmc_1/FigTree.tre")
+
+# |>
+#     force_ultrametric()
 
 # write.tree(time_tr@phylo, "~/_data/_phylo/chir_mcmctree.nwk")
 
@@ -179,15 +199,15 @@ mrca_time(tree2, "Polypedilum", "Chironomus")
 
 
 for (spp in list(c("Culicoides", "Tanytarsus"),
-c("Parochlus", "Tanytarsus"),
-c("Propsilocerus", "Tanytarsus"),
-c("Clunio", "Tanytarsus"),
-c("Polypedilum", "Tanytarsus"),
-c("Polypedilum", "Chironomus"))) {
+                 c("Parochlus", "Tanytarsus"),
+                 c("Propsilocerus", "Tanytarsus"),
+                 c("Clunio", "Tanytarsus"),
+                 c("Polypedilum", "Tanytarsus"),
+                 c("Polypedilum", "Chironomus"))) {
     t1 <- mrca_time(tree1, spp[[1]], spp[[2]]) * 100
     t2 <- mrca_time(tree2, spp[[1]], spp[[2]])
     msg1 <- sprintf("%s -- %s = ",
-            spp[[1]], spp[[2]]) |>
+                    spp[[1]], spp[[2]]) |>
         str_pad(30, "right")
     msg2 <- sprintf("%7.2f |%7.2f |%5.2f (us | them | rel. diff.)\n",
                     t1, t2, abs(t1 - t2) / mean(c(t1, t2)))
@@ -216,11 +236,11 @@ c("Polypedilum", "Chironomus"))) {
 
 
 bt_lines <- c("(((((Chironomus_riparius:0.028788,Chironomus_tepperi:0.025600):0.008002,Chironomus_tentans:0.019421):0.108075,(Polypedilum_pembai:0.031548,Polypedilum_vanderplanki:0.029075):0.107787):0.033845,Tanytarsus_gracilentus:0.150658):0.085242,(Clunio_marinus:0.114118,Belgica_antarctica:0.120344):0.043675,(Propsilocerus_akamusi:0.124211,((Culicoides_sonorensis:0.309562,Anopheles_stephensi:0.286965):0.130299,Parochlus_steinenii:0.188874):0.150195):0.026016);",
-"((((Chironomus_tentans:0.019063,(Chironomus_riparius:0.028818,Chironomus_tepperi:0.025412):0.007965):0.107509,(Polypedilum_pembai:0.031416,Polypedilum_vanderplanki:0.029336):0.106407):0.034020,Tanytarsus_gracilentus:0.150539):0.085533,(Clunio_marinus:0.113747,Belgica_antarctica:0.119879):0.044267,((Parochlus_steinenii:0.189637,(Culicoides_sonorensis:0.308262,Anopheles_stephensi:0.285912):0.130360):0.150050,Propsilocerus_akamusi:0.124203):0.026159);",
-"((Propsilocerus_akamusi:0.124500,((Anopheles_stephensi:0.286971,Culicoides_sonorensis:0.312491):0.130820,Parochlus_steinenii:0.190219):0.149749):0.026774,(((Chironomus_tentans:0.019329,(Chironomus_riparius:0.028877,Chironomus_tepperi:0.025466):0.007742):0.106546,(Polypedilum_pembai:0.031411,Polypedilum_vanderplanki:0.029394):0.107079):0.034006,Tanytarsus_gracilentus:0.151206):0.085562,(Belgica_antarctica:0.120046,Clunio_marinus:0.114474):0.043482);",
-"((((Parochlus_steinenii:0.190057,(Culicoides_sonorensis:0.310311,Anopheles_stephensi:0.287772):0.131149):0.151462,Propsilocerus_akamusi:0.124546):0.026706,(Clunio_marinus:0.114560,Belgica_antarctica:0.120289):0.043150):0.085973,(((Chironomus_riparius:0.029034,Chironomus_tepperi:0.024908):0.007858,Chironomus_tentans:0.019469):0.107791,(Polypedilum_vanderplanki:0.029858,Polypedilum_pembai:0.031382):0.107674):0.034189,Tanytarsus_gracilentus:0.150574);",
-"((((Parochlus_steinenii:0.189321,(Anopheles_stephensi:0.285715,Culicoides_sonorensis:0.310995):0.130366):0.149742,Propsilocerus_akamusi:0.123982):0.026463,(((Chironomus_tentans:0.018972,(Chironomus_tepperi:0.025268,Chironomus_riparius:0.028808):0.007860):0.106977,(Polypedilum_pembai:0.031248,Polypedilum_vanderplanki:0.029236):0.108174):0.033470,Tanytarsus_gracilentus:0.150447):0.086420):0.043931,Clunio_marinus:0.114298,Belgica_antarctica:0.119618);",
-"(((Chironomus_tentans:0.019418,(Chironomus_tepperi:0.025086,Chironomus_riparius:0.029073):0.007958):0.107041,(Polypedilum_vanderplanki:0.029433,Polypedilum_pembai:0.031444):0.108209):0.034213,((((Culicoides_sonorensis:0.310853,Anopheles_stephensi:0.284779):0.131698,Parochlus_steinenii:0.189661):0.151380,Propsilocerus_akamusi:0.124252):0.026188,(Belgica_antarctica:0.119511,Clunio_marinus:0.113914):0.043126):0.085895,Tanytarsus_gracilentus:0.151090);")
+              "((((Chironomus_tentans:0.019063,(Chironomus_riparius:0.028818,Chironomus_tepperi:0.025412):0.007965):0.107509,(Polypedilum_pembai:0.031416,Polypedilum_vanderplanki:0.029336):0.106407):0.034020,Tanytarsus_gracilentus:0.150539):0.085533,(Clunio_marinus:0.113747,Belgica_antarctica:0.119879):0.044267,((Parochlus_steinenii:0.189637,(Culicoides_sonorensis:0.308262,Anopheles_stephensi:0.285912):0.130360):0.150050,Propsilocerus_akamusi:0.124203):0.026159);",
+              "((Propsilocerus_akamusi:0.124500,((Anopheles_stephensi:0.286971,Culicoides_sonorensis:0.312491):0.130820,Parochlus_steinenii:0.190219):0.149749):0.026774,(((Chironomus_tentans:0.019329,(Chironomus_riparius:0.028877,Chironomus_tepperi:0.025466):0.007742):0.106546,(Polypedilum_pembai:0.031411,Polypedilum_vanderplanki:0.029394):0.107079):0.034006,Tanytarsus_gracilentus:0.151206):0.085562,(Belgica_antarctica:0.120046,Clunio_marinus:0.114474):0.043482);",
+              "((((Parochlus_steinenii:0.190057,(Culicoides_sonorensis:0.310311,Anopheles_stephensi:0.287772):0.131149):0.151462,Propsilocerus_akamusi:0.124546):0.026706,(Clunio_marinus:0.114560,Belgica_antarctica:0.120289):0.043150):0.085973,(((Chironomus_riparius:0.029034,Chironomus_tepperi:0.024908):0.007858,Chironomus_tentans:0.019469):0.107791,(Polypedilum_vanderplanki:0.029858,Polypedilum_pembai:0.031382):0.107674):0.034189,Tanytarsus_gracilentus:0.150574);",
+              "((((Parochlus_steinenii:0.189321,(Anopheles_stephensi:0.285715,Culicoides_sonorensis:0.310995):0.130366):0.149742,Propsilocerus_akamusi:0.123982):0.026463,(((Chironomus_tentans:0.018972,(Chironomus_tepperi:0.025268,Chironomus_riparius:0.028808):0.007860):0.106977,(Polypedilum_pembai:0.031248,Polypedilum_vanderplanki:0.029236):0.108174):0.033470,Tanytarsus_gracilentus:0.150447):0.086420):0.043931,Clunio_marinus:0.114298,Belgica_antarctica:0.119618);",
+              "(((Chironomus_tentans:0.019418,(Chironomus_tepperi:0.025086,Chironomus_riparius:0.029073):0.007958):0.107041,(Polypedilum_vanderplanki:0.029433,Polypedilum_pembai:0.031444):0.108209):0.034213,((((Culicoides_sonorensis:0.310853,Anopheles_stephensi:0.284779):0.131698,Parochlus_steinenii:0.189661):0.151380,Propsilocerus_akamusi:0.124252):0.026188,(Belgica_antarctica:0.119511,Clunio_marinus:0.113914):0.043126):0.085895,Tanytarsus_gracilentus:0.151090);")
 
 write_lines(bt_lines, "~/_data/_phylo/boot_noog.bootstraps")
 

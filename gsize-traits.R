@@ -22,20 +22,20 @@ names(spp_pal) <- c("Ctenta", "Cripar", "Pvande", "Ppemba",
 plan(multisession)
 
 #' To convert back to full species names:
-spp_name_map <- list("Aaegyp" = "A. aegypti",
-                     "Asteph" = "A. stephensi",
-                     "Bantar" = "B. antarctica",
-                     "Cripar" = "C. riparius",
-                     "Ctenta" = "C. tentans",
-                     "Cmarin" = "C. marinus",
-                     "Cquinq" = "C. quinquefasciatus",
-                     "Csonor" = "C. sonorensis",
-                     "Mdomes" = "M. domestica",
-                     "Pstein" = "P. steinenii",
-                     "Ppemba" = "P. pembai",
-                     "Pvande" = "P. vanderplanki",
-                     "Pakamu" = "P. akamusi",
-                     "Tgraci" = "T. gracilentus")
+spp_name_map <- list("Aaegyp" = "Aedes aegypti",
+                     "Asteph" = "Anopheles stephensi",
+                     "Bantar" = "Belgica antarctica",
+                     "Cripar" = "Chironomus riparius",
+                     "Ctenta" = "Chironomus tentans",
+                     "Cmarin" = "Clunio marinus",
+                     "Cquinq" = "Culex quinquefasciatus",
+                     "Csonor" = "Culicoides sonorensis",
+                     "Mdomes" = "Musca domestica",
+                     "Pstein" = "Parochlus steinenii",
+                     "Ppemba" = "Polypedilum pembai",
+                     "Pvande" = "Polypedilum vanderplanki",
+                     "Pakamu" = "Propsilocerus akamusi",
+                     "Tgraci" = "Tanytarsus gracilentus")
 # So it's the same order as spp_pal:
 spp_name_map <- spp_name_map[names(spp_pal)]
 
@@ -61,6 +61,8 @@ gstat_df <- read_csv("_data/genome-stats.csv", col_types = cols()) |>
                                        "Asteph", "Mdomes"))) |>
     filter(species != "Cmarin") |>
     mutate(log_sum_interg_len = log10(sum_interg_len),
+           prop_interg_len = sum_interg_len / gsize,
+           prop_intron_len = (intron_len * n_introns * n_prots) / gsize,
            full_spp = map_chr(paste(species), \(z) spp_name_map[[z]]) |>
                factor(levels = unlist(spp_name_map)),
            chir = family == "Chironomidae",
@@ -96,7 +98,8 @@ rep_pal <- as.list(plasma(9, begin = 0.2, end = 0.9)[c(5,1,6,2,7,3,8,4,9)])
 names(rep_pal) <- paste(rep_class_map)
 
 rep_df <- read_csv("_data/repeats-summary.csv", col_types = cols()) |>
-    filter(class != "Unclassified") |>
+    filter(species != "Cmarin",
+           class != "Unclassified") |>
     # filter(!class %in% nonTE_classes) |>
     mutate(gsize = map_dbl(species, \(s) gstat_df$gsize[gstat_df$species == s]),
            prop = length / gsize,
@@ -108,7 +111,9 @@ rep_df <- read_csv("_data/repeats-summary.csv", col_types = cols()) |>
                factor(levels = unlist(spp_name_map)),
            family = map_vec(species, \(s) gstat_df$family[gstat_df$species == s]),
            chir = family == "Chironomidae",
-           chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae")) |>
+           chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae"),
+           chir_cerat_fct = factor(chir_cerat, levels = c(TRUE, FALSE),
+                                   labels = c("Chir. + Cerat.", "Others"))) |>
     select(-gsize)
 
 
@@ -143,16 +148,11 @@ rownames(rep_prop_df) <- paste(rep_prop_df$species)
 
 
 
-#' ===========================================================================
-#' ===========================================================================
-#  Phylogenetic analyses ----
-#' ===========================================================================
-#' ===========================================================================
-
-#'
-#' This section tests whether traits differ between families
-#' Chironomidae and Ceratopogonidae, and all others.
-#'
+#' =================================================================
+#' =================================================================
+#  Read phylogeny ----
+#' =================================================================
+#' =================================================================
 
 
 dip_tr <- read.tree("~/_data/_phylo/chir_mcmctree.nwk") |>
@@ -164,82 +164,84 @@ dip_tr <- read.tree("~/_data/_phylo/chir_mcmctree.nwk") |>
 dip_tr$edge.length <- dip_tr$edge.length / max(node.depth.edgelength(dip_tr))
 max(node.depth.edgelength(dip_tr))
 
-dip_tr |> plot(no.margin = TRUE)
+# dip_tr |> plot(no.margin = TRUE)
 
 
-#' genome size ~ family
-set.seed(531684999)
-gs_mod <- phylolm(log_gsize ~ chir_cerat, gstat_df, dip_tr,
-                  model = "OUfixedRoot", boot = 2000)
-gs_mod |> summary()
-gs_mod$bootconfint95
-#       (Intercept) chir_ceratTRUE     sigma2     alpha
-# 2.5%     8.587211     -0.9153641 0.05574064  1.017443
-# 97.5%    8.960914     -0.4351406 3.73589239 50.000021
 
 
-#' number of protein-coding genes ~ family
-set.seed(741269662)
-np_mod <- phylolm(n_prots ~ chir_cerat, gstat_df, dip_tr,
-                  model = "OUfixedRoot", boot = 2000)
-np_mod |> summary()
-np_mod$bootconfint95
-#       (Intercept) chir_ceratTRUE    sigma2      alpha
-# 2.5%     12075.25      -700.9569   9117071  0.9514159
-# 97.5%    16483.06      4593.7824 655126569 50.0000210
+#' ===========================================================================
+#' ===========================================================================
+#  Regressions - family versus... ----
+#' ===========================================================================
+#' ===========================================================================
+
+#'
+#' This section tests whether traits differ between families
+#' Chironomidae and Ceratopogonidae, and all others.
+#'
 
 
-#' intron length ~ family
-set.seed(1979093900)
-il_mod <- phylolm(log_intron_len ~ chir_cerat, gstat_df, dip_tr,
-                  model = "OUfixedRoot", boot = 2000)
-il_mod |> summary()
-il_mod$bootconfint95
-#       (Intercept) chir_ceratTRUE     sigma2      alpha
-# 2.5%     2.523898     -0.6707964 0.02535029  0.7385094
-# 97.5%    2.786116     -0.3464602 2.06566365 50.0000210
+if (!file.exists("_data/family-regressions.rds")) {
+    # Takes ~36 sec
+    set.seed(1269567689)
+    regr_df <- tibble(feature = c("log_gsize", "n_prots", "log_intron_len",
+                                  "n_introns", "n_introns_no_Pstein",
+                                  "log_sum_interg_len",
+                                  "prop_intron_len", "prop_interg_len")) |>
+        mutate(pl_model = map(feature, \(x) {
+            .boots <- 2000
+            f <- as.formula(paste(x, "~ chir_cerat"))
+            if (x %in% c("prop_intron_len", "prop_interg_len")) {
+                m <- phylolm(f, gstat_df, dip_tr, model = "OUfixedRoot",
+                             upper.bound = 200, boot = .boots)
+            } else if (x == "n_introns") {
+                m <- phylolm(f, gstat_df, dip_tr, model = "OUfixedRoot",
+                             upper.bound = 500, boot = .boots)
+            } else if (x == "n_introns_no_Pstein") {
+                f <- as.formula("n_introns ~ chir_cerat")
+                m <- phylolm(f, filter(gstat_df, species != "Pstein"),
+                             drop.tip(dip_tr, "Pstein"),
+                             model = "OUfixedRoot", upper.bound = 500,
+                             boot = .boots)
+            } else {
+                m <- phylolm(f, gstat_df, dip_tr, model = "OUfixedRoot",
+                             boot = .boots)
+            }
+            m$call[[2]] <- eval(f)
+            return(m)
+        })) |>
+        mutate(coef = map_dbl(pl_model, \(x) coef(x)[["chir_ceratTRUE"]]),
+               coef_lo = map_dbl(pl_model,
+                                 \(x) x$bootconfint95[1,"chir_ceratTRUE"]),
+               coef_hi = map_dbl(pl_model,
+                                 \(x) x$bootconfint95[2,"chir_ceratTRUE"])) |>
+        select(feature, starts_with("coef"), pl_model)
+    write_rds(regr_df, "_data/family-regressions.rds", compress = "xz")
+} else {
+    regr_df <- read_rds("_data/family-regressions.rds")
+}
 
-#' n introns ~ family
-set.seed(502219923)
-in_mod <- phylolm(n_introns ~ chir_cerat, gstat_df, dip_tr,
-                  model = "OUfixedRoot", upper.bound = 500, boot = 2000)
-in_mod |> summary()
-in_mod$bootconfint95
-#       (Intercept) chir_ceratTRUE      sigma2      alpha
-# 2.5%     4.403924     -0.8643251   0.5264592   1.280122
-# 97.5%    5.307306      0.2404377 208.1284428 500.000000
-
-#' **no significant effect of family, but when we drop Pstein there is one:
-set.seed(81582400)
-in_mod2 <- phylolm(n_introns ~ chir_cerat, filter(gstat_df, species != "Pstein"),
-                  drop.tip(dip_tr, "Pstein"),
-                  model = "OUfixedRoot", upper.bound = 500, boot = 2000)
-in_mod2 |> summary()
-in_mod2$bootconfint95
-#       (Intercept) chir_ceratTRUE     sigma2      alpha
-# 2.5%     4.600993     -0.8086019  0.1309948   1.125725
-# 97.5%    5.129142     -0.1493447 71.0557109 500.000000
-
-
-#' intergenic length ~ family
-set.seed(502219923)
-ig_mod <- phylolm(log_sum_interg_len ~ chir_cerat, gstat_df, dip_tr,
-                  model = "OUfixedRoot", boot = 2000)
-ig_mod |> summary()
-ig_mod$bootconfint95
-#       (Intercept) chir_ceratTRUE     sigma2      alpha
-# 2.5%     8.212508     -0.8988728 0.06907438  0.5533094
-# 97.5%    8.639594     -0.3441207 4.97920148 50.0000210
-
+regr_df
+# # A tibble: 8 × 5
+#   feature                  coef   coef_lo  coef_hi pl_model
+#   <chr>                   <dbl>     <dbl>    <dbl> <list>
+# 1 log_gsize             -0.681    -0.921    -0.459 <phylolm>
+# 2 n_prots             2043.     -502.     4646.    <phylolm>
+# 3 log_intron_len        -0.502    -0.665    -0.341 <phylolm>
+# 4 n_introns             -0.305    -0.896     0.264 <phylolm>
+# 5 n_introns_no_Pstein   -0.475    -0.796    -0.158 <phylolm>
+# 6 log_sum_interg_len    -0.622    -0.901    -0.341 <phylolm>
+# 7 prop_intron_len       -0.312    -0.468    -0.159 <phylolm>
+# 8 prop_interg_len        0.0599   -0.0135    0.134 <phylolm>
 
 
 #' repeat classes ~ family
 #' note: the Brownian motion (BM) model fit better for these regressions
 set.seed(195060244)
 rep_mods <- map(c(levels(rep_df$class), "total", "total_TE"), \(cl) {
-    cl_mod <- phylolm(as.formula(paste(cl, "~ chir_cerat")),
-                      rep_prop_df, dip_tr, model = "BM", boot = 2000)
-    cl_mod[["call"]][[2]] <- as.formula(paste(cl, "~ chir_cerat"))
+    f <- as.formula(paste(cl, "~ chir_cerat"))
+    cl_mod <- phylolm(f, rep_len_df, dip_tr, model = "BM", boot = 2000)
+    cl_mod$call[[2]] <- eval(f)
     return(cl_mod)
 })
 names(rep_mods) <- c(levels(rep_df$class), "total", "total_TE")
@@ -248,7 +250,123 @@ names(rep_mods) <- c(levels(rep_df$class), "total", "total_TE")
 map(rep_mods, \(z) z$bootconfint95)
 
 
+rep_regr_df <- tibble(class = c(levels(rep_df$class), "total", "total_TE")) |>
+    mutate(pl_model1 = map(class, \(x) {
+        f <- as.formula(sprintf("log10(%s) ~ chir_cerat", x))
+        if (x == "LINE") {
+            cl_mod <- phylolm(f, rep_len_df, dip_tr, model = "OUfixedRoot",
+                              upper.bound = 200, boot = 0)
+        } else {
+            cl_mod <- phylolm(f, rep_len_df, dip_tr, model = "OUfixedRoot",
+                              boot = 0)
+        }
+        cl_mod$call[[2]] <- eval(f)
+        return(cl_mod)
+    }),
+    pl_model2 = map(class, \(x) {
+        f <- as.formula(sprintf("log10(%s) ~ chir_cerat", x))
+        cl_mod <- phylolm(f, rep_len_df, dip_tr, model = "BM", boot = 0)
+        cl_mod$call[[2]] <- eval(f)
+        return(cl_mod)
+    })) |>
+    # mutate(coef = map_dbl(pl_model, \(x) coef(x)[["chir_ceratTRUE"]]),
+    #        coef_lo = map_dbl(pl_model,
+    #                          \(x) x$bootconfint95[1,"chir_ceratTRUE"]),
+    #        coef_hi = map_dbl(pl_model,
+    #                          \(x) x$bootconfint95[2,"chir_ceratTRUE"])) |>
+    # select(class, starts_with("coef"), pl_model)
+    mutate(aic1 = map_dbl(pl_model1, \(x) AIC(x)),
+           aic2 = map_dbl(pl_model2, \(x) AIC(x)),
+           daic = aic1 - aic2)
+rep_regr_df
 
+
+rep_len_pglmm_df <- rep_len_df |>
+    as_tibble() |>
+    select(-total, -total_TE) |>
+    pivot_longer(DNA:Small_RNA, names_to = "class", values_to = "len") |>
+    mutate(log_len = log10(len)) |>
+    group_by(class) |>
+    mutate(z_len = (len - mean(len)),
+           z_log_len = (log_len - mean(log_len))) |>
+    ungroup()
+
+rep_len_pglmm_df |>
+    ggplot(aes(log_gsize, z_log_len)) +
+    geom_point() +
+    facet_wrap(~ class)
+
+rep_len_pglmm_df |>
+    ggplot(aes(chir_cerat_fct, z_log_len)) +
+    geom_hline(yintercept = 0, color = "gray70", linewidth = 0.75) +
+    geom_jitter(aes(color = full_spp), height = 0, width = 0.1, size = 2) +
+    facet_wrap(~ class) +
+    scale_color_manual(values = full_spp_pal) +
+    theme(axis.text.x = element_text(size = 9, color = "black"),
+          axis.title.x = element_blank(),
+          legend.title = element_blank(),
+          legend.text = element_text(face = "italic"))
+
+
+
+
+
+
+
+
+
+
+#' ===========================================================================
+#' ===========================================================================
+#  Correlations - gsize vs ... ----
+#' ===========================================================================
+#' ===========================================================================
+
+
+
+
+m <- cor_phylo(~ log_gsize + log_intron_len + n_introns + n_prots +
+                   log_sum_interg_len + prop_intron_len + prop_interg_len,
+               ~species, dip_tr, data = gstat_df,
+               # constrain_d = TRUE,
+               method = "bobyqa",
+               max_iter = 10e3,
+               boot = 0)
+m
+
+
+
+if (!file.exists("_data/gsize-corrs.rds")) {
+    # Takes ~1 min
+    set.seed(328380265)
+    corr_df <- tibble(feature = c("log_intron_len", "n_introns", "n_prots",
+                                  "log_sum_interg_len", "prop_intron_len",
+                                  "prop_interg_len")) |>
+        mutate(cp_model = map(feature, \(x) {
+            f <- as.formula(paste0("~ log_gsize + ", x))
+            if (x == "log_sum_interg_len" || x == "prop_intron_len") {
+                m <- cor_phylo(f, ~species, dip_tr, data = gstat_df,
+                               constrain_d = TRUE, method = "bobyqa",
+                               boot = 2000)
+            } else {
+                m <- cor_phylo(f, ~species, dip_tr, data = gstat_df,
+                               boot = 2000)
+            }
+            m$call[[2]] <- eval(f)
+            # cat(x, "\n")
+            return(m)
+        })) |>
+        mutate(corr = map_dbl(cp_model, \(x) x[["corrs"]][1,2]),
+               corr_lo = map_dbl(cp_model, \(x) boot_ci(x)[["corrs"]][2,1]),
+               corr_hi = map_dbl(cp_model, \(x) boot_ci(x)[["corrs"]][1,2])) |>
+        select(feature, starts_with("corr"), cp_model)
+
+    write_rds(corr_df, "_data/gsize-corrs.rds", compress = "xz")
+} else {
+    corr_df <- read_rds("_data/gsize-corrs.rds")
+}
+
+corr_df
 
 
 
@@ -376,47 +494,11 @@ rep_p <- rep_df |>
 
 
 
-
 #' ===========================================================================
 #' ===========================================================================
 #  Plots - gsize vs ----
 #' ===========================================================================
 #' ===========================================================================
-
-
-set.seed(1812535342)
-gs_nl_cor <- cor_phylo(~ log_gsize + log_intron_len, ~species, dip_tr,
-                       data = gstat_df, boot = 2000)
-# Pearson correlation coefficient estimate:
-gs_nl_cor[["corrs"]][1,2]
-# Bootstrapped 95% CI:
-with(list(x = boot_ci(gs_nl_cor)[["corrs"]]), {c(x[2,1], x[1,2])})
-
-set.seed(256063708)
-gs_ni_cor <- cor_phylo(~ log_gsize + n_introns, ~species, dip_tr,
-                       data = gstat_df, boot = 2000)
-# Pearson correlation coefficient estimate:
-gs_ni_cor[["corrs"]][1,2]
-# Bootstrapped 95% CI:
-with(list(x = boot_ci(gs_ni_cor)[["corrs"]]), {c(x[2,1], x[1,2])})
-# note: removing Pstein doesn't change this!
-
-set.seed(1180981201)
-gs_np_cor <- cor_phylo(~ log_gsize + n_prots, ~species, dip_tr,
-                       data = gstat_df, boot = 2000)
-# Pearson correlation coefficient estimate:
-gs_np_cor[["corrs"]][1,2]
-# Bootstrapped 95% CI:
-with(list(x = boot_ci(gs_np_cor)[["corrs"]]), {c(x[2,1], x[1,2])})
-
-set.seed(538650984)
-gs_ig_cor <- cor_phylo(~ log_gsize + log_sum_interg_len, ~species, dip_tr,
-                       data = gstat_df, constrain_d = TRUE, method = "bobyqa",
-                       boot = 2000)
-# Pearson correlation coefficient estimate:
-gs_ig_cor[["corrs"]][1,2]
-# Bootstrapped 95% CI:
-with(list(x = boot_ci(gs_ig_cor)[["corrs"]]), {c(x[2,1], x[1,2])})
 
 
 gstat_df |>
@@ -480,3 +562,23 @@ rep_df |>
                        labels = 100 * 2^(0:3)) +
     scale_fill_manual(NULL, values = spp_pal, aesthetics = c("color", "fill"),
                       guide = "none")
+
+
+
+
+
+
+gs_df <- "~/Stanford_Drive/UW/midgenomes/midgenomes.xlsx" |>
+    readxl::read_excel(sheet = "gsize-proteins") |>
+    filter(accession != "x") |>
+    mutate(chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae"))
+
+
+gs_df |>
+    ggplot(aes(log10(gsize), log10(n_genes))) +
+    geom_point(aes(color = chir_cerat)) +
+    scale_y_continuous("Protein-coding genes (K)") +
+    scale_x_continuous("Genome size (Mb)",
+                       breaks = log10(100e6 * 2^(0:3)),
+                       labels = 100 * 2^(0:3)) +
+    scale_color_manual(values = c("gray70", "red"))
