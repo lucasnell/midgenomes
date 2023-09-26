@@ -1,6 +1,8 @@
 library(tidyverse)
 library(parallel)
 
+#' DEFUNCT -- EVERYTHING HERE IS DONE INSIDE `make-genome-stats.R`
+
 
 options("mc.cores" = max(1L, detectCores() - 2L))
 

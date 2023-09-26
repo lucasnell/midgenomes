@@ -9,6 +9,13 @@ library(viridisLite)
 
 theme_set(theme_minimal())
 
+#' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#'
+#' CAN SIMPLIFY BELOW BY USING `_data/genome-stats.csv`
+#'
+#' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 
 spp_df  <- tibble(species = c("Aaegyp", "Asteph", "Bantar", "Cquinq", "Cripar",
                               "Csonor", "Ctenta", "Mdomes", "Pakamu", "Ppemba",

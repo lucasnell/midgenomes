@@ -1,5 +1,7 @@
 library(tidyverse)
 
+#' THIS IS NOW DEFUNCT, EVERYTHING USEFUL THAT'S DONE HERE IS DONE IN `make-genome-stats.R`
+
 repeats_df <- read_csv("_data/repeats-summary.csv", col_types = cols())
 
 # repeats_df$length |> log10() |> hist()

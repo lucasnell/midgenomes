@@ -1,5 +1,7 @@
 library(tidyverse)
 
+#' DEFUNCT -- EVERYTHING HERE IS DONE INSIDE `make-genome-stats.R`
+
 
 #' Get transcript bounds for a given data frame read from a gff file and
 #' a string indicating the source database.
@@ -121,24 +123,8 @@ spp_df <- tibble(spp = c("Aaegyp", "Asteph", "Bantar", "Cmarin", "Cquinq",
                             "InsectBase", "InsectBase", "here", "InsectBase",
                             "here"))
 
-if (file.exists("_data/seq_lens.csv")) {
-    seq_len_df <- read_csv("_data/seq_lens.csv", col_types = "cci")
-} else {
-    seq_len_df <- spp_df$spp |>
-        map_dfr(\(s) {
-            .fn <- paste0("~/_data/_assemblies/", s, "_assembly.fasta.gz")
-            sl <- read_lines(.fn, progress = FALSE)
-            hl <- which(grepl("^>", sl))
-            ll <- c(hl[-1] - 1L, length(sl))
-            stopifnot(length(hl) == length(ll))
-            lens <- map_int(1:length(hl), \(i) sum(nchar(sl[(hl[i]+1L):(ll[i])])))
-            ids <- sl[hl] |> str_remove_all(">") |> str_remove("\ .*")
-            tibble(species = s, seqid = ids, length = lens)
-        })
-    write_csv(seq_len_df, "_data/seq_lens.csv")
-}
 
-
+seq_len_df <- read_csv("_data/seq_lens.csv", col_types = "cci")
 
 
 for (i in 1:nrow(spp_df)) {

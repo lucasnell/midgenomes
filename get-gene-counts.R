@@ -2,6 +2,9 @@
 library(tidyverse)
 
 #'
+#' DEFUNCT -- THIS IS DONE INSIDE `make-genome-stats.R`
+#'
+#'
 #' Get counts of the number of genes in each assembly's protein sets,
 #' accounting for the fact that many genes contain multiple isoforms.
 #'
