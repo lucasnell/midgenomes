@@ -16,3 +16,5 @@
 explore-assembly-stats.R
 
 *.xz
+
+_figures
