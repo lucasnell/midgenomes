@@ -94,19 +94,22 @@ rm $FULL_SPECIES_TREE
 
 
 
-# echo -e "k\t-lnL" >> nLL.txt
-# for i in {7..9}; do
-#     CAFE_OUT=cafe_k${i}
-#     cafe5 -t ${SPECIES_TREE} -i ${COUNTS_FILE} -c ${THREADS} -p -k $i \
-#         -o ${CAFE_OUT} \
-#         > ${CAFE_OUT}.out
-#     echo -ne "$i\t" >> nLL.txt
-#     grep -A 1 "Inferring processes for Gamma model" ${CAFE_OUT}.out \
-#         | grep "^Score" \
-#         | sed 's/Score (-lnL): *//g' \
-#         >> nLL.txt
-#     unset -v CAFE_OUT
-# done
+# Run for multiple levels of k and save negative log likelihoods to choose
+# which k to stick with
+
+echo -e "k\t-lnL" >> nLL.txt
+for i in {3..9}; do
+    CAFE_OUT=cafe_k${i}
+    cafe5 -t ${SPECIES_TREE} -i ${COUNTS_FILE} -c ${THREADS} -p -k $i \
+        -o ${CAFE_OUT} \
+        > ${CAFE_OUT}.out
+    echo -ne "$i\t" >> nLL.txt
+    grep -A 1 "Inferring processes for Gamma model" ${CAFE_OUT}.out \
+        | grep "^Score" \
+        | sed 's/Score (-lnL): *//g' \
+        >> nLL.txt
+    unset -v CAFE_OUT
+done
 
 
 #' I then looked at the following plots in R:
