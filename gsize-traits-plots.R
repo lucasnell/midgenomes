@@ -11,37 +11,15 @@ library(patchwork)
 library(future)
 library(future.apply)
 
-theme_set(theme_classic())
-spp_pal <- turbo(100)[c(70+3*0:8, 60, 15+4*2:0, 30)] |> as.list()
-names(spp_pal) <- c("Ctenta", "Cripar", "Pvande", "Ppemba",
-                    "Tgraci", "Bantar", "Cmarin", "Pakamu",
-                    "Pstein", "Csonor", "Cquinq", "Aaegyp",
-                    "Asteph", "Mdomes")
-
 # For phylolm bootstrapping:
 plan(multisession)
 
-#' To convert back to full species names:
-spp_name_map <- list("Aaegyp" = "Aedes aegypti",
-                     "Asteph" = "Anopheles stephensi",
-                     "Bantar" = "Belgica antarctica",
-                     "Cripar" = "Chironomus riparius",
-                     "Ctenta" = "Chironomus tentans",
-                     "Cmarin" = "Clunio marinus",
-                     "Cquinq" = "Culex quinquefasciatus",
-                     "Csonor" = "Culicoides sonorensis",
-                     "Mdomes" = "Musca domestica",
-                     "Pstein" = "Parochlus steinenii",
-                     "Ppemba" = "Polypedilum pembai",
-                     "Pvande" = "Polypedilum vanderplanki",
-                     "Pakamu" = "Propsilocerus akamusi",
-                     "Tgraci" = "Tanytarsus gracilentus")
-# So it's the same order as spp_pal:
-spp_name_map <- spp_name_map[names(spp_pal)]
-
-full_spp_pal <- spp_pal
-names(full_spp_pal) <- map_chr(names(spp_pal), \(z) spp_name_map[[z]])
-
+# To create data frame used in phylolm:
+pl_df <- function(.df, spp_col = "spp_abbrev") {
+    .df <- as.data.frame(.df)
+    rownames(.df) <- paste(.df[[spp_col]])
+    return(.df)
+}
 
 
 #' =================================================================
@@ -50,31 +28,24 @@ names(full_spp_pal) <- map_chr(names(spp_pal), \(z) spp_name_map[[z]])
 #' =================================================================
 #' =================================================================
 
+
+
 gstat_df <- read_csv("_data/genome-stats.csv", col_types = cols()) |>
-    mutate(family = factor(family,
-                           levels = c("Chironomidae", "Ceratopogonidae",
-                                      "Culicidae", "Muscidae")),
-           species = factor(species,
-                            levels = c("Ctenta", "Cripar", "Pvande", "Ppemba",
-                                       "Tgraci", "Bantar", "Cmarin", "Pakamu",
-                                       "Pstein", "Csonor", "Cquinq", "Aaegyp",
-                                       "Asteph", "Mdomes"))) |>
-    filter(species != "Cmarin") |>
+    # ordering factors so their levels are in order they show up
+    mutate(family = factor(family, levels = unique(family)),
+           species = factor(species, levels = species),
+           spp_abbrev = factor(spp_abbrev, levels = spp_abbrev)) |>
+    # filter(spp_abbrev != "Cmarin") |>
     mutate(log_sum_interg_len = log10(sum_interg_len),
-           prop_interg_len = sum_interg_len / gsize,
-           prop_intron_len = (intron_len * n_introns * n_prots) / gsize,
-           full_spp = map_chr(paste(species), \(z) spp_name_map[[z]]) |>
-               factor(levels = unlist(spp_name_map)),
            chir = family == "Chironomidae",
            chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae")) |>
-    as.data.frame() |>
-    (\(x) { rownames(x) <- paste(x$species); return(x) })()
+    pl_df()
 
 
 
 #' =================================================================
 #' =================================================================
-#  Read repeat-element data ----
+#  Repeat-element info ----
 #' =================================================================
 #' =================================================================
 
@@ -93,58 +64,6 @@ rep_class_map <- list("SINE" = "SINEs",
 nonTE_classes <- c("RC", "Small_RNA", "Satellite", "Simple_repeat", "Low_complexity")
 # TE element classes:
 TE_classes <- names(rep_class_map)[!names(rep_class_map) %in% nonTE_classes]
-
-rep_pal <- as.list(plasma(9, begin = 0.2, end = 0.9)[c(5,1,6,2,7,3,8,4,9)])
-names(rep_pal) <- paste(rep_class_map)
-
-rep_df <- read_csv("_data/repeats-summary.csv", col_types = cols()) |>
-    filter(species != "Cmarin",
-           class != "Unclassified") |>
-    # filter(!class %in% nonTE_classes) |>
-    mutate(gsize = map_dbl(species, \(s) gstat_df$gsize[gstat_df$species == s]),
-           prop = length / gsize,
-           plot_class = map_chr(class, \(x) rep_class_map[[x]]) |>
-               factor(levels = unlist(rep_class_map)),
-           class = factor(class, levels = names(rep_class_map)),
-           species = factor(species, levels = levels(gstat_df$species)),
-           full_spp = map_chr(paste(species), \(z) spp_name_map[[z]]) |>
-               factor(levels = unlist(spp_name_map)),
-           family = map_vec(species, \(s) gstat_df$family[gstat_df$species == s]),
-           chir = family == "Chironomidae",
-           chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae"),
-           chir_cerat_fct = factor(chir_cerat, levels = c(TRUE, FALSE),
-                                   labels = c("Chir. + Cerat.", "Others"))) |>
-    select(-gsize)
-
-
-
-rep_elem_df <- rep_df |>
-    select(-length, -prop, -plot_class) |>
-    pivot_wider(names_from = class, values_from = elements) |>
-    mutate(total = rowSums(across(all_of(names(rep_class_map)))),
-           total_TE = rowSums(across(all_of(TE_classes))),
-           gsize = map_dbl(species, \(x) gstat_df$gsize[gstat_df$species == x]),
-           log_gsize = map_dbl(species, \(x) gstat_df$log_gsize[gstat_df$species == x])) |>
-    as.data.frame()
-rep_len_df <- rep_df |>
-    select(-elements, -prop, -plot_class) |>
-    pivot_wider(names_from = class, values_from = length) |>
-    mutate(total = rowSums(across(all_of(names(rep_class_map)))),
-           total_TE = rowSums(across(all_of(TE_classes))),
-           gsize = map_dbl(species, \(x) gstat_df$gsize[gstat_df$species == x]),
-           log_gsize = map_dbl(species, \(x) gstat_df$log_gsize[gstat_df$species == x])) |>
-    as.data.frame()
-rep_prop_df <- rep_df |>
-    select(-elements, -length, -plot_class) |>
-    pivot_wider(names_from = class, values_from = prop) |>
-    mutate(total = rowSums(across(all_of(names(rep_class_map)))),
-           total_TE = rowSums(across(all_of(TE_classes))),
-           gsize = map_dbl(species, \(x) gstat_df$gsize[gstat_df$species == x]),
-           log_gsize = map_dbl(species, \(x) gstat_df$log_gsize[gstat_df$species == x])) |>
-    as.data.frame()
-rownames(rep_elem_df) <- paste(rep_elem_df$species)
-rownames(rep_len_df) <- paste(rep_len_df$species)
-rownames(rep_prop_df) <- paste(rep_prop_df$species)
 
 
 
@@ -166,6 +85,44 @@ max(node.depth.edgelength(dip_tr))
 
 # dip_tr |> plot(no.margin = TRUE)
 
+
+
+
+#' ===========================================================================
+#' ===========================================================================
+#  Set aesthetics ----
+#' ===========================================================================
+#' ===========================================================================
+
+
+theme_set(theme_classic())
+spp_pal <- turbo(100)[c(70+3*0:8, 60, 15+4*2:0, 30)] |> as.list()
+names(spp_pal) <- c("Ctenta", "Cripar", "Pvande", "Ppemba",
+                    "Tgraci", "Bantar", "Cmarin", "Pakamu",
+                    "Pstein", "Csonor", "Cquinq", "Aaegyp",
+                    "Asteph", "Mdomes")
+
+
+#' To convert back to full species names:
+spp_name_map <- list("Aaegyp" = "Aedes aegypti",
+                     "Asteph" = "Anopheles stephensi",
+                     "Bantar" = "Belgica antarctica",
+                     "Cripar" = "Chironomus riparius",
+                     "Ctenta" = "Chironomus tentans",
+                     "Cmarin" = "Clunio marinus",
+                     "Cquinq" = "Culex quinquefasciatus",
+                     "Csonor" = "Culicoides sonorensis",
+                     "Mdomes" = "Musca domestica",
+                     "Pstein" = "Parochlus steinenii",
+                     "Ppemba" = "Polypedilum pembai",
+                     "Pvande" = "Polypedilum vanderplanki",
+                     "Pakamu" = "Propsilocerus akamusi",
+                     "Tgraci" = "Tanytarsus gracilentus")
+# So it's the same order as spp_pal:
+spp_name_map <- spp_name_map[names(spp_pal)]
+
+full_spp_pal <- spp_pal
+names(full_spp_pal) <- map_chr(names(spp_pal), \(z) spp_name_map[[z]])
 
 
 
