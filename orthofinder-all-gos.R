@@ -1,4 +1,9 @@
 
+#'
+#' Extract GO terms for all OrthoFinder HOGs.
+#' Output from here is used for CAFE.
+#'
+
 library(tidyverse)
 library(parallel)
 

@@ -1,3 +1,9 @@
+#'
+#' Extract GO terms for 1-to-1 OrthoFinder HOGs.
+#' Output from here is used for HyPhy.
+#'
+
+
 
 library(tidyverse)
 library(parallel)

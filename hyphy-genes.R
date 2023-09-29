@@ -71,9 +71,6 @@ get_term <- function(gos) {
 }
 
 
-
-
-
 #' Within response to stimulus > response to chemical >
 #' response to inorganic substance:
 #'
@@ -99,7 +96,7 @@ get_term <- function(gos) {
 #' Within response to stimulus > response to external stimulus > response to
 #' stress > response to other organism:
 #'
-#'   * GO:0098542 defense response to other organism
+#'   * GO:0098542 - defense response to other organism
 #'
 
 

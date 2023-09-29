@@ -3,10 +3,12 @@
 
 library(clusterProfiler)
 library(GO.db)
+library(AnnotationDbi)
 # ^^ make sure these are loaded before tidyverse ^^
 library(rrvgo)
 library(org.Dm.eg.db)
 library(tidyverse)
+
 
 #' #' Show node names of cafe tree:
 #' ```r
@@ -106,7 +108,7 @@ genes <- chir_hogs |>
 
 overrep <- enricher(genes,
                     pvalueCutoff = 0.1, pAdjustMethod = "BH",
-                    minGSSize = 1, qvalueCutoff = 0.2,
+                    minGSSize = 1,
                     TERM2GENE=term2gene, TERM2NAME=term2name)
 overrep |> as_tibble()
 
