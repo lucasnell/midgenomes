@@ -34,61 +34,40 @@ BY_correct <- function(Pvals, .names, fdr = 0.05) {
 
 
 
-absrel <- \(x) paste0("~/_data/chir_hyphy_absrel/", x)
 busted <- \(x) paste0("~/_data/chir_hyphy_busted/", x)
 relax <- \(x) paste0("~/_data/chir_hyphy_relax/", x)
 
 
-all_absrel_data <- list.files(absrel(""), "*.json") |>
-    map(\(x) { tryCatch(read_json(absrel(x)), error = function(e) NA) })
 all_busted_data <- list.files(busted(""), "*.json") |>
     map(\(x) { tryCatch(read_json(busted(x)), error = function(e) NA) })
 all_relax_data <- list.files(relax(""), "*.json") |>
     map(\(x) { tryCatch(read_json(relax(x)), error = function(e) NA) })
-names(all_absrel_data) <- list.files(absrel(""), "*.json") |> str_remove(".json$")
 names(all_busted_data) <- list.files(busted(""), "*.json") |> str_remove(".json$")
 names(all_relax_data) <- list.files(relax(""), "*.json") |> str_remove(".json$")
 
-str(all_absrel_data[[1]], max.level = 1)
 str(all_busted_data[[1]], max.level = 1)
 str(all_relax_data[[1]], max.level = 1)
 
 
-#' The same 12 HOGs failed for all 3 No idea why.
-mean(map_lgl(all_absrel_data, \(x) isTRUE(is.na(x))))
+#' The same 12 HOGs failed for both. No idea why.
 mean(map_lgl(all_busted_data, \(x) isTRUE(is.na(x))))
 mean(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))
-identical(names(which(map_lgl(all_absrel_data, \(x) isTRUE(is.na(x))))),
-          names(which(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))))
 identical(names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x))))),
           names(which(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))))
 names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x)))))
 
 
 # Remove these failed ones.
-absrel_data <- all_absrel_data[map_lgl(all_absrel_data, \(x) !isTRUE(is.na(x)))]
 busted_data <- all_busted_data[map_lgl(all_busted_data, \(x) !isTRUE(is.na(x)))]
 relax_data <- all_relax_data[map_lgl(all_relax_data, \(x) !isTRUE(is.na(x)))]
 
 # These objects take up a lot of memory, so remove them from environment:
-rm(all_absrel_data, all_busted_data, all_relax_data); invisible(gc())
+rm(all_busted_data, all_relax_data); invisible(gc())
 
 
-# # For aBSREL, this is how you get individual p-values:
-# absrel_data[[1]][["branch attributes"]][["0"]] |>
-#     map_dbl(\(x) {z <- x$`Corrected P-value`; ifelse(is.null(z), NA_real_, z)})
-
-
-hyphy_df <- tibble(hog = names(absrel_data),
-                   absrel_signifs = map_dbl(absrel_data, \(x) {
-                       x[["test results"]][["positive test results"]]
-                   }),
-                   busted_pvals = map_dbl(busted_data, \(x) {
-                       x[["test results"]][["p-value"]]
-                   }),
-                   relax_pvals = map_dbl(relax_data, \(x) {
-                       x[["test results"]][["p-value"]]
-                   }),
+hyphy_df <- tibble(hog = names(busted_data),
+                   busted_pvals = map_dbl(busted_data, \(x) x[["test results"]][["p-value"]]),
+                   relax_pvals = map_dbl(relax_data, \(x) x[["test results"]][["p-value"]]),
                    relax_k = map_dbl(relax_data, \(x) {
                        n <- "relaxation or intensification parameter"
                        return(x[["test results"]][[n]])
@@ -96,7 +75,6 @@ hyphy_df <- tibble(hog = names(absrel_data),
                    busted_disc = BY_correct(busted_pvals, hog),
                    relax_disc = BY_correct(relax_pvals, hog))
 
-table(hyphy_df$absrel_signifs)
 sum(hyphy_df$busted_disc)
 sum(hyphy_df$relax_disc)
 sum(hyphy_df$busted_disc & hyphy_df$relax_disc)
