@@ -1,6 +1,7 @@
 
-library(tidyverse)
-library(ape)
+
+source("_scripts/00-preamble.R")
+
 library(phylolm)
 library(phyr)
 library(future)
@@ -8,14 +9,6 @@ library(future.apply)
 
 # For phylolm bootstrapping:
 plan(multisession)
-
-# To create data frame used in phylolm:
-pl_df <- function(.df, spp_col = "spp_abbrev") {
-    .df <- as.data.frame(.df)
-    rownames(.df) <- paste(.df[[spp_col]])
-    return(.df)
-}
-
 
 
 
@@ -43,7 +36,11 @@ gstat_df <- read_csv("_data/genome-stats.csv", col_types = cols()) |>
     rename_with(\(x) paste0("log_", x), DNA:Small_RNA) |>
     select(spp_abbrev, chir_cerat, log_gsize, log_n_genes, log_sum_interg_len,
            mean_log_intron_len, log_DNA:log_Small_RNA) |>
-    pl_df()
+    as.data.frame() |>
+    (\(.df) {
+        rownames(.df) <- paste(.df[["spp_abbrev"]])
+        return(.df)
+    })()
 
 
 
