@@ -1,13 +1,15 @@
-library(tidyverse)
-library(here)
 
-divsum_dir <- "~/_data/_repeats/repeats_diverg/divsum"
+
+source("00-preamble.R")
+
+
+divsum_dir <- paste0(repeats_dir, "/repeats_diverg/divsum")
 
 species <- list.files(divsum_dir) |> str_remove("\\.divsum")
 
 theme_set(theme_minimal())
 
-gsizes <- here("_data/genome-stats.csv") |>
+gsizes <- "_data/genome-stats.csv" |>
     read_csv(col_types = cols()) |>
     select(species, gsize) |>
     (\(x) {

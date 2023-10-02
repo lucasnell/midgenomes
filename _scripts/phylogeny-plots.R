@@ -104,7 +104,9 @@ force_ultrametric <- function(treedata_obj) {
 time_tr <- read.mcmctree(paste0(mcmctree_dir, "/mcmc_1/FigTree.tre")) |>
     force_ultrametric()
 
-write.tree(time_tr@phylo, "_data/time-tree.nwk")
+if (!file.exists("_data/phylo/time-tree.nwk")) {
+    write.tree(time_tr@phylo, "_data/phylo/time-tree.nwk")
+}
 
 time_tr@data[["CI"]] <- time_tr@data[["0.95HPD"]] |> map(as.numeric)
 time_tr@phylo$tip.label <- expand_spp(time_tr@phylo$tip.label)
@@ -112,7 +114,7 @@ time_tr@phylo$tip.label <- expand_spp(time_tr@phylo$tip.label)
 
 time_tr_p0 <- ggtree(time_tr) +
     geom_rootedge(0.04) +
-    geom_tiplab(size = 10 / 2.83465, fontface = "italic") +
+    geom_tiplab(size = 9 / 2.83465, fontface = "italic") +
     geom_range("CI", color = "dodgerblue", size = 3, alpha = 0.5,
                center = "reltime") +
     theme_tree2()
@@ -125,5 +127,5 @@ time_tr_p <- time_tr_p0 |>
 
 time_tr_p
 
-save_plot("time-tree", time_tr_p, 6.5, 4)
+save_plot("time-tree", time_tr_p, 6, 4, .png = FALSE)
 

@@ -1,5 +1,8 @@
+
+source("_scripts/00-preamble.R")
+
 library(jsonlite)
-library(tidyverse)
+
 
 # LEFT OFF ----
 #' How to summarize this information?
@@ -34,8 +37,8 @@ BY_correct <- function(Pvals, .names, fdr = 0.05) {
 
 
 
-busted <- \(x) paste0("~/_data/chir_hyphy_busted/", x)
-relax <- \(x) paste0("~/_data/chir_hyphy_relax/", x)
+busted <- \(x) paste0(hyphy_busted_dir, "/", x)
+relax <- \(x) paste0(hyphy_relax_dir, "/", x)
 
 
 all_busted_data <- list.files(busted(""), "*.json") |>

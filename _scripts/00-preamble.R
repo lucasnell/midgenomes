@@ -17,6 +17,10 @@ assembly_dir <- "~/_data/_assemblies"
 proteins_dir <- "~/_data/_proteins"
 features_dir <- "~/_data/_features"
 repeats_dir <- "~/_data/_repeats"
+hyphy_busted_dir <- "~/_data/chir_hyphy_busted"
+hyphy_relax_dir <- "~/_data/chir_hyphy_relax"
+
+
 
 
 library(tidyverse)
