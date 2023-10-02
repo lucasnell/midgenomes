@@ -1,25 +1,12 @@
 
-library(tidyverse)
-library(viridisLite)
+
+source("_scripts/00-preamble.R")
+
 library(ggridges)
-library(ape)
-library(phylolm)
-library(phyr)
 library(ggtree)
 library(treeio)
 library(patchwork)
-library(future)
-library(future.apply)
 
-# For phylolm bootstrapping:
-plan(multisession)
-
-# To create data frame used in phylolm:
-pl_df <- function(.df, spp_col = "spp_abbrev") {
-    .df <- as.data.frame(.df)
-    rownames(.df) <- paste(.df[[spp_col]])
-    return(.df)
-}
 
 
 #' =================================================================

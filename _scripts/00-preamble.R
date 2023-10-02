@@ -4,8 +4,27 @@
 #'
 
 
+#'
+#' Update these on your system (do NOT include trailing '/'):
+#'
+raxml_supp_dir <- "~/_data/_phylo/chir_raxml_supp"
+mcmctree_dir <- "~/_data/_phylo/chir_mcmctree"
+cafe_dir <- "~/_data/chir_cafe"
+orthofinder_dir <- "~/_data/chir_orthofinder/orthofinder-output"
+orthofinder_extr_dir <- "~/_data/_orthofinder-extraction"
+go_dir <- "~/_data/_go-terms"
+assembly_dir <- "~/_data/_assemblies"
+proteins_dir <- "~/_data/_proteins"
+features_dir <- "~/_data/_features"
+repeats_dir <- "~/_data/_repeats"
+
+
 library(tidyverse)
+library(viridisLite)
 library(ape)
+library(parallel)
+
+options(mc.cores = max(1L, detectCores()-2L))
 
 
 if (file.exists(".Rprofile")) source(".Rprofile")
@@ -31,10 +50,6 @@ save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {
     options(warn = old_warn)
     invisible(NULL)
 }
-
-raxml_supp_dir <- "~/_data/_phylo/chir_raxml_supp"
-mcmctree_dir <- "~/_data/_phylo/chir_mcmctree"
-
 
 #' Functions to expand and abbreviate species names.
 #' Because they both involve reading `_data/species-names-families.csv`,

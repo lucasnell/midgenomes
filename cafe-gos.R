@@ -5,16 +5,19 @@ library(clusterProfiler)
 library(GO.db)
 library(AnnotationDbi)
 # ^^ make sure these are loaded before tidyverse ^^
+
 library(rrvgo)
 library(org.Dm.eg.db)
-library(tidyverse)
+
+source("_scripts/00-preamble.R")
 
 
 #' #' Show node names of cafe tree:
 #' ```r
 #' library(ape)
 #' library(ggtree)
-#' cafe_tr <- read_lines("~/_data/chir_cafe/cafe_k8_run1/Gamma_asr.tre") |>
+#' cafe_tr <- paste0(cafe_dir, "/cafe_k8_run1/Gamma_asr.tre") |>
+#'     read_lines() |>
 #'     keep(~ startsWith(.x, "  TREE")) |>
 #'     getElement(1) |>
 #'     str_remove(".*= ") |>
@@ -29,7 +32,7 @@ library(tidyverse)
 
 
 #' Gene count changes:
-gc_df <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_change.tab" |>
+gc_df <- paste0(cafe_dir, "/cafe_k8_run1/Gamma_change.tab") |>
     read_tsv(col_types = paste0(c("c", rep("d", 25)), collapse = "")) |>
     # change in count from node 20 to 17 (i.e., to chironomidae):
     mutate(chir_d = !!.node, hog = FamilyID) |>
@@ -41,7 +44,7 @@ gc_df <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_change.tab" |>
 #' for each HOG.
 #' I had to do the column names this way because it has a weird extra
 #' tab at the end of the line.
-bp_file <- "~/_data/chir_cafe/cafe_k8_run1/Gamma_branch_probabilities.tab"
+bp_file <- paste0(cafe_dir, "/cafe_k8_run1/Gamma_branch_probabilities.tab")
 hog_pd_df <- read_tsv(bp_file,
                          na = "N/A", col_types =
                              paste0(c("c", rep("d", 25),"c"), collapse = ""),
@@ -61,7 +64,7 @@ hog_pd_df |>
 
 
 # GO terms for all HOGs:
-hog_gos <- "~/_data/_orthofinder-extraction/All_HOG_GO/N0-GO-by-HOG.tsv" |>
+hog_gos <- paste0(orthofinder_extr_dir, "/All_HOG_GO/N0-GO-by-HOG.tsv") |>
     read_tsv(col_types = cols())
 
 

@@ -22,9 +22,9 @@ library(sf)
 #' ===========================================================================
 #' ===========================================================================
 
-myvatn_map <- st_read("_data/Myvatn_WSGUTM28.geojson")
+myvatn_map <- st_read("_data/spatial/Myvatn_WSGUTM28.geojson")
 
-samp_df <- read_csv("_data/Tgraci-sample-locations.csv", col_types = "cdd")
+samp_df <- read_csv("_data/spatial/Tgraci-sample-locations.csv", col_types = "cdd")
 
 myvatn_bounds <- st_bbox(myvatn_map) |> as.list()
 
@@ -68,7 +68,7 @@ save_plot("myvatn_map", myvatn_p, 4, 5, .png = FALSE)
 
 
 # Iceland outline is from GADM data (version 4.1; https://gadm.org/)
-iceland_map <- st_read("_data/gadm41_ISL_0.json") |>
+iceland_map <- st_read("_data/spatial/gadm41_ISL_0.geojson") |>
     st_transform(st_crs("+proj=utm +zone=28 ellps=WGS84"))
 geom_nrows <- map_int(iceland_map$geometry[[1]], \(x) nrow(x[[1]]))
 

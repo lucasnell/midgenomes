@@ -4,37 +4,30 @@
 #' Output from here is used for CAFE.
 #'
 
-library(tidyverse)
-library(parallel)
 
-options(mc.cores = max(1L, detectCores()-2L))
+source("_scripts/00-preamble.R")
+
 
 
 #' OrthoFinder directory. It's assumed this directory is unchanged from the
 #' output from OrthoFinder.
 ofd <- function(...) {
     dots <- list(...)
-    base_dir <- "~/_data/chir_orthofinder/orthofinder-output"  ## << change as necessary
-    base_dir <- str_remove(base_dir, "/$")
-    if (length(dots) == 0) return(base_dir)
-    do.call(paste0, c(list(base_dir, "/"), dots))
+    if (length(dots) == 0) return(orthofinder_dir)
+    do.call(paste0, c(list(orthofinder_dir, "/"), dots))
 }
 #' OrthoFinder Extraction directory. This is where files live that contain
 #' information we extracted from the OrthoFinder information.
 oed <- function(...) {
     dots <- list(...)
-    base_dir <- "~/_data/_orthofinder-extraction"  ## << change as necessary
-    base_dir <- str_remove(base_dir, "/$")
-    if (length(dots) == 0) return(base_dir)
-    do.call(paste0, c(list(base_dir, "/"), dots))
+    if (length(dots) == 0) return(orthofinder_extr_dir)
+    do.call(paste0, c(list(orthofinder_extr_dir, "/"), dots))
 }
 #' GO terms directory
 god <- function(...) {
     dots <- list(...)
-    base_dir <- "~/_data/_go-terms"  ## << change as necessary
-    base_dir <- str_remove(base_dir, "/$")
-    if (length(dots) == 0) return(base_dir)
-    do.call(paste0, c(list(base_dir, "/"), dots))
+    if (length(dots) == 0) return(go_dir)
+    do.call(paste0, c(list(go_dir, "/"), dots))
 }
 #' This removes transcript id that's an extension separated by
 #' either the last '-' or '.'

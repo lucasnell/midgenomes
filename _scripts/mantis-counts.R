@@ -3,8 +3,7 @@
 #' Updated on 2023-09-20
 
 
-library(tidyverse)
-
+source("_scripts/00-preamble.R")
 
 
 #' -------------------------------------------------
@@ -26,7 +25,7 @@ lab_dbs <- function(x) {
 
 map_dfr(c("Cripar", "Csonor", "Pstein", "Tgraci"),
         \(spp) {
-            anno_file <- paste0("~/_data/_go-terms/zzz-mantis-full/", spp,
+            anno_file <- paste0(go_dir, "/zzz-mantis-full/", spp,
                                 "_mantis/output_annotation.tsv")
             anno_df <- read_tsv(anno_file, col_types = cols())
             # Total number of proteins annotated:
@@ -64,7 +63,7 @@ tag_interest <- c("kegg_ko", "go", "cog", "enzyme_ec", "kegg_pathway")
 
 map_dfr(c("Cripar", "Csonor", "Pstein", "Tgraci"),
         \(spp) {
-            anno_file <- paste0("~/_data/_go-terms/zzz-mantis-full/", spp,
+            anno_file <- paste0(go_dir, "/zzz-mantis-full/", spp,
                                 "_mantis/consensus_annotation.tsv")
             anno_tags <- read_lines(anno_file) |>
                 str_split("\t") |>

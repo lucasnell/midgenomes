@@ -1,12 +1,10 @@
 
-#' Make `genome-stats.csv`, `seq_lens.csv`, `intergenic-%s.csv.xz`,
-#' `introns-%s.csv.xz`, `repeats-summary.csv` files all inside `_data`.
+#' Make `genome-stats.csv`, `intergenic/*.csv.xz`, and `introns/*.csv.xz`
+#' files all inside `_data`.
 
 
-library(tidyverse)
-library(parallel)
+source("_scripts/00-preamble.R")
 
-options("mc.cores" = max(1L, detectCores() - 2L))
 
 #' Safe call to `mcmapply` that reverts to `mapply` on Windows:
 safe_mcmapply <- function(FUN, ..., MoreArgs = NULL) {
@@ -29,16 +27,6 @@ safe_mclapply <- function(X, FUN, ...) {
     return(out)
 }
 
-
-
-#' --------------------
-#' Set these directories:
-#' --------------------
-assembly_dir <- "~/_data/_assemblies"
-proteins_dir <- "~/_data/_proteins"
-features_dir <- "~/_data/_features"
-orthofinder_dir <- "~/_data/chir_orthofinder/orthofinder-output"
-repeats_dir <- "~/_data/_repeats"
 
 
 
@@ -81,22 +69,17 @@ gstats_df$annot_source[gstats_df$species == "Musca domestica"] <- "InsectBase"
 #'
 #' Note: `seq_len_df` is necessary for intergenic sequences below
 #'
-if (file.exists("_data/seq_lens.csv")) {
-    seq_len_df <- read_csv("_data/seq_lens.csv", col_types = "cci")
-} else {
-    seq_len_df <- gstats_df$spp_abbrev |>
-        map_dfr(\(s) {
-            .fn <- paste0(assembly_dir, "/", s, "_assembly.fasta.gz")
-            sl <- read_lines(.fn, progress = FALSE)
-            hl <- which(grepl("^>", sl))
-            ll <- c(hl[-1] - 1L, length(sl))
-            stopifnot(length(hl) == length(ll))
-            lens <- map_int(1:length(hl), \(i) sum(nchar(sl[(hl[i]+1L):(ll[i])])))
-            ids <- sl[hl] |> str_remove_all(">") |> str_remove("\ .*")
-            tibble(spp_abbrev = s, seqid = ids, length = lens)
-        })
-    write_csv(seq_len_df, "_data/seq_lens.csv")
-}
+seq_len_df <- gstats_df$spp_abbrev |>
+    map_dfr(\(s) {
+        .fn <- paste0(assembly_dir, "/", s, "_assembly.fasta.gz")
+        sl <- read_lines(.fn, progress = FALSE)
+        hl <- which(grepl("^>", sl))
+        ll <- c(hl[-1] - 1L, length(sl))
+        stopifnot(length(hl) == length(ll))
+        lens <- map_int(1:length(hl), \(i) sum(nchar(sl[(hl[i]+1L):(ll[i])])))
+        ids <- sl[hl] |> str_remove_all(">") |> str_remove("\ .*")
+        tibble(spp_abbrev = s, seqid = ids, length = lens)
+    })
 
 
 gsize_df <- seq_len_df |>
@@ -176,9 +159,6 @@ ngenes_df <- gstats_df |>
 # Introns ----
 #' ===========================================================================
 
-#' HOG file for N0 node from OrthoFinder:
-hog_file_n0 <- paste0(orthofinder_dir, "/Phylogenetic_Hierarchical_Orthogroups/N0.tsv")
-
 
 #'
 #' Find names of "... genes with orthologues across [all]... species ... and
@@ -188,7 +168,8 @@ hog_file_n0 <- paste0(orthofinder_dir, "/Phylogenetic_Hierarchical_Orthogroups/N
 #' are also captured.
 #'
 
-gnames_df <- hog_file_n0 |>
+gnames_df <- orthofinder_dir |>
+    paste0("/Phylogenetic_Hierarchical_Orthogroups/N0.tsv") |>
     read_tsv(col_types = cols()) |>
     #' This species only had ~58% of genes match to orthogroups, so
     #' I'm removing it from the analyses:
@@ -411,7 +392,7 @@ get_introns <- function(.spp, .source, .genes, .write = FALSE) {
         select(seqid, gene, trans, id, start, end)
 
     if (.write) {
-        out_fn <- sprintf("_data/introns-%s.csv.xz", .spp)
+        out_fn <- sprintf("_data/introns/%s.csv.xz", .spp)
         cat("Writing to ", out_fn, "\n")
         write_csv(intron_df, out_fn)
     }
@@ -490,7 +471,7 @@ get_intergenic <- function(.spp, .source,
         })
 
     if (.write) {
-        out_fn <- sprintf("_data/intergenic-%s.csv.xz", .spp)
+        out_fn <- sprintf("_data/intergenic/%s.csv.xz", .spp)
         cat("Writing to ", out_fn, "\n")
         write_csv(igl_df, out_fn, progress = FALSE)
     }
@@ -560,16 +541,11 @@ one_spp_repeats <- function(.spp) {
 }
 
 
-repeats_df <- c("Aaegyp", "Asteph", "Bantar", "Cmarin", "Cquinq", "Cripar",
+repeats_len_df <- c("Aaegyp", "Asteph", "Bantar", "Cmarin", "Cquinq", "Cripar",
                 "Csonor", "Ctenta", "Mdomes", "Pakamu", "Ppemba",
                 "Pstein", "Pvande", "Tgraci") |>
     safe_mclapply(one_spp_repeats) |>
-    do.call(what = bind_rows)
-
-write_csv(repeats_df, "_data/repeats-summary.csv")
-
-
-repeats_len_df <- repeats_df |>
+    do.call(what = bind_rows) |>
     select(spp_abbrev, class, length) |>
     pivot_wider(names_from = class, values_from = length) |>
     mutate(spp_abbrev = factor(spp_abbrev, levels = levels(gstats_df$spp_abbrev))) |>

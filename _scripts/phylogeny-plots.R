@@ -22,7 +22,7 @@ library(viridis)
 #' Tree from RAxML-NG with bootstrap (n = 1000) branch support
 #' using Felsenstein bootstrap
 boot_tr <- read.tree(paste0(raxml_supp_dir, "/chir_supp.raxml.supportFBP"))
-ml_tr <- read.tree("~/_data/_phylo/chir_ml.tree")
+ml_tr <- read.tree("_data/phylo/chir_ml.nwk")
 ml_tr$node.label <- boot_tr$node.label
 ml_tr$tip.label <- expand_spp(ml_tr$tip.label)
 

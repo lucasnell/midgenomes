@@ -35,7 +35,7 @@ spp_pal <- turbo(100)[c(70+4*0:7, 60, 15+4*2:0, 30)]
 
 
 intron_df <- map_dfr(spp_df$species, \(.spp) {
-    sprintf("_data/introns-%s.csv.xz", .spp) |>
+    sprintf("_data/introns/%s.csv.xz", .spp) |>
         read_csv(col_types = cols(), progress = FALSE) |>
         mutate(species = .spp, family = spp_df$family[spp_df$species == .spp],
                intron_len = as.integer(end - start + 1)) |>

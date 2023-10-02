@@ -36,7 +36,7 @@ spp_pal <- turbo(100)[c(70+3*0:8, 60, 15+4*2:0, 30)]
 names(spp_pal) <- levels(spp_df$species)
 
 interg_df <- map_dfr(spp_df$species, \(.spp) {
-    sprintf("_data/intergenic-%s.csv.xz", .spp) |>
+    sprintf("_data/intergenic/%s.csv.xz", .spp) |>
         read_csv(col_types = cols(), progress = FALSE) |>
         mutate(species = .spp, family = spp_df$family[spp_df$species == .spp]) |>
         filter(interg_len > 0) |>

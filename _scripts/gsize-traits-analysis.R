@@ -59,7 +59,7 @@ rescale_phy <- function(x) {
     return(x)
 }
 
-dip_tr <- read.tree("~/_data/_phylo/chir_mcmctree.nwk") |>
+dip_tr <- read.tree("_data/phylo/time-tree.nwk") |>
     reorder("pruningwise") |>
     rescale_phy()
 

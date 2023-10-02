@@ -10,8 +10,8 @@
 #' docker container using the following command:
 #'
 #' ```
-#' docker run -it --rm=true --platform linux/amd64 -v ~/_data:/data \
-#'     lucasnell/midgenomes:v1.0.8 /bin/bash
+#' docker run -it --rm=true --platform linux/amd64 -v <midgenomes DIRECTORY>/_data:/data \
+#'     lucasnell/midgenomes:v1.0.10 /bin/bash
 #' ```
 #'
 #' Once inside the container, I run the following bash code:
@@ -123,7 +123,7 @@ ddBD = function(tr, outgroup, root.time = 1, measure = c("SSE","KL")){
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
-rel_tr <- read.tree("/data/_phylo/chir_mega_relTimes.nwk")
+rel_tr <- read.tree("/data/phylo/chir_mega_relTimes.nwk")
 
 #' Notes:
 #' * Because RelTime-ML in MEGA removes the outgroup from the relative-time
