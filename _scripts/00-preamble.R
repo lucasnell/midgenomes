@@ -33,6 +33,11 @@ options(mc.cores = max(1L, detectCores()-2L))
 
 if (file.exists(".Rprofile")) source(".Rprofile")
 
+
+theme_set(theme_classic() +
+              theme(strip.background = element_blank()))
+
+
 save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {
     stopifnot(is.character(n) && length(n) == 1)
     stopifnot(is.ggplot(p))

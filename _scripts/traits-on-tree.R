@@ -98,7 +98,6 @@ p_dip_tr <- read.tree("_data/phylo/time-tree.nwk") |>
 #' ===========================================================================
 
 
-theme_set(theme_classic())
 spp_pal <- full_spp_pal <- turbo(100)[c(70+3*0:8, 60, 15+4*2:0, 30)] |> as.list()
 names(spp_pal) <- levels(feature_df$spp_abbrev)
 names(full_spp_pal) <- levels(feature_df$species)
