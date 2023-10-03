@@ -2,6 +2,7 @@
 
 source("_scripts/00-preamble.R")
 
+library(phyr)
 library(ggtree)
 library(treeio)
 library(patchwork)
@@ -38,6 +39,24 @@ feature_df <- read_csv("_data/genome-stats.csv", col_types = cols()) |>
 
 #' ===========================================================================
 #' ===========================================================================
+#  Read correlation models ----
+#' ===========================================================================
+#' ===========================================================================
+
+corr_list <- read_rds("_data/gsize-corrs.rds") |>
+    split(~ feature) |>
+    map(\(x) {
+        if ((x$corr_lo > 0 && x$corr_hi > 0) ||
+            (x$corr_lo < 0 && x$corr_hi < 0)) {
+            sig_str <- "*"
+        } else sig_str <- ""
+        sprintf("r = %.2f%s", x$corr, sig_str)
+    })
+
+
+
+#' ===========================================================================
+#' ===========================================================================
 #  Plots - gsize vs ----
 #' ===========================================================================
 #' ===========================================================================
@@ -50,9 +69,24 @@ one_gsize_corr_p <- function(.y_var, .y_subtr, .y_lab, .y_breaks, .y_lims) {
         y_scale <- scale_y_continuous(.y_lab, breaks = log10(.y_breaks),
                                       labels = .y_breaks, limits = .y_lims)
     }
+    if (grepl("n_genes", .y_var)) {
+        .hj <- 1;
+        .x_fun <- max
+    } else {
+        .hj <- 0;
+        .x_fun <- min
+    }
+    if (is.null(.y_lims)) {
+        .y_max <- max(feature_df[[.y_var]] - .y_subtr, na.rm = TRUE)
+    } else .y_max <- max(.y_lims)
     p <- feature_df |>
         ggplot(aes(log_gsize, .data[[.y_var]] - .y_subtr)) +
         geom_point(aes(color = species), size = 2, na.rm = TRUE) +
+        geom_text(data = tibble(log_gsize = .x_fun(feature_df$log_gsize),
+                                y = .y_max,
+                                lab = corr_list[[.y_var]]),
+                  aes(y = y, label = lab), size = 6 / 2.83465,
+                  hjust = .hj, vjust = 1) +
         y_scale +
         scale_x_continuous("Genome size (Mb)",
                            breaks = log10(100e6 * 2^(0:3)),
