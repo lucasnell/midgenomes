@@ -37,8 +37,8 @@ BY_correct <- function(Pvals, .names, fdr = 0.05) {
 
 
 
-busted <- \(x) paste0(hyphy_busted_dir, "/", x)
-relax <- \(x) paste0(hyphy_relax_dir, "/", x)
+busted <- \(x) paste0(dirs$hyphy_busted, "/", x)
+relax <- \(x) paste0(dirs$hyphy_relax, "/", x)
 
 
 all_busted_data <- list.files(busted(""), "*.json") |>

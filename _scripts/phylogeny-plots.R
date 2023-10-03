@@ -21,7 +21,7 @@ library(viridis)
 
 #' Tree from RAxML-NG with bootstrap (n = 1000) branch support
 #' using Felsenstein bootstrap
-boot_tr <- read.tree(paste0(raxml_supp_dir, "/chir_supp.raxml.supportFBP"))
+boot_tr <- read.tree(paste0(dirs$raxml_supp, "/chir_supp.raxml.supportFBP"))
 ml_tr <- read.tree("_data/phylo/chir_ml.nwk")
 ml_tr$node.label <- boot_tr$node.label
 ml_tr$tip.label <- expand_spp(ml_tr$tip.label)
@@ -50,10 +50,10 @@ save_plot("ML-tree", ml_tr_p, 6.5, 4)
 #' ===========================================================================
 
 
-tt1 <- read.mcmctree(paste0(mcmctree_dir, "/mcmc_1/FigTree.tre"))@data
-tt2 <- read.mcmctree(paste0(mcmctree_dir, "/mcmc_2/FigTree.tre"))@data
-tt3 <- read.mcmctree(paste0(mcmctree_dir, "/mcmc_3/FigTree.tre"))@data
-tt4 <- read.mcmctree(paste0(mcmctree_dir, "/mcmc_4/FigTree.tre"))@data
+tt1 <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre"))@data
+tt2 <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_2/FigTree.tre"))@data
+tt3 <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_3/FigTree.tre"))@data
+tt4 <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_4/FigTree.tre"))@data
 
 # All rows correspond to the same nodes:
 all(tt1$node == tt2$node) && all(tt1$node == tt3$node) && all(tt1$node == tt4$node)
@@ -101,7 +101,7 @@ force_ultrametric <- function(treedata_obj) {
     return(treedata_obj)
 }
 
-time_tr <- read.mcmctree(paste0(mcmctree_dir, "/mcmc_1/FigTree.tre")) |>
+time_tr <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre")) |>
     force_ultrametric()
 
 if (!file.exists("_data/phylo/time-tree.nwk")) {

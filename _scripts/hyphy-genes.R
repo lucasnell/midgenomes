@@ -29,7 +29,7 @@ write_faa <- function(faa_obj, fn) {
 }
 
 
-hog_gos <- orthofinder_extr_dir |>
+hog_gos <- dirs$orthofinder_extr |>
     paste0("/Single_Copy_HOG_GO/N0-GO-by-HOG.tsv") |>
     read_tsv(col_types = cols()) |>
     mutate(go = go |>
@@ -145,7 +145,7 @@ all_hogs <- focal_go_df$hogs |>
     do.call(what = c) |>
     unique()
 
-hog_genes <- orthofinder_extr_dir |>
+hog_genes <- dirs$orthofinder_extr |>
     paste0("/Single_Copy_HOG_GO/N0-GO-by-species-genes.tsv") |>
     read_tsv(col_types = cols()) |>
     select(-go) |>

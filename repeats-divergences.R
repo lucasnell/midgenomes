@@ -3,7 +3,7 @@
 source("00-preamble.R")
 
 
-divsum_dir <- paste0(repeats_dir, "/repeats_diverg/divsum")
+divsum_dir <- paste0(dirs$repeats, "/repeats_diverg/divsum")
 
 species <- list.files(divsum_dir) |> str_remove("\\.divsum")
 

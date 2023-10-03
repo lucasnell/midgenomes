@@ -71,7 +71,7 @@ gstats_df$annot_source[gstats_df$species == "Musca domestica"] <- "InsectBase"
 #'
 seq_len_df <- gstats_df$spp_abbrev |>
     map_dfr(\(s) {
-        .fn <- paste0(assembly_dir, "/", s, "_assembly.fasta.gz")
+        .fn <- paste0(dirs$assembly, "/", s, "_assembly.fasta.gz")
         sl <- read_lines(.fn, progress = FALSE)
         hl <- which(grepl("^>", sl))
         ll <- c(hl[-1] - 1L, length(sl))
@@ -101,7 +101,7 @@ ngenes_df <- gstats_df |>
     rename(.spp = spp_abbrev, .source = annot_source) |>
     pmap_dfr(\(.spp, .source) {
         stopifnot(.source %in% c("VectorBase", "GenBank", "InsectBase", "here"))
-        faa_lines <- read_lines(paste0(proteins_dir, "/", .spp,
+        faa_lines <- read_lines(paste0(dirs$proteins, "/", .spp,
                                        "_proteins.faa.gz"), progress = FALSE)
         faa_lines <- faa_lines[grepl("^>", faa_lines)]
         .n_prots <- length(faa_lines)
@@ -168,7 +168,7 @@ ngenes_df <- gstats_df |>
 #' are also captured.
 #'
 
-gnames_df <- orthofinder_dir |>
+gnames_df <- dirs$orthofinder |>
     paste0("/Phylogenetic_Hierarchical_Orthogroups/N0.tsv") |>
     read_tsv(col_types = cols()) |>
     #' This species only had ~58% of genes match to orthogroups, so
@@ -364,7 +364,7 @@ get_introns <- function(.spp, .source, .genes, .write = FALSE) {
     # .spp = "Tgraci"; .source = "here"
     # .genes = unique(do.call(c, gnames_df[[.spp]])); .write = FALSE
 
-    .fn <- paste0(features_dir, "/", .spp, "_features.gff3.gz")
+    .fn <- paste0(dirs$features, "/", .spp, "_features.gff3.gz")
     gff_df <- read_tsv(.fn, comment = "#",
                        col_names = c("seqid", "source", "type", "start",
                                      "end", "score", "strand", "phase",
@@ -447,7 +447,7 @@ get_intergenic <- function(.spp, .source,
 
     stopifnot(.source %in% c("VectorBase", "GenBank", "InsectBase", "here"))
 
-    .fn <- paste0(features_dir, "/", .spp, "_features.gff3.gz")
+    .fn <- paste0(dirs$features, "/", .spp, "_features.gff3.gz")
     gff_df <- read_tsv(.fn, comment = "#",
                        col_names = c("seqid", "source", "type", "start",
                                      "end", "score", "strand", "phase",
@@ -524,7 +524,7 @@ one_spp_repeats <- function(.spp) {
     .col_names <- c("SW", "p_div", "p_del", "p_ins", "query_seq",
                     "begin", "end", "left", "unk1", "matching_repeat",
                     "class", "begin2", "end2", "left2", "id", "star")
-    .fn <- sprintf("%s/%s_repeats.tsv", repeats_dir, .spp)
+    .fn <- sprintf("%s/%s_repeats.tsv", dirs$repeats, .spp)
     repeats <- read_table(.fn, skip = 3, col_types = cols(), progress = FALSE,
                           col_names = .col_names)
     repeat_sums <- repeats |>

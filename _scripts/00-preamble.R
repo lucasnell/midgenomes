@@ -7,18 +7,19 @@
 #'
 #' Update these on your system (do NOT include trailing '/'):
 #'
-raxml_supp_dir <- "~/_data/_phylo/chir_raxml_supp"
-mcmctree_dir <- "~/_data/_phylo/chir_mcmctree"
-cafe_dir <- "~/_data/chir_cafe"
-orthofinder_dir <- "~/_data/chir_orthofinder/orthofinder-output"
-orthofinder_extr_dir <- "~/_data/_orthofinder-extraction"
-go_dir <- "~/_data/_go-terms"
-assembly_dir <- "~/_data/_assemblies"
-proteins_dir <- "~/_data/_proteins"
-features_dir <- "~/_data/_features"
-repeats_dir <- "~/_data/_repeats"
-hyphy_busted_dir <- "~/_data/chir_hyphy_busted"
-hyphy_relax_dir <- "~/_data/chir_hyphy_relax"
+dirs <- new.env()
+dirs$raxml_supp <- "~/_data/_phylo/chir_raxml_supp"
+dirs$mcmctree <- "~/_data/_phylo/chir_mcmctree"
+dirs$cafe <- "~/_data/chir_cafe"
+dirs$orthofinder <- "~/_data/chir_orthofinder/orthofinder-output"
+dirs$orthofinder_extr <- "~/_data/_orthofinder-extraction"
+dirs$go <- "~/_data/_go-terms"
+dirs$assembly <- "~/_data/_assemblies"
+dirs$proteins <- "~/_data/_proteins"
+dirs$features <- "~/_data/_features"
+dirs$repeats <- "~/_data/_repeats"
+dirs$hyphy_busted <- "~/_data/chir_hyphy_busted"
+dirs$hyphy_relax <- "~/_data/chir_hyphy_relax"
 
 
 
