@@ -5,6 +5,7 @@ source("_scripts/00-preamble.R")
 library(ggtree)
 library(treeio)
 library(patchwork)
+library(grid)
 
 
 
@@ -57,12 +58,10 @@ one_gsize_corr_p <- function(.y_var, .y_subtr, .y_lab, .y_breaks, .y_lims) {
                            breaks = log10(100e6 * 2^(0:3)),
                            labels = 100 * 2^(0:3)) +
         scale_fill_manual(NULL, values = full_spp_pal,
-                          aesthetics = c("color", "fill"), guide = "none")
-    if (.y_var != "log_non_TE") {
-        p <- p + theme(axis.title.x = element_blank())
-    } else p <- p +
-        theme(axis.title.x = element_text(size = 14, vjust = 0,
-                                          margin = margin(0,0,0,t=1,"lines")))
+                          aesthetics = c("color", "fill"), guide = "none") +
+        theme(axis.title.x = element_blank(),
+              axis.title.y = element_text(size = 9),
+              axis.text = element_text(size = 8))
     if (! .y_var %in% c("log_DNA", "log_non_TE", "log_Unclassified")) {
         p <- p + theme(axis.text.x = element_blank())
     }
@@ -83,46 +82,16 @@ gsize_corr_ps <- tribble(~.y_var, ~.y_subtr, ~.y_lab, ~.y_breaks, ~.y_lims,
         "log_non_TE", 6, "non-TE\nrepeats (Mb)", 5^(0:2), log10(c(0.17, 53)),
         "log_Unclassified", 6, "Unclassified\nrepeats (Mb)", 5^(0:2), log10(c(0.17, 53))) |>
     pmap(one_gsize_corr_p)
-do.call(wrap_plots, c(list(nrow = 3), gsize_corr_ps))
+
+gsize_corr_p <- do.call(wrap_plots, c(list(nrow = 3), gsize_corr_ps))
 
 
-for (x in c("log_SINE", "log_LINE", "log_LTR", "log_DNA", "log_non_TE", "log_Unclassified")){
-    cat(sprintf("%s = %.3f -- %.3f\n", x,
-                round(10^min(feature_df[[x]]) / 1e6, 3),
-                round(10^max(feature_df[[x]]) / 1e6, 3)))
-}
-# log_SINE = 0.011 -- 9.848
-# log_LINE = 0.351 -- 246.300
-# log_LTR = 0.479 -- 294.027
-# log_DNA = 1.083 -- 399.441
-# log_non_TE = 0.365 -- 52.163
-# log_Unclassified = 0.174 -- 45.254
-
-
-
-
-
-gsize_traits_panels_p <- feature_df |>
-    pivot_longer(- c(species, spp_abbrev, log_gsize)) |>
-    mutate(name = pretty$convert(name, to_fct = TRUE, units = TRUE)) |>
-    ggplot(aes(log_gsize, value)) +
-    geom_point(aes(color = species), size = 2, na.rm = TRUE) +
-    ylab(expression({"log"}[10]~"[ Feature ]")) +
-    scale_x_continuous("Genome size (Mb)",
-                       breaks = log10(100e6 * 2^(0:3)),
-                       labels = 100 * 2^(0:3)) +
-    scale_fill_manual(NULL, values = full_spp_pal,
-                      guide = "none",
-                      # guide = guide_legend(label.theme = element_text(face = "italic")),
-                      aesthetics = c("color", "fill")) +
-    facet_wrap(~ name, scales = "free_y", ncol = 3) +
-    theme(strip.text = element_text(size = 7), strip.clip = "off")
 
 
 
 #' ========================================================================
 #' ========================================================================
-# inset tree ----
+# Inset tree ----
 #' ========================================================================
 #' ========================================================================
 
@@ -136,26 +105,33 @@ tree_inset <- read.tree("_data/phylo/time-tree.nwk") |>
     mutate(species = factor(label, levels = levels(feature_df$species))) |>
     ggtree() +
     geom_rootedge(0.1) +
-    # geom_tippoint(aes(color = species), size = 3) +
-    geom_tiplab(aes(color = species), size = 7 / 2.83465, fontface = "italic") +
+    geom_tippoint(aes(color = species), size = 3) +
+    # geom_tiplab(aes(color = species), size = 7 / 2.83465, fontface = "italic") +
     scale_color_manual(NULL, values = full_spp_pal, guide = "none") +
-    theme_inset() +
-    coord_cartesian(xlim = c(0, 6))
+    coord_cartesian(xlim = c(0, 4)) +
+    theme_inset()
 # tree_inset
 
 
 #' ========================================================================
 #' ========================================================================
-# combine and save ----
+# save separately ----
 #' ========================================================================
 #' ========================================================================
 
+#' I'm saving them separately and will combine them in Illustrator.
 
-gsize_traits_p <- tree_inset + gsize_traits_panels_p +
-    plot_layout(nrow = 1, widths = c(1, 1.6))
+# # If you want to do it programmatically:
+# x_lab <- textGrob("Genome size (Mb)", y = unit(0.1, "npc"), hjust = 0.5,
+#                   vjust = 0, gp = gpar(fontsize = 14))
+# do.call(wrap_plots, c(list(design = "abcd\naefg\nahij\nakkk",
+#                            heights = c(rep(1, 3), 0.1),
+#                            tree_inset),
+#                       gsize_corr_ps, list(x_lab)))
 
 
-save_plot("gsize-traits", gsize_traits_p, 6.5, 4)
+save_plot("tree-inset", tree_inset, 1.5, 3.6, .png = FALSE)
+save_plot("gsize-corrs", gsize_corr_p, 5, 3.5, .png = FALSE)
 
 
 
