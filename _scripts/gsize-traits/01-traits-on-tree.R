@@ -11,30 +11,6 @@ library(patchwork)
 
 #' =================================================================
 #' =================================================================
-#  Info to make labels pretty ----
-#' =================================================================
-#' =================================================================
-
-#' Repeat element classes in order with formatted names for plotting,
-#' where all non-TE classes are grouped together:
-rep_class_map <- list("SINE" = "SINEs",
-                      "LINE" = "LINEs",
-                      "LTR" = "LTR elements",
-                      "DNA" = "DNA transposons",
-                      "non_TE" = "non-TE elements",
-                      "Unclassified" = "Unclassified")
-
-# non-TE (but known) element classes:
-nonTE_classes <- c("RC", "Small_RNA", "Satellite", "Simple_repeat",
-                   "Low_complexity")
-# TE element classes:
-TE_classes <- c("SINE", "LINE", "LTR", "DNA")
-
-
-
-
-#' =================================================================
-#' =================================================================
 #  Read genome stats ----
 #' =================================================================
 #' =================================================================
@@ -64,11 +40,10 @@ repeat_df <- read_csv("_data/genome-stats.csv", col_types = cols()) |>
            species = factor(species, levels = species),
            spp_abbrev = factor(spp_abbrev, levels = spp_abbrev)) |>
     mutate(non_TE = rowSums(across(all_of(nonTE_classes)))) |>
-    select(species, spp_abbrev, all_of(names(rep_class_map))) |>
-    pivot_longer(all_of(names(rep_class_map)),
+    select(species, spp_abbrev, all_of(repeat_classes)) |>
+    pivot_longer(all_of(repeat_classes),
                  names_to = "class", values_to = "len") |>
-    mutate(class = factor(class, levels = names(rep_class_map),
-                          labels = unlist(rep_class_map)))
+    mutate(class = factor(class, levels = repeat_classes))
 
 
 
@@ -98,16 +73,13 @@ p_dip_tr <- read.tree("_data/phylo/time-tree.nwk") |>
 #' ===========================================================================
 
 
-spp_pal <- full_spp_pal <- turbo(100)[c(70+3*0:8, 60, 15+4*2:0, 30)] |> as.list()
-names(spp_pal) <- levels(feature_df$spp_abbrev)
-names(full_spp_pal) <- levels(feature_df$species)
 
 #' Start with color palette from https://www.nature.com/articles/nmeth.1618
 #' then remove those not needed:
 rep_pal <- c(c("#000000", "#2271B2", "#3DB7E9", "#F748A5", "#359B73", "#d55e00",
                "#e69f00", "#f0e442")[c(2:6)], "gray70") |>
     as.list()
-names(rep_pal) <- paste(rep_class_map)
+names(rep_pal) <- repeat_classes
 
 # An alternative starting point if you want:
 # c("#000000", "#AA0DB4", "#FF54ED", "#00B19F", "#EB057A", "#F8071D", "#FF8D1A", "#9EFF37")
@@ -154,7 +126,7 @@ tree_p <- ggtree(p_dip_tr, linewidth = 1, lineend = "square") |>
 #' ===========================================================================
 
 
-one_phy_feature_p <- function(.y_var, .y_mult, .y_lab, .y_breaks, .y_labels, .y_lims) {
+one_phy_feature_p <- function(.y_var, .y_mult, .y_lab, .y_breaks, .y_lims) {
 
     feature_df |>
         mutate(species = factor(species, levels = rev(levels(species)))) |>
