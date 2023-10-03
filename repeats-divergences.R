@@ -1,35 +1,22 @@
 
 
-source("00-preamble.R")
+source("_scripts/00-preamble.R")
 
+library(ggtree)
+library(patchwork)
 
-divsum_dir <- paste0(dirs$repeats, "/repeats_diverg/divsum")
-
-species <- list.files(divsum_dir) |> str_remove("\\.divsum")
-
-theme_set(theme_minimal())
 
 gsizes <- "_data/genome-stats.csv" |>
-    read_csv(col_types = cols()) |>
-    select(species, gsize) |>
-    (\(x) {
-        z <- as.list(x[["gsize"]])
-        names(z) <- x[["species"]]
-        return(z)
-    })()
+        read_csv(col_types = cols()) |>
+        select(spp_abbrev, gsize) |>
+        (\(x) {
+            z <- as.list(x[["gsize"]])
+            names(z) <- x[["spp_abbrev"]]
+            return(z)
+        })()
 
-#' Repeat element classes in order with formatted names for plotting:
-class_map <- list("SINE" = "SINEs",
-                  "LINE" = "LINEs",
-                  "LTR" = "LTR elements",
-                  "DNA" = "DNA transposons",
-                  "RC" = "Rolling-circles",
-                  "Small_RNA" = "Small RNA",
-                  "Satellite" = "Satellites",
-                  "Simple_repeat" = "Simple repeats",
-                  "Low_complexity" = "Low complexity")
 
-simplify_class <- function(.class) {
+simplify_class <- function(.class, combine_nonTE = TRUE) {
     .class <- str_split(.class, "\\/") |>
         map_chr(\(x) x[1])
     # Remove '?' because the RepeatMasker's *.tbl summary includes
@@ -39,6 +26,10 @@ simplify_class <- function(.class) {
     .class <- ifelse(.class %in% c("rRNA", "tRNA", "snRNA"), "Small_RNA", .class)
     # Unclassified is Unknown or ARTEFACT:
     .class <- ifelse(.class %in% c("Unknown", "ARTEFACT"), "Unclassified", .class)
+    if (combine_nonTE) {
+        # Combine all non-TE (but known) classes into "non_TE"
+        .class <- ifelse(.class %in% nonTE_classes, "non_TE", .class)
+    }
     return(.class)
 }
 
@@ -46,18 +37,14 @@ simplify_class <- function(.class) {
 one_spp_ds <- function(.spp) {
     # .spp = "Tgraci"
 
-    ds_lines <- paste0(divsum_dir, "/", .spp, ".divsum") |>
+    ds_lines <- paste0(dirs$repeats, "/repeats_diverg/divsum/",
+                       .spp, ".divsum") |>
         read_lines()
     ds_lines <- ds_lines[ds_lines != ""]
 
     tbl_inds <- c("^Weighted average Kimura divergence for each repeat family",
                   "^Coverage for each repeat class and divergence") |>
         map_int(\(s) which(grepl(s, ds_lines)) + 1L)
-
-    ds_lines[tbl_inds[1]:(tbl_inds[2]-2L)] |>
-        I() |>
-        read_tsv(col_types = cols()) |>
-        filter(!grepl("--", `Kimura%`))
 
     cn <- str_split(ds_lines[tbl_inds[2]], "\\s+")[[1]]
     cn[cn == ""] <- paste0("ZZZZ_", 1:sum(cn == ""))
@@ -71,32 +58,56 @@ one_spp_ds <- function(.spp) {
         summarize(bp = sum(bp), .groups = "drop") |>
         mutate(perc = bp / gsizes[[.spp]] * 100) |>
         filter(class != "Unclassified") |>
-        mutate(plot_class = map_chr(class, \(x) class_map[[x]]) |>
-                   factor(levels = unlist(class_map)),
-               species = .spp)
+        mutate(plot_class = pretty$convert(class, to_fct = TRUE),
+               spp_abbrev = .spp)
 
     return(ds_df)
 }
 
 
-ds_df <- species |>
+ds_df <- names(gsizes) |>
     map_dfr(one_spp_ds) |>
-    mutate(species = factor(species,
-                            levels = c("Ctenta", "Cripar", "Pvande", "Ppemba",
-                                       "Tgraci", "Bantar", "Cmarin", "Pakamu",
-                                       "Pstein", "Csonor", "Cquinq", "Aaegyp",
-                                       "Asteph", "Mdomes")))
+    mutate(spp_abbrev = factor(spp_abbrev, levels = names(gsizes))) |>
+    arrange(spp_abbrev) |>
+    mutate(species = expand_spp(spp_abbrev, to_fct = TRUE))
 
 
-ds_df |>
-    # filter(Div <= 50) |>
-    # Remove non-TE elements:
-    filter(!class %in% c("RC", "Small_RNA", "Satellite", "Simple_repeat", "Low_complexity")) |>
+
+
+
+divergence_panels_p <- ds_df |>
     ggplot(aes(Div, perc, fill = plot_class)) +
-    geom_bar(stat = "identity") +
-    # scale_fill_brewer(NULL, palette = "Dark2") +
+    geom_bar(stat = "identity", color = NA) +
     scale_fill_viridis_d(NULL, begin = 0.0) +
-    xlab("Sequence divergence (Kimura distance)") +
-    ylab("Percent of genome") +
-    facet_wrap(~ species, scales = "free_y")
+    xlab("Sequence divergence\n(Kimura distance)") +
+    scale_y_continuous("Percent of genome", position = "right", n.breaks = 3) +
+    facet_wrap(~ species, ncol = 1, scales = "free_y") +
+    theme(strip.background = element_blank(),
+          strip.text = element_blank())
 
+
+
+
+# color lines by whether it's Chironomidae:
+tree_p <- read.tree("_data/phylo/time-tree.nwk") |>
+    (\(x) {
+        x$tip.label <- expand_spp(x$tip.label) |>
+            str_split(" ") |>
+            map_chr(\(x) paste0(str_sub(x[1], end = 1), ". ", x[2]))
+        return(x)
+    })() |>
+    ggtree(linewidth = 1, lineend = "square") |>
+    groupClade(.node = 20) +
+    aes(color = group) +
+    geom_tiplab(size = 8 / 2.83465, fontface = "italic", offset = 0.2) +
+    theme(legend.position = "none") +
+    scale_color_manual(values = c("gray70", "black")) +
+    coord_cartesian(xlim = c(0, 7))
+
+
+
+rep_div_p <- tree_p + divergence_panels_p +
+    plot_layout(nrow = 1, widths = c(1, 1.5))
+
+
+save_plot("repeat-divergences", rep_div_p, 6.5, 8)
