@@ -1,4 +1,16 @@
 
+#'
+#' Create plots of traits along phylogeny and confidence intervals for
+#' traits for either (a) families Chironomidae and Ceratopogonidae
+#' or (b) all others.
+#' These CIs indicate whether families Chironomidae and Ceratopogonidae differ
+#' from all others in our phylogeny for each trait.
+#'
+#' File `_data/family-regressions.rds` (created in
+#' `_scripts/gsize-traits/01-gsize-traits-analysis.R`)
+#' is required for these plots.
+#'
+
 
 source("_scripts/00-preamble.R")
 
@@ -90,32 +102,11 @@ names(regr_ci_list) <- read_rds("_data/family-regressions.rds")[["feature"]]
 
 #' ===========================================================================
 #' ===========================================================================
-#  Inset tree and set aesthetics ----
+#  Inset tree ----
 #' ===========================================================================
 #' ===========================================================================
 
 
-
-#' Start with color palette from https://www.nature.com/articles/nmeth.1618
-#' then remove those not needed:
-rep_pal <- c(c("#000000", "#2271B2", "#3DB7E9", "#F748A5", "#359B73", "#d55e00",
-               "#e69f00", "#f0e442")[c(2:4, 6:7)], "gray70") |>
-    as.list()
-names(rep_pal) <- repeat_classes
-
-# An alternative starting point if you want:
-c("#000000", "#AA0DB4", "#FF54ED", "#00B19F", "#EB057A", "#F8071D", "#FF8D1A", "#9EFF37")
-
-
-
-shared_theme <- theme(panel.background = element_rect(fill = "transparent", color = NA),
-                      plot.background = element_rect(fill = "transparent", color = NA),
-                      axis.title.y = element_blank(),
-                      axis.text.y = element_blank(),
-                      axis.ticks.y = element_blank(),
-                      # axis.line.y = element_blank(),
-                      axis.text.x = element_text(size = 8),
-                      axis.title.x = element_text(size = 9))
 
 
 tree_inset <- read.tree("_data/phylo/time-tree.nwk") |>
@@ -180,20 +171,15 @@ one_phy_feature_p <- function(.y_var, .y_subtr, .y_lab, .y_breaks, .y_lims) {
         scale_color_manual(values = full_spp_pal, guide = "none",
                            aesthetics = c("color", "fill")) +
         coord_flip(ylim = .y_lims) +
-        shared_theme
+        theme(panel.background = element_rect(fill = "transparent", color = NA),
+              plot.background = element_rect(fill = "transparent", color = NA),
+              axis.title.y = element_blank(),
+              axis.text.y = element_blank(),
+              axis.ticks.y = element_blank(),
+              axis.text.x = element_text(size = 8),
+              axis.title.x = element_text(size = 9))
 }
 
-
-#' phy_feature_ps <- tribble(~.y_var, ~.y_mult, ~.y_lab, ~.y_breaks, ~.y_lims,
-#'      "gsize", 1e-6, "Genome size\n(Mb)", 0:2*500, NULL,
-#'      #' Below, '\u00D7' is unicode for multiply sign, and had to use lowercase
-#'      #' '\u' instead of '\U' to have no space between sign and "1000"
-#'      "n_genes", 1e-3, "Protein-coding\ngenes (\u00D71000)", 0:2*10, NULL, # c(10.8, NA),
-#'      "sum_interg_len", 1e-6, "Total intergenic\nDNA (Mb)", 0:2*300, NULL,
-#'      "mean_intron_len", 1e-3, "Mean intron\nlength (kb)", 0:2*6, NULL) |>
-#'     pmap(one_phy_feature_p)
-#' names(phy_feature_ps) <- c("gsize", "n_genes", "sum_interg_len",
-#'                            "mean_intron_len")
 
 phy_feature_ps <- tribble(~.y_var, ~.y_subtr, ~.y_lab, ~.y_breaks, ~.y_lims,
                            "log_gsize", 6, "Genome size\n(Mb)", 100 * 2^(0:3), NULL,
