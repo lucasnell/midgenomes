@@ -55,7 +55,7 @@ pretty$map <- list("gsize" = "Genome size",
                    "LINE" = "LINE",
                    "LTR" = "LTR",
                    "DNA" = "DNA",
-                   "non_TE" = "non-TE repeats",
+                   "non_TE" = "non-TE",
                    "Unclassified" = "Unclassified")
 pretty$convert <- function(yucks, to_fct = FALSE, units = FALSE) {
     yucks <- gsub("log_", "", yucks)
@@ -108,17 +108,27 @@ save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {
 #' Functions to expand and abbreviate species names.
 #' Because they both involve reading `_data/species-names-families.csv`,
 #' they're best used on vectors.
-expand_spp <- function(x) {
+expand_spp <- function(x, to_fct = FALSE) {
     map_list <- read_csv("_data/species-names-families.csv", col_types = cols(),
                          progress = FALSE) |>
         (\(y) {z <- as.list(y$species); names(z) <- y$spp_abbrev; return(z)})()
-    map_chr(x, \(.x) map_list[[.x]])
+    z <- map_chr(x, \(.x) map_list[[.x]])
+    if (to_fct) {
+        lvls <- paste(map_list)[paste(map_list) %in% z]
+        z <- factor(z, levels = lvls)
+    }
+    return(z)
 }
-abbrev_spp <- function(x) {
+abbrev_spp <- function(x, to_fct = FALSE) {
     map_list <- read_csv("_data/species-names-families.csv", col_types = cols(),
                          progress = FALSE) |>
         (\(y) {z <- as.list(y$spp_abbrev); names(z) <- y$species; return(z)})()
-    map_chr(x, \(.x) map_list[[.x]])
+    z <- map_chr(x, \(.x) map_list[[.x]])
+    if (to_fct) {
+        lvls <- paste(map_list)[paste(map_list) %in% z]
+        z <- factor(z, levels = lvls)
+    }
+    return(z)
 }
 
 
