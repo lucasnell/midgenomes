@@ -88,74 +88,41 @@ gsize_corr_p <- do.call(wrap_plots, c(list(nrow = 3), gsize_corr_ps))
 
 
 
-
 #' ========================================================================
 #' ========================================================================
-# Inset tree ----
-#' ========================================================================
-#' ========================================================================
-
-tree_inset <- read.tree("_data/phylo/time-tree.nwk") |>
-    (\(x) {
-        x$tip.label <- expand_spp(x$tip.label)
-        return(x)
-    })() |>
-    ggtree() |>
-    as.treedata() |>
-    mutate(species = factor(label, levels = levels(feature_df$species))) |>
-    ggtree() +
-    geom_rootedge(0.1) +
-    geom_tippoint(aes(color = species), size = 3) +
-    # geom_tiplab(aes(color = species), size = 7 / 2.83465, fontface = "italic") +
-    scale_color_manual(NULL, values = full_spp_pal, guide = "none") +
-    coord_cartesian(xlim = c(0, 4)) +
-    theme_inset()
-# tree_inset
-
-
-#' ========================================================================
-#' ========================================================================
-# save separately ----
+# save plot ----
 #' ========================================================================
 #' ========================================================================
 
-#' I'm saving them separately and will combine them in Illustrator.
 
-# # If you want to do it programmatically:
-# x_lab <- textGrob("Genome size (Mb)", y = unit(0.1, "npc"), hjust = 0.5,
-#                   vjust = 0, gp = gpar(fontsize = 14))
-# do.call(wrap_plots, c(list(design = "abcd\naefg\nahij\nakkk",
-#                            heights = c(rep(1, 3), 0.1),
-#                            tree_inset),
-#                       gsize_corr_ps, list(x_lab)))
-
-
-save_plot("tree-inset", tree_inset, 1.5, 3.6, .png = FALSE)
-save_plot("gsize-corrs", gsize_corr_p, 5, 3.5, .png = FALSE)
+save_plot("gsize-corrs", gsize_corr_p, 5, 3.5)
 
 
 
 
 
-#' Not sure if this is necessary. It's a larger dataset just on number of
-#' proteins vs genome size for a bunch of Dipteran species.
-#' I collected these two variables for all dipterans with assemblies on
-#' InsectBase (on 29 Sep 2023), except for those in genera with many assemblies,
-#' at which point I randomly chose 5 species to represent that genus.
-#' I don't have the phylogenetic info to analyze this properly, but it shows
-#' that compared to a wide range of dipterans, chironomids have an especially
-#' steep slope between genome size and number of proteins.
-#'
+# #' Not sure if this is necessary. It's a larger dataset just on number of
+# #' proteins vs genome size for a bunch of Dipteran species.
+# #' I collected these two variables for all dipterans with assemblies on
+# #' InsectBase (on 29 Sep 2023), except for those in genera with many assemblies,
+# #' at which point I randomly chose 5 species to represent that genus.
+# #' I don't have the phylogenetic info to analyze this properly, but it shows
+# #' that compared to a wide range of dipterans, chironomids have an especially
+# #' steep slope between genome size and number of proteins.
+# #'
 # gs_df <- "~/Stanford_Drive/UW/midgenomes/midgenomes.xlsx" |>
 #     readxl::read_excel(sheet = "gsize-proteins") |>
 #     filter(accession != "x") |>
 #     mutate(chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae"))
 #
 # gs_df |>
-#     ggplot(aes(log10(gsize), log10(n_genes))) +
+#     arrange(chir_cerat) |>
+#     ggplot(aes(log10(gsize), log10(n_genes / 1e3))) +
 #     geom_point(aes(color = chir_cerat)) +
-#     scale_y_continuous("Protein-coding genes (K)") +
+#     scale_y_continuous("Protein-coding\ngenes (\u00D71000)",
+#                        breaks = log10(12 * 1.5^(0:2)),
+#                        labels = 12 * 1.5^(0:2)) +
 #     scale_x_continuous("Genome size (Mb)",
 #                        breaks = log10(100e6 * 2^(0:3)),
 #                        labels = 100 * 2^(0:3)) +
-#     scale_color_manual(values = c("gray70", "red"))
+#     scale_color_manual(values = c("gray70", "red"), guide = "none")
