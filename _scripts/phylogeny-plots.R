@@ -7,7 +7,6 @@ source("_scripts/00-preamble.R")
 
 library(ggtree)
 library(treeio)
-library(viridis)
 
 
 
@@ -110,13 +109,17 @@ if (!file.exists("_data/phylo/time-tree.nwk")) {
 
 time_tr@data[["CI"]] <- time_tr@data[["0.95HPD"]] |> map(as.numeric)
 time_tr@phylo$tip.label <- expand_spp(time_tr@phylo$tip.label)
+time_tr@data[["species"]] <- factor(time_tr@phylo$tip.label,
+                                    levels = names(full_spp_pal))
 
 
-time_tr_p0 <- ggtree(time_tr) +
+time_tr_p0 <- time_tr |>
+    mutate(species = factor(label, levels = names(full_spp_pal))) |>
+    ggtree() +
     geom_rootedge(0.04) +
-    geom_tiplab(size = 9 / 2.83465, fontface = "italic") +
-    geom_range("CI", color = "dodgerblue", size = 3, alpha = 0.5,
-               center = "reltime") +
+    geom_tiplab(size = 9 / 2.83465, fontface = "bold.italic", aes(color = species)) +
+    geom_range("CI", color = "gray50", alpha = 0.5, size = 3, center = "reltime") +
+    scale_color_manual(NULL, values = full_spp_pal, guide = "none") +
     theme_tree2()
 
 time_tr_p <- time_tr_p0 |>
