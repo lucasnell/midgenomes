@@ -93,12 +93,15 @@ one_gsize_corr_p <- function(.y_var, .y_subtr, .y_lab, .y_breaks, .y_lims) {
                            labels = 100 * 2^(0:3)) +
         scale_fill_manual(NULL, values = full_spp_pal,
                           aesthetics = c("color", "fill"), guide = "none") +
-        theme(axis.title.x = element_blank(),
-              axis.title.y = element_text(size = 9),
+        theme(axis.title.y = element_text(size = 9),
               axis.text = element_text(size = 8))
     if (! .y_var %in% c("log_DNA", "log_non_TE", "log_Unclassified")) {
         p <- p + theme(axis.text.x = element_blank())
     }
+    if ( .y_var != "log_non_TE" ) {
+        p <- p + theme(axis.title.x = element_blank())
+    } else p <- p + theme(axis.title.x = element_text(size = 11,
+                                                      margin = margin(0,0,0,t=9)))
     return(p)
 }
 
@@ -129,7 +132,7 @@ gsize_corr_p <- do.call(wrap_plots, c(list(nrow = 3), gsize_corr_ps))
 #' ========================================================================
 
 
-save_plot("gsize-corrs", gsize_corr_p, 5, 3.5)
+save_plot("gsize-corrs", gsize_corr_p, 5.5, 4)
 
 
 
