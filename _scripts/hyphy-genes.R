@@ -113,6 +113,11 @@ focal_go_df <- tibble(go = c("GO:0010038", "GO:0010212", "GO:0034059",
                       hogs = map(offspring, \(o) hog_gos$hog[hog_gos$go %in% o]))
 focal_go_df
 
+# Write to CSV for use in summarizing output later:
+focal_go_df |>
+    mutate(across(offspring:hogs, \(x) map_chr(x, paste, collapse = ";"))) |>
+    write_csv("_data/hyphy-focal-hog-go.csv")
+
 
 #' Below shows that some HOGs are shared among the GO terms:
 shared_mat <- matrix(0L, nrow(focal_go_df), nrow(focal_go_df))
