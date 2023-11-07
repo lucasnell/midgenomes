@@ -106,6 +106,62 @@ hog_focal_go_df <- "_data/hyphy-focal-hog-go.csv" |>
     mutate(busted_disc = map_lgl(hog, \(h) hyphy_df$busted_disc[hyphy_df$hog == h]),
            relax_disc = map_lgl(hog, \(h) hyphy_df$relax_disc[hyphy_df$hog == h]))
 
+hog_focal_go_p_df <- hog_focal_go_df |>
+    group_by(go, term) |>
+    summarize(BUSTED = mean(busted_disc),
+              RELAX = mean(relax_disc),
+              both = mean(busted_disc & relax_disc),
+              .groups = "drop") |>
+    pivot_longer(BUSTED:RELAX) |>
+    mutate(name = factor(name, levels = rev(c("BUSTED", "Both", "RELAX"))),
+           term = sprintf("%s (%s)", term, go)) |>
+    arrange(go, term, name) |>
+    group_by(go, term) |>
+    mutate(start = c(0, value[1] - both[1]),
+           end = c(value[1], value[1] + value[2] - both[2])) |>
+    ungroup() |>
+    mutate(term = factor(term, levels = sort(unique(term))),
+           term_int = as.integer(term))
+
+ho_focal_go_lab_df <- hog_focal_go_df |>
+    group_by(go, term) |>
+    summarize(n = n(),
+              value = mean(busted_disc | relax_disc) + 0.03,
+              .groups = "drop") |>
+    mutate(term = sprintf("%s (%s)", term, go),
+           term = factor(term, levels = sort(unique(term))),
+           term_int = as.integer(term))
+
+
+hog_focal_go_p <- hog_focal_go_p_df |>
+    mutate(term_int = case_when(str_detect(term, "cold|anoxia|ionizing") ~ term_int,
+                                name == "RELAX" ~ term_int + 0.2,
+                                TRUE ~ term_int - 0.2)) |>
+    ggplot(aes(y = term_int))  +
+    geom_segment(aes(yend = term_int, x = start, xend = end, color = name),
+                 linewidth = 3) +
+    geom_text(data = ho_focal_go_lab_df,
+              aes(x = value, label = n), hjust = 0, size = 8/2.8) +
+    scale_x_continuous("Significant HOGs", labels = scales::percent,
+                       limits = c(0, 1.1), breaks = 0.25* 0:4) +
+    scale_y_continuous(NULL, breaks = 1:length(levels(hog_focal_go_p_df$term)),
+                       labels = levels(hog_focal_go_p_df$term),
+                       limits = c(1, length(levels(hog_focal_go_p_df$term))) +
+                           c(-1, 1) * 0.25) +
+    scale_color_manual(values = viridisLite::magma(2, begin = 0.3, end = 0.8)) +
+    theme(axis.title.y = element_blank(),
+          axis.title.x = element_text(size = 9),
+          axis.text = element_text(size = 8),
+          legend.position = "none",
+          axis.text.y = element_text(color = "black"))
+
+save_plot("hyphy-focal-go-percent", hog_focal_go_p, w = 4, h = 1.6, .png = FALSE)
+
+
+
+
+
+
 
 #' Names of HOGs where null is rejected for both models.
 sign_hogs <- hog_focal_go_df |>
@@ -113,52 +169,19 @@ sign_hogs <- hog_focal_go_df |>
     getElement("hog") |>
     unique()
 
-
-hog_focal_go_df |>
-    group_by(go, term) |>
-    rename(GO = go, Description = term) |>
-    summarize(n = n(),
-              BUSTED = mean(busted_disc) * 100,
-              RELAX = mean(relax_disc) * 100,
-              Both = mean(busted_disc & relax_disc) * 100,
-              .groups = "drop") |>
-    gt() |>
-    cols_label(n = "{{*n*}}") |>
-    fmt_number(BUSTED:Both, decimals = 1) |>
-    tab_spanner(label = "% significant", columns = BUSTED:Both) |>
-    fmt_integer(n) |>
-    opt_table_font(font = "Helvetica") |>
-    tab_style(style = list(cell_text(align = "center")),
-              locations = cells_column_labels(-Description)) |>
-    tab_options(data_row.padding = 1.5,
-                column_labels.padding = 1.5,
-                table.font.size = 10,
-                column_labels.border.top.width = 2,
-                column_labels.border.top.color = "black",
-                column_labels.border.bottom.width = 1,
-                column_labels.border.bottom.color = "black",
-                table_body.border.top.width = 1,
-                table_body.border.top.color = "black",
-                table_body.border.bottom.width = 2,
-                table_body.border.bottom.color = "black",
-                table_body.hlines.width = 0,
-                table.font.color = "black") |>
-    gtsave("_figures/hyphy-go-sign-percents.pdf")
-
-plot_crop("_figures/hyphy-go-sign-percents.pdf", quiet = TRUE)
-
-
-
-
-
-hyphy_df |>
+#'
+#' Below, I replace zeros with <1e-26 because this is more accureate as
+#' indicated by one of the authors:
+#' https://github.com/veg/hyphy/issues/988#issuecomment-504519957
+#'
+hyphy_sign_hogs_table <- hyphy_df |>
     filter(hog %in% sign_hogs) |>
     select(1:4) |>
     mutate(desc = case_when(hog == "N0.HOG0006267" ~ "exportin",
                             hog == "N0.HOG0001010" ~ "peroxiredoxin-1",
                             hog == "N0.HOG0005696" ~ "sulfonylurea receptor",
-                            hog == "N0.HOG0007992" ~ "F-box and wd40 domain protein 7",
-                            hog == "N0.HOG0007399" ~ "Serrate protein",
+                            hog == "N0.HOG0007992" ~ "F-box/WD-40 domain protein 7",
+                            hog == "N0.HOG0007399" ~ "SERRATE protein",
                             hog == "N0.HOG0007118" ~ "dynein heavy chain",
                             hog == "N0.HOG0007838" ~ "prohibitin",
                             hog == "N0.HOG0008783" ~ "protein kinase C",
@@ -166,10 +189,13 @@ hyphy_df |>
                             hog == "N0.HOG0004934" ~ "4-aminobutyrate aminotransferase",
                             hog == "N0.HOG0006858" ~ "Vav guanine nucleotide exchange factor",
                             hog == "N0.HOG0006910" ~ "ETS domain-containing protein",
-                            hog == "N0.HOG0007233" ~ "Heat shock protein 83",
-                            hog == "N0.HOG0007347" ~ "Cyclic-nucleotide-gated cation channel",
+                            hog == "N0.HOG0007233" ~ "heat shock protein 83",
+                            hog == "N0.HOG0007347" ~ "cyclic-nucleotide-gated cation channel",
                             TRUE ~ NA)) |>
+    # So that sub_small_vals works below:
+    mutate(across(contains("pvals"), \(x) ifelse(x == 0, 1e-14, x))) |>
     select(hog, desc, everything()) |>
+    arrange(relax_k) |>
     gt() |>
     cols_label(hog = "HOG",
                desc = "Description",
@@ -177,6 +203,9 @@ hyphy_df |>
                relax_pvals = "{{*P*-value}}",
                relax_k = "{{*k*}}") |>
     fmt_scientific(contains("pvals"), decimals = 2) |>
+    sub_small_vals(columns = contains("pvals"),
+                   threshold = 1e-13,
+                   small_pattern = md("<10<sup>−26</sup>")) |>
     fmt_number(relax_k, decimals = 2) |>
     tab_spanner(label = "BUSTED", columns = contains("busted")) |>
     tab_spanner(label = "RELAX", columns = contains("relax")) |>
@@ -195,7 +224,9 @@ hyphy_df |>
                 table_body.border.bottom.width = 2,
                 table_body.border.bottom.color = "black",
                 table_body.hlines.width = 0,
-                table.font.color = "black") |>
+                table.font.color = "black")
+
+hyphy_sign_hogs_table |>
     gtsave("_figures/hyphy-sign-hogs.pdf")
 
 plot_crop("_figures/hyphy-sign-hogs.pdf", quiet = TRUE)
