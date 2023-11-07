@@ -36,7 +36,6 @@ BY_correct <- function(Pvals, .names, fdr = 0.1) {
 }
 
 
-
 busted <- \(x) paste0(dirs$hyphy_busted, "/", x)
 relax <- \(x) paste0(dirs$hyphy_relax, "/", x)
 
@@ -48,16 +47,25 @@ all_relax_data <- list.files(relax(""), "*.json") |>
 names(all_busted_data) <- list.files(busted(""), "*.json") |> str_remove(".json$")
 names(all_relax_data) <- list.files(relax(""), "*.json") |> str_remove(".json$")
 
-# str(all_busted_data[[1]], max.level = 1)
-# str(all_relax_data[[1]], max.level = 1)
 
-
-#' The same 12 HOGs failed for both. No idea why.
+#' The same 12 HOGs failed for both.
 mean(map_lgl(all_busted_data, \(x) isTRUE(is.na(x))))
 mean(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))
 identical(names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x))))),
           names(which(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))))
-names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x)))))
+bad_hogs <- names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x)))))
+bad_hogs
+
+#' The errors occur as a form of this:
+#'
+#' ### Obtaining branch lengths and nucleotide substitution biases under the
+#' nucleotide GTR model
+#' Error:
+#' The number of tree tips in 'XXfQsCFh.tree_0'(13) is not equal to the number
+#' of sequences in the data filter associated with the tree (3).
+#'
+#' It's not clear to me why this is happening, so these HOGs are filtered out.
+#'
 
 
 # Remove these failed ones.
@@ -72,30 +80,19 @@ rm(all_busted_data, all_relax_data); invisible(gc())
 hyphy_df <- tibble(hog = names(busted_data),
                    busted_pvals = map_dbl(busted_data, \(x) x[["test results"]][["p-value"]]),
                    relax_pvals = map_dbl(relax_data, \(x) x[["test results"]][["p-value"]]),
+                   #'
+                   #' From docs: "A significant result of k>1 indicates that
+                   #' selection strength has been intensified along the test
+                   #' branches, and a significant result of k<1 indicates that
+                   #' selection strength has been relaxed" along the test
+                   #' branches.
+                   #'
                    relax_k = map_dbl(relax_data, \(x) {
                        n <- "relaxation or intensification parameter"
                        return(x[["test results"]][[n]])
                    }),
                    busted_disc = BY_correct(busted_pvals, hog),
                    relax_disc = BY_correct(relax_pvals, hog))
-
-sum(hyphy_df$busted_disc)
-sum(hyphy_df$relax_disc)
-sum(hyphy_df$busted_disc & hyphy_df$relax_disc)
-
-#' From docs: "A significant result of k>1 indicates that selection strength
-#' has been intensified along the test branches, and a significant result of
-#' k<1 indicates that selection strength has been relaxed" along the test
-#' branches.
-sum(hyphy_df$relax_disc & hyphy_df$relax_k > 1)
-sum(hyphy_df$relax_disc & hyphy_df$relax_k < 1)
-
-sum(hyphy_df$busted_disc & hyphy_df$relax_disc & hyphy_df$relax_k > 1)
-sum(hyphy_df$busted_disc & hyphy_df$relax_disc & hyphy_df$relax_k < 1)
-
-
-# hist(hyphy_df$busted_pvals)
-# hist(hyphy_df$relax_pvals)
 
 
 
@@ -110,6 +107,7 @@ hog_focal_go_df <- "_data/hyphy-focal-hog-go.csv" |>
            relax_disc = map_lgl(hog, \(h) hyphy_df$relax_disc[hyphy_df$hog == h]))
 
 
+#' Names of HOGs where null is rejected for both models.
 sign_hogs <- hog_focal_go_df |>
     filter(busted_disc & relax_disc) |>
     getElement("hog") |>
@@ -203,47 +201,4 @@ hyphy_df |>
 plot_crop("_figures/hyphy-sign-hogs.pdf", quiet = TRUE)
 
 
-
-
-
-# This helped me manually describe each HOG:
-
-
-hogs <- c("N0.HOG0001074", "N0.HOG0004934", "N0.HOG0006858", "N0.HOG0006910", "N0.HOG0007233", "N0.HOG0007347")
-
-sp <- "Cquinq"
-
-
-genes <- "_data/hyphy-hog-genes.csv" |>
-    read_csv(col_types = cols()) |>
-    filter(species == sp, hog %in% hogs) |>
-    mutate(hog = factor(hog, levels = hogs)) |>
-    arrange(hog) |>
-    getElement("gene")
-
-paste0(dirs$features, "/", sp, "_features.gff3.gz") |>
-    read_tsv(comment = "#",
-             col_names = c("seqid", "source", "type", "start",
-                           "end", "score", "strand", "phase",
-                           "attributes"),
-             col_types = "ccciicccc", progress = FALSE) |>
-    filter(type == "protein_coding_gene") |>
-    select(attributes) |>
-    mutate(gene = str_remove(attributes, "ID=") |>
-               str_remove(";.*"),
-           desc = str_remove(attributes, ".*description=") |>
-               str_remove(";.*")) |>
-    filter(gene %in% genes) |>
-    mutate(gene = factor(gene, levels = genes)) |>
-    arrange(gene) |>
-    select(gene, desc)
-
-
-"_data/hyphy-hog-genes.csv" |>
-    read_csv(col_types = cols()) |>
-    filter(species == sp, hog %in% hogs) |>
-    mutate(hog = factor(hog, levels = hogs)) |>
-    arrange(hog) |>
-    getElement("gene") |>
-    paste(collapse = "\n") |> cat()
 
