@@ -85,7 +85,7 @@ repeat_classes <- c("SINE", "LINE", "LTR", "DNA", "non_TE", "Unclassified")
 
 save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {
     stopifnot(is.character(n) && length(n) == 1)
-    stopifnot(is.ggplot(p))
+    stopifnot(is.ggplot(p) || is.function(p))
     stopifnot(is.numeric(w) && length(w) == 1)
     stopifnot(is.numeric(h) && length(h) == 1)
     stopifnot(is.logical(.pdf) && length(.pdf) == 1)
@@ -95,11 +95,23 @@ save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {
     if (.pdf) {
         cairo_pdf(sprintf("_figures/%s.pdf", n), width = w, height = h,
                   bg = NA, ...)
-        plot(p)
+        if (is.function(p)) {
+            p()
+        } else {
+            plot(p)
+        }
         tmp <- dev.off()
     }
     if (.png) {
-        ggsave(sprintf("_figures/%s.png", n), p, width = w, height = h)
+        .fn <- sprintf("_figures/%s.png", n)
+        if (is.function(p)) {
+            png(filename = .fn, width = w, height = h, units = "in",
+                bg = NA, res = 300)
+            p()
+            tmp <- dev.off()
+        } else {
+            ggsave(.fn, p, width = w, height = h)
+        }
     }
     options(warn = old_warn)
     invisible(NULL)

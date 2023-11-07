@@ -1,6 +1,4 @@
 
-
-
 library(clusterProfiler)
 library(GO.db)
 library(AnnotationDbi)
@@ -55,13 +53,6 @@ hog_pd_df <- read_tsv(bp_file,
     select(hog, pval) |>
     left_join(gc_df, by = "hog")
 
-#' Relationship between change in gene count and p-value:
-hog_pd_df |>
-    ggplot(aes(abs(chir_d), -log(pval))) +
-    geom_hline(yintercept = -log(0.05)) +
-    geom_jitter(height = 0, width = 0.05, alpha = 0.5, shape = 1)
-
-
 
 # GO terms for all HOGs:
 hog_gos <- paste0(dirs$orthofinder_extr, "/All_HOG_GO/N0-GO-by-HOG.tsv") |>
@@ -108,7 +99,6 @@ genes <- chir_hogs |>
 
 
 
-
 overrep <- enricher(genes,
                     pvalueCutoff = 0.1, pAdjustMethod = "BH",
                     minGSSize = 1,
@@ -143,11 +133,12 @@ or_bp_red <- reduceSimMatrix(or_bp_sim_mat,
     as_tibble()
 or_bp_red
 
-treemapPlot(or_bp_red)
-# scatterPlot(or_bp_sim_mat, or_bp_red, onlyParents = TRUE)
-wordcloudPlot(or_bp_red, min.freq=1, colors="black")
+treemap_p <- function() treemap::treemap(or_bp_red, index = c("parentTerm", "term"),
+        vSize = "score", type = "index", title = "",
+        palette = viridisLite::turbo(length(unique(or_bp_red$parent))),
+        fontcolor.labels = c("#FFFFFFDD", "#00000080"), bg.labels = 0,
+        border.col = "#00000080")
 
 
 
-
-
+# save_plot("cafe-go-treemap", treemap_p, w = 6, h = 6.75, .png = FALSE)
