@@ -2,8 +2,7 @@
 
 
 #'
-#' Combine 2 BRAKER annotations (RNAseq + OrthoDB proteins) using TSEBRA,
-#' and run BUSCO on resulting CDS.
+#' Combine 2 BRAKER annotations (RNAseq + OrthoDB proteins) using TSEBRA.
 #' The RNAseq annotation will be preferred because we're assuming the
 #' proteins from OrthoDB are generally not from closely related species.
 #'
@@ -27,8 +26,7 @@
 #'   -p Prefix for all output. Final outputs will be
 #'      `${OUT_PREFIX}_tsebra.gff3.gz`,
 #'      `${OUT_PREFIX}_cds.fasta.gz`,
-#'      `${OUT_PREFIX}_proteins.faa.gz`, and
-#'      `${OUT_PREFIX}_cds_busco.tar.gz`.
+#'      `${OUT_PREFIX}_proteins.faa.gz`.
 #'
 #'
 #'
@@ -176,9 +174,6 @@ export OUT_CDS_FASTA=${OUT_PREFIX}_cds.fasta
 #' FASTA file (.faa to show it's AA sequences) containing proteins:
 export OUT_PROT_FASTA=${OUT_PREFIX}_proteins.faa
 
-#' Output directory for BUSCO run on CDS:
-export BUSCO_OUT_DIR=${OUT_PREFIX}_cds_busco
-
 
 mkdir working
 cd working
@@ -307,19 +302,12 @@ conda deactivate
 #' ===========================================================================
 #' ===========================================================================
 #'
-#' Run BUSCO on resulting CDS and
-#' move over final outputs
+#' Move over final outputs
 #'
 #' ===========================================================================
 #' ===========================================================================
 
-run_busco ${OUT_CDS_FASTA} ${THREADS}
 
-mv busco ${BUSCO_OUT_DIR}
-mv busco.out ./${BUSCO_OUT_DIR}/busco.stdout
-
-tar -czf ${BUSCO_OUT_DIR}.tar.gz ${BUSCO_OUT_DIR}
-mv ${BUSCO_OUT_DIR}.tar.gz ${OUTPUT_LOC}/
 
 
 #' ----------
