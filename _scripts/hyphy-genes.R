@@ -110,7 +110,7 @@ focal_go_df <- tibble(go = c("GO:0010038", "GO:0010212", "GO:0034059",
                       term = get_term(go),
                       # parent GO term plus offspring (recursive)
                       offspring = mclapply(go, get_offs),
-                      hogs = map(offspring, \(o) hog_gos$hog[hog_gos$go %in% o]))
+                      hogs = map(offspring, \(o) unique(hog_gos$hog[hog_gos$go %in% o])))
 focal_go_df
 
 # Write to CSV for use in summarizing output later:
@@ -131,7 +131,7 @@ sum(shared_mat[lower.tri(shared_mat)] > 0)
 sum(shared_mat[upper.tri(shared_mat)] > 0)
 #' Whole matrix with total HOGs on diagonal:
 shared_mat + diag(map_int(focal_go_df$hogs, length))
-shared_mat
+
 
 
 #' Extract names of genes and species for all HOGs we want to analyze.
