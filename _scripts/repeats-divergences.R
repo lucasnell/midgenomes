@@ -72,6 +72,29 @@ ds_df <- names(gsizes) |>
     mutate(species = expand_spp(spp_abbrev, to_fct = TRUE))
 
 
+gsize_p <- gsizes |>
+    (\(x) {
+        tibble(spp_abbrev = factor(names(x), levels = names(x)),
+               gsize = log10(as.numeric(x)))
+    })() |>
+    arrange(spp_abbrev) |>
+    mutate(species = expand_spp(spp_abbrev, to_fct = TRUE)) |>
+    mutate(species = factor(species, levels = rev(levels(species)))) |>
+    ggplot() +
+    geom_segment(aes(x = species, y = gsize - 6, xend = species, yend = 0),
+                 linewidth = 1, linetype = "22", color = "gray60") +
+    geom_point(aes(species, gsize - 6), size = 4) +
+    scale_y_continuous("Genome size\n(Mb)", breaks = log10(100 * 2^(0:3)),
+                       labels = 100 * 2^(0:3)) +
+    scale_x_discrete(drop = FALSE) +
+    coord_flip(ylim = c(1.92, NA)) +
+    theme(panel.background = element_rect(fill = "transparent", color = NA),
+          plot.background = element_rect(fill = "transparent", color = NA),
+          # axis.text.x = element_text(size = 8),
+          # axis.title.x = element_text(size = 9),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank())
 
 
 
@@ -106,8 +129,8 @@ tree_p <- read.tree("_data/phylo/time-tree.nwk") |>
 
 
 
-rep_div_p <- tree_p + divergence_panels_p +
-    plot_layout(nrow = 1, widths = c(1, 1.5))
+rep_div_p <- tree_p + gsize_p + divergence_panels_p +
+    plot_layout(nrow = 1, widths = c(1, 1, 1.5))
 
 
-save_plot("repeat-divergences", rep_div_p, 6.5, 8)
+save_plot("repeat-divergences", rep_div_p, w = 7.5, h = 8)

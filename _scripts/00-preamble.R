@@ -13,13 +13,15 @@ dirs$mcmctree <- "~/_data/_phylo/chir_mcmctree"
 dirs$cafe <- "~/_data/chir_cafe"
 dirs$orthofinder <- "~/_data/chir_orthofinder/orthofinder-output"
 dirs$orthofinder_extr <- "~/_data/_orthofinder-extraction"
-dirs$go <- "~/_data/_go-terms"
+dirs$hyphy_busted <- "~/_data/chir_hyphy_busted"
+dirs$hyphy_relax <- "~/_data/chir_hyphy_relax"
 dirs$assembly <- "~/_data/_assemblies"
+
+
+dirs$go <- "~/_data/_go-terms"
 dirs$proteins <- "~/_data/_proteins"
 dirs$features <- "~/_data/_features"
 dirs$repeats <- "~/_data/_repeats"
-dirs$hyphy_busted <- "~/_data/chir_hyphy_busted"
-dirs$hyphy_relax <- "~/_data/chir_hyphy_relax"
 
 
 
@@ -43,6 +45,13 @@ names(spp_pal) <- read_csv("_data/species-names-families.csv", col_types = cols(
                            progress = FALSE)[["spp_abbrev"]]
 names(full_spp_pal) <- read_csv("_data/species-names-families.csv", col_types = cols(),
                                 progress = FALSE)[["species"]]
+
+#' Generic colorblind-safe palettes from
+#' http://mkweb.bcgsc.ca/colorblind/palettes.mhtml#projecthome
+safe_pals <- list(main = c("#000000", "#2271B2", "#3DB7E9", "#F748A5",
+                           "#359B73", "#d55e00", "#e69f00", "#f0e442"),
+                  alt = c("#000000", "#AA0DB4", "#FF54ED", "#00B19F",
+                          "#EB057A", "#F8071D", "#FF8D1A", "#9EFF37"))
 
 
 #' Make names of genome features and repeat element classes pretty for plotting:
