@@ -4,6 +4,7 @@ source("_scripts/00-preamble.R")
 library(jsonlite)
 library(gt)
 library(knitr)
+library(ggtext)
 
 # To have tibbles display more digits:
 options(pillar.sigfig = 4)
@@ -117,58 +118,64 @@ hog_focal_go_df <- "_data/hyphy-focal-hog-go.csv" |>
     unnest(hog) |>
     filter(hog %in% hyphy_df$hog) |>
     mutate(busted_disc = map_lgl(hog, \(h) hyphy_df$busted_disc[hyphy_df$hog == h]),
-           relax_disc = map_lgl(hog, \(h) hyphy_df$relax_disc[hyphy_df$hog == h]))
+           relax_disc = map_lgl(hog, \(h) hyphy_df$relax_disc[hyphy_df$hog == h]),
+           relax_k = map_dbl(hog, \(h) hyphy_df$relax_k[hyphy_df$hog == h]))
 
 hog_focal_go_p_df <- hog_focal_go_df |>
     group_by(go, term) |>
-    summarize(BUSTED = mean(busted_disc),
-              RELAX = mean(relax_disc),
+    summarize(BUSTED = mean(busted_disc & !relax_disc),
+              RELAX_rel = mean(relax_disc & relax_k < 1 & !busted_disc),
+              RELAX_int = mean(relax_disc & relax_k > 1 & !busted_disc),
               both = mean(busted_disc & relax_disc),
+              any = mean(busted_disc | relax_disc),
               .groups = "drop") |>
-    pivot_longer(BUSTED:RELAX) |>
-    mutate(name = factor(name, levels = rev(c("BUSTED", "Both", "RELAX"))),
-           term = sprintf("%s (%s)", term, go)) |>
+    arrange(desc(both), desc(any)) |>
+    select(-any) |>
+    mutate(go = factor(go, levels = go),
+           term = factor(term, levels = term)) |>
+    pivot_longer(BUSTED:both) |>
+    mutate(name = factor(name, levels = c("RELAX_rel", "RELAX_int", "both", "BUSTED"))) |>
     arrange(go, term, name) |>
     group_by(go, term) |>
-    mutate(start = c(0, value[1] - both[1]),
-           end = c(value[1], value[1] + value[2] - both[2])) |>
+    mutate(start = c(0, cumsum(value[1:3])),
+           end = cumsum(value)) |>
     ungroup() |>
-    mutate(term = factor(term, levels = sort(unique(term))),
-           term_int = as.integer(term))
+    mutate(term_int = as.integer(term),
+           term_p = sprintf("%i. %s", term_int, term),
+           # term_p = sprintf("%i. %s (%s)", term_int, term, go),
+           term_p = factor(term_p, levels = rev(sort(unique(term_p)))))
 
-ho_focal_go_lab_df <- hog_focal_go_df |>
+hog_focal_go_lab_df <- hog_focal_go_df |>
     group_by(go, term) |>
     summarize(n = n(),
               value = mean(busted_disc | relax_disc) + 0.03,
               .groups = "drop") |>
-    mutate(term = sprintf("%s (%s)", term, go),
-           term = factor(term, levels = sort(unique(term))),
-           term_int = as.integer(term))
+    mutate(term = factor(term, levels = levels(hog_focal_go_p_df$term)),
+           term_int = as.integer(term),
+           term_p = sprintf("%i. %s", term_int, term),
+           # term_p = sprintf("%i. %s (%s)", term_int, term, go),
+           term_p = factor(term_p, levels = rev(sort(unique(term_p)))))
 
+
+hyphy_pal <- viridisLite::magma(1000)[c(150, 400, 551, 800)]
 
 hog_focal_go_p <- hog_focal_go_p_df |>
-    mutate(term_int = case_when(str_detect(term, "cold|anoxia|ionizing") ~ term_int,
-                                name == "RELAX" ~ term_int + 0.2,
-                                TRUE ~ term_int - 0.2)) |>
-    ggplot(aes(y = term_int))  +
-    geom_segment(aes(yend = term_int, x = start, xend = end, color = name),
-                 linewidth = 3) +
-    geom_text(data = ho_focal_go_lab_df,
+    ggplot(aes(value, term_p))  +
+    geom_col(aes(fill = name)) +
+    geom_text(data = hog_focal_go_lab_df,
               aes(x = value, label = n), hjust = 0, size = 8/2.8) +
     scale_x_continuous("Significant HOGs", labels = scales::percent,
                        limits = c(0, 1.1), breaks = 0.25* 0:4) +
-    scale_y_continuous(NULL, breaks = 1:length(levels(hog_focal_go_p_df$term)),
-                       labels = levels(hog_focal_go_p_df$term),
-                       limits = c(1, length(levels(hog_focal_go_p_df$term))) +
-                           c(-1, 1) * 0.25) +
-    scale_color_manual(values = viridisLite::magma(2, begin = 0.3, end = 0.8)) +
+    scale_fill_manual(values = hyphy_pal) +
     theme(axis.title.y = element_blank(),
           axis.title.x = element_text(size = 9),
           axis.text = element_text(size = 8),
           legend.position = "none",
           axis.text.y = element_text(color = "black"))
+# hog_focal_go_p
 
-save_plot("hyphy-focal-go-percent", hog_focal_go_p, w = 4, h = 1.6, .png = FALSE)
+
+# save_plot("hyphy-focal-go-percent", hog_focal_go_p, w = 4, h = 1.6, .png = FALSE)
 
 
 
