@@ -189,14 +189,9 @@ sign_hogs <- hog_focal_go_df |>
     getElement("hog") |>
     unique()
 
-#'
-#' Below, I replace zeros with <1e-26 because this is more accureate as
-#' indicated by one of the authors:
-#' https://github.com/veg/hyphy/issues/988#issuecomment-504519957
-#'
 hyphy_sign_hogs_table <- hyphy_df |>
     filter(hog %in% sign_hogs) |>
-    select(1:4) |>
+    select(1,4) |>
     mutate(desc = case_when(hog == "N0.HOG0006267" ~ "exportin",
                             hog == "N0.HOG0001010" ~ "peroxiredoxin-1",
                             hog == "N0.HOG0005696" ~ "sulfonylurea receptor",
@@ -212,23 +207,20 @@ hyphy_sign_hogs_table <- hyphy_df |>
                             hog == "N0.HOG0007233" ~ "heat shock protein 83",
                             hog == "N0.HOG0007347" ~ "cyclic-nucleotide-gated cation channel",
                             TRUE ~ NA)) |>
-    # So that sub_small_vals works below:
-    mutate(across(contains("pvals"), \(x) ifelse(x == 0, 1e-14, x))) |>
-    select(hog, desc, everything()) |>
+    mutate(gos = map_chr(hog, \(h) {
+        g <- hog_focal_go_df$go[hog_focal_go_df$hog == h]
+        # Convert to factor based on `hog_focal_go_p_df$go`, then into integer:
+        gint <- which(levels(hog_focal_go_p_df$go) %in% g)
+        paste(gint, collapse = ",")
+    })) |>
+    select(hog, gos, desc, relax_k) |>
     arrange(relax_k) |>
     gt() |>
     cols_label(hog = "HOG",
                desc = "Description",
-               busted_pvals = "{{*P*-value}}",
-               relax_pvals = "{{*P*-value}}",
+               gos = "GO",
                relax_k = "{{*k*}}") |>
-    fmt_scientific(contains("pvals"), decimals = 2) |>
-    sub_small_vals(columns = contains("pvals"),
-                   threshold = 1e-13,
-                   small_pattern = md("<10<sup>−26</sup>")) |>
     fmt_number(relax_k, decimals = 2) |>
-    tab_spanner(label = "BUSTED", columns = contains("busted")) |>
-    tab_spanner(label = "RELAX", columns = contains("relax")) |>
     opt_table_font(font = "Helvetica") |>
     tab_style(style = list(cell_text(align = "center")),
               locations = cells_column_labels(-desc)) |>
@@ -246,10 +238,12 @@ hyphy_sign_hogs_table <- hyphy_df |>
                 table_body.hlines.width = 0,
                 table.font.color = "black")
 
-hyphy_sign_hogs_table |>
-    gtsave("_figures/hyphy-sign-hogs.pdf")
+# hyphy_sign_hogs_table |>
+#     gtsave("_figures/hyphy-sign-hogs.pdf")
+#
+# plot_crop("_figures/hyphy-sign-hogs.pdf", quiet = TRUE)
 
-plot_crop("_figures/hyphy-sign-hogs.pdf", quiet = TRUE)
+
 
 
 
