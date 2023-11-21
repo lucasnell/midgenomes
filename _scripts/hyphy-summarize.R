@@ -36,26 +36,23 @@ BY_correct <- function(Pvals, .names, fdr = 0.1) {
 }
 
 
-busted <- \(x) paste0(dirs$hyphy_busted, "/", x)
-relax <- \(x) paste0(dirs$hyphy_relax, "/", x)
-
-
-all_busted_data <- list.files(busted(""), "*.json") |>
-    map(\(x) { tryCatch(read_json(busted(x)), error = function(e) NA) })
-all_relax_data <- list.files(relax(""), "*.json") |>
-    map(\(x) { tryCatch(read_json(relax(x)), error = function(e) NA) })
-names(all_busted_data) <- list.files(busted(""), "*.json") |> str_remove(".json$")
-names(all_relax_data) <- list.files(relax(""), "*.json") |> str_remove(".json$")
-
-
-#' The same 12 HOGs failed for both.
-mean(map_lgl(all_busted_data, \(x) isTRUE(is.na(x))))
-mean(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))
-identical(names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x))))),
-          names(which(map_lgl(all_relax_data, \(x) isTRUE(is.na(x))))))
-bad_hogs <- names(which(map_lgl(all_busted_data, \(x) isTRUE(is.na(x)))))
-bad_hogs
-
+#'
+#' The same 12 HOGs failed for both tests:
+#'
+#' - N0.HOG0005474
+#' - N0.HOG0005567
+#' - N0.HOG0006093
+#' - N0.HOG0006291
+#' - N0.HOG0006401
+#' - N0.HOG0006823
+#' - N0.HOG0006968
+#' - N0.HOG0007232
+#' - N0.HOG0007353
+#' - N0.HOG0007393
+#' - N0.HOG0007749
+#' - N0.HOG0008307
+#'
+#'
 #' The errors occur as a form of this:
 #'
 #' ### Obtaining branch lengths and nucleotide substitution biases under the
@@ -64,16 +61,32 @@ bad_hogs
 #' The number of tree tips in 'XXfQsCFh.tree_0'(13) is not equal to the number
 #' of sequences in the data filter associated with the tree (3).
 #'
-#' It's not clear to me why this is happening, so these HOGs are filtered out.
+#' This happens because they "failed to align to any of the in-frame references"
+#' in the first step of the codon-aware alignment
+#' (`hyphy /opt/codon-msa/pre-msa.bf --input HOG-NAME.fasta`)
+#' that happens inside `hyphy-align.sh`.
+#' This results in alignments with fewer species than tips in the phylogeny.
+#' These HOGs are discarded from our analysis.
 #'
 
 
-# Remove these failed ones.
-busted_data <- all_busted_data[map_lgl(all_busted_data, \(x) !isTRUE(is.na(x)))]
-relax_data <- all_relax_data[map_lgl(all_relax_data, \(x) !isTRUE(is.na(x)))]
+# Read HyPhy results and return NA for failed HOGs:
+read_hyphy <- function(x, .test) {
+    tryCatch(read_json(paste0(dirs[[paste0("hyphy_",tolower(.test))]], "/", x)),
+             error = function(e) NA)
+}
 
-# These objects take up a lot of memory, so remove them from environment:
-rm(all_busted_data, all_relax_data); invisible(gc())
+busted_data <- list.files(paste0(dirs$hyphy_busted, "/", ""), "*.json")|>
+    set_names(\(x) str_remove(x, ".json$")) |>
+    map(read_hyphy, .test = "busted") |>
+    discard(\(x) isTRUE(is.na(x)))
+
+relax_data <- list.files(paste0(dirs$hyphy_relax, "/", ""), "*.json") |>
+    set_names(\(x) str_remove(x, ".json$")) |>
+    map(read_hyphy, .test = "relax") |>
+    discard(\(x) isTRUE(is.na(x)))
+
+
 
 
 
