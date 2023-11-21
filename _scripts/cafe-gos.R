@@ -6,6 +6,7 @@ library(AnnotationDbi)
 
 library(rrvgo)
 library(org.Dm.eg.db)
+library(treemap)
 
 source("_scripts/00-preamble.R")
 
@@ -133,12 +134,105 @@ or_bp_red <- reduceSimMatrix(or_bp_sim_mat,
     as_tibble()
 or_bp_red
 
-treemap_p <- function() treemap::treemap(or_bp_red, index = c("parentTerm", "term"),
+treemap_p <- function() {
+    .pal <- viridisLite::turbo(length(unique(or_bp_red$parent)), begin = 0.2)
+    treemap(or_bp_red, index = c("parentTerm", "term"),
         vSize = "score", type = "index", title = "",
-        palette = viridisLite::turbo(length(unique(or_bp_red$parent))),
+        lowerbound.cex.labels = 0.1,
+        palette = .pal,
         fontcolor.labels = c("#FFFFFFDD", "#00000080"), bg.labels = 0,
         border.col = "#00000080")
-
-
+}
+# treemap_p()
 
 # save_plot("cafe-go-treemap", treemap_p, w = 6, h = 6.75, .png = FALSE)
+
+
+
+
+
+
+
+
+
+#' --------------------------------
+#' This helped me manually describe each HOG:
+#' --------------------------------
+#
+#
+# hogs <- genes
+#
+# cq <- "Cquinq"
+#
+# cq_genes <- paste0(dirs$orthofinder_extr, "/All_HOG_GO/N0-GO-by-species-genes.tsv") |>
+#     read_tsv(col_types = cols()) |>
+#     filter(species == cq, hog %in% hogs) |>
+#     select(hog, gene) |>
+#     mutate(hog = factor(hog, levels = hogs)) |>
+#     arrange(hog)
+#
+# cq_hog_genes <- paste0(dirs$features, "/", cq, "_features.gff3.gz") |>
+#     read_tsv(comment = "#",
+#              col_names = c("seqid", "source", "type", "start",
+#                            "end", "score", "strand", "phase",
+#                            "attributes"),
+#              col_types = "ccciicccc", progress = FALSE) |>
+#     filter(type == "protein_coding_gene") |>
+#     select(attributes) |>
+#     mutate(gene = str_remove(attributes, "ID=") |>
+#                str_remove(";.*"),
+#            desc = str_remove(attributes, ".*description=") |>
+#                str_remove(";.*")) |>
+#     filter(gene %in% cq_genes$gene) |>
+#     mutate(gene = factor(gene, levels = cq_genes$gene)) |>
+#     arrange(gene) |>
+#     select(gene, desc) |>
+#     left_join(cq_genes, by = "gene") |>
+#     select(hog, gene, desc) |>
+#     arrange(hog, gene) |>
+#     mutate(species = cq)
+#
+#
+#
+#
+# # =============*
+#
+# md <- "Mdomes"
+#
+# md_genes <- paste0(dirs$orthofinder_extr, "/All_HOG_GO/N0-GO-by-species-genes.tsv") |>
+#     read_tsv(col_types = cols()) |>
+#     filter(species == md, hog %in% hogs) |>
+#     select(hog, gene) |>
+#     mutate(hog = factor(hog, levels = hogs)) |>
+#     arrange(hog)
+#
+# md_hog_genes <- paste0(dirs$proteins, "/", md, "_proteins.faa.gz") |>
+#     read_lines(progress = FALSE) |>
+#     keep(\(x) grepl("^>", x)) |>
+#     str_remove("^>") |>
+#     str_remove(" OS=.*") |>
+#     str_split(" annotation: ") |>
+#     map_dfr(\(x) {
+#         z <- if (length(x) > 1) x[[2]] else ""
+#         tibble(gene = x[[1]], desc = z)
+#     }) |>
+#     mutate(gene = str_remove(gene, "\\..*")) |>
+#     filter(gene %in% md_genes$gene) |>
+#     left_join(md_genes, by = "gene") |>
+#     select(hog, gene, desc) |>
+#     arrange(hog, gene) |>
+#     mutate(species = md)
+#
+#
+# bind_rows(cq_hog_genes, md_hog_genes) |>
+#     select(hog, species, gene, desc) |>
+#     arrange(hog, species, gene) |>
+#     mutate(desc = desc |>
+#                str_remove(" variant.*") |>
+#                str_remove("(?i)probable ") |>
+#                str_remove("%2C.*")) |>
+#     clipr::write_clip()
+
+
+
+
