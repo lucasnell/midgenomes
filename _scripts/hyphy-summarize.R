@@ -189,9 +189,17 @@ sign_hogs <- hog_focal_go_df |>
     getElement("hog") |>
     unique()
 
+
+#'
+#' Below, I replace p-values of zero with <1e-26 because this is more accurate
+#' as indicated by one of the authors:
+#' https://github.com/veg/hyphy/issues/988#issuecomment-504519957
+#'
+
+
 hyphy_sign_hogs_table <- hyphy_df |>
     filter(hog %in% sign_hogs) |>
-    select(1,4) |>
+    select(1:4) |>
     mutate(desc = case_when(hog == "N0.HOG0006267" ~ "exportin",
                             hog == "N0.HOG0001010" ~ "peroxiredoxin-1",
                             hog == "N0.HOG0005696" ~ "sulfonylurea receptor",
@@ -207,20 +215,36 @@ hyphy_sign_hogs_table <- hyphy_df |>
                             hog == "N0.HOG0007233" ~ "heat shock protein 83",
                             hog == "N0.HOG0007347" ~ "cyclic-nucleotide-gated cation channel",
                             TRUE ~ NA)) |>
-    mutate(gos = map_chr(hog, \(h) {
-        g <- hog_focal_go_df$go[hog_focal_go_df$hog == h]
-        # Convert to factor based on `hog_focal_go_p_df$go`, then into integer:
-        gint <- which(levels(hog_focal_go_p_df$go) %in% g)
-        paste(gint, collapse = ",")
-    })) |>
-    select(hog, gos, desc, relax_k) |>
-    arrange(relax_k) |>
+    mutate(gos = map_chr(hog,
+                         \(h) {
+                             g <- hog_focal_go_df$go[hog_focal_go_df$hog == h]
+                             #' Convert to factor based on
+                             #' `hog_focal_go_p_df$go`, then into integer:
+                             gint <- which(levels(hog_focal_go_p_df$go) %in% g)
+                             paste(gint, collapse = ",")
+                         }),
+           relax_pvals = ifelse(relax_pvals == 0, 1e-26, relax_pvals)) |>
+    select(hog, gos, desc, everything()) |>
+    arrange(relax_pvals * busted_pvals) |>
+    # Make global variable so I can access individual descriptions:
+    (\(x) {
+        signif_descs <<- x$desc
+        return(x)
+    })() |>
     gt() |>
     cols_label(hog = "HOG",
                desc = "Description",
                gos = "GO",
+               busted_pvals = "{{*P*-value}}",
+               relax_pvals = "{{*P*-value}}",
                relax_k = "{{*k*}}") |>
+    fmt_scientific(contains("pvals"), decimals = 2) |>
+    sub_small_vals(columns = contains("pvals"),
+                   threshold = 1e-25,
+                   small_pattern = md("<10<sup>−26</sup>")) |>
     fmt_number(relax_k, decimals = 2) |>
+    tab_spanner(label = "BUSTED", columns = contains("busted")) |>
+    tab_spanner(label = "RELAX", columns = contains("relax")) |>
     opt_table_font(font = "Helvetica") |>
     tab_style(style = list(cell_text(align = "center")),
               locations = cells_column_labels(-desc)) |>
@@ -240,10 +264,13 @@ hyphy_sign_hogs_table <- hyphy_df |>
 
 # hyphy_sign_hogs_table |>
 #     gtsave("_figures/hyphy-sign-hogs.pdf")
-#
 # plot_crop("_figures/hyphy-sign-hogs.pdf", quiet = TRUE)
 
 
+#' To see the descriptions as a list:
+# signif_descs |>
+#     paste(collapse = "\n") |>
+#     cat()
 
 
 
