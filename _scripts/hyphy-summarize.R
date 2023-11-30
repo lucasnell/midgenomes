@@ -207,7 +207,7 @@ hyphy_sign_hogs_table <- hyphy_df |>
                             hog == "N0.HOG0007399" ~ "SERRATE protein",
                             hog == "N0.HOG0007118" ~ "dynein heavy chain",
                             hog == "N0.HOG0007838" ~ "prohibitin",
-                            hog == "N0.HOG0008783" ~ "protein kinase C",
+                            hog == "N0.HOG0008783" ~ "protein kinase D",
                             hog == "N0.HOG0001074" ~ "ribosomal protein S6 kinase",
                             hog == "N0.HOG0004934" ~ "4-aminobutyrate aminotransferase",
                             hog == "N0.HOG0006858" ~ "Vav guanine nucleotide exchange factor",

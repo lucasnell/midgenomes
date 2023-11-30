@@ -7,8 +7,6 @@ source("_scripts/00-preamble.R")
 
 library(lubridate)
 library(readxl)
-# library(rgdal)
-# library(broom)
 library(patchwork)
 library(viridis)
 
