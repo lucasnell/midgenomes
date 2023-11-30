@@ -8,28 +8,59 @@
 #' Update these on your system (do NOT include trailing '/'):
 #'
 dirs <- new.env()
-dirs$raxml_supp <- "~/_data/_phylo/chir_raxml_supp"
-dirs$mcmctree <- "~/_data/_phylo/chir_mcmctree"
-dirs$cafe <- "~/_data/chir_cafe"
-dirs$orthofinder <- "~/_data/chir_orthofinder/orthofinder-output"
-dirs$orthofinder_extr <- "~/_data/_orthofinder-extraction"
-dirs$hyphy_busted <- "~/_data/chir_hyphy_busted"
-dirs$hyphy_relax <- "~/_data/chir_hyphy_relax"
-dirs$assembly <- "~/_data/_assemblies"
+#' You should only need to change this one:
+dirs$parent <- "~/_data/__to-deposit"
+#' ^^^^^^^^
+#'
+
+dirs$raxml_supp <- paste0(dirs$parent, "/phylo/chir_raxml_supp")
+dirs$mcmctree <- paste0(dirs$parent, "/phylo/chir_mcmctree")
+dirs$cafe <- paste0(dirs$parent, "/chir_cafe")
+dirs$orthofinder <- paste0(dirs$parent, "/chir_orthofinder/orthofinder-output")
+dirs$orthofinder_extr <- paste0(dirs$parent, "/orthofinder-extraction")
+dirs$hyphy_busted <- paste0(dirs$parent, "/chir_hyphy_busted")
+dirs$hyphy_relax <- paste0(dirs$parent, "/chir_hyphy_relax")
+
+dirs$assembly <- paste0(dirs$parent, "/assemblies")
+dirs$go <- paste0(dirs$parent, "/go-terms")
+dirs$proteins <- paste0(dirs$parent, "/proteins")
+dirs$features <- paste0(dirs$parent, "/features")
+dirs$repeats <- paste0(dirs$parent, "/repeats")
 
 
-dirs$go <- "~/_data/_go-terms"
-dirs$proteins <- "~/_data/_proteins"
-dirs$features <- "~/_data/_features"
-dirs$repeats <- "~/_data/_repeats"
+
+suppressPackageStartupMessages({
+    library(viridisLite)
+    library(ape)
+    library(parallel)
+    library(tidyverse)
+})
+
+#'
+#' Alphabetic list of other packages needed:
+#'
+#' - AnnotationDbi
+#' - clusterProfiler
+#' - future
+#' - future.apply
+#' - ggtext
+#' - ggtree
+#' - GO.db
+#' - grid
+#' - gt
+#' - jsonlite
+#' - knitr
+#' - org.Dm.eg.db
+#' - patchwork
+#' - phylolm
+#' - phyr
+#' - rrvgo
+#' - treeio
+#' - treemap
+#'
 
 
 
-
-library(tidyverse)
-library(viridisLite)
-library(ape)
-library(parallel)
 
 options(mc.cores = max(1L, detectCores()-2L))
 
