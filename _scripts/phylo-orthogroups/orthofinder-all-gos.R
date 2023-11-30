@@ -64,7 +64,7 @@ for (.node in c("N0", "N1", "N3", "N5")) {
 
     #' Now find all the GO terms:
     #' Took ~6 sec for N0 w/ 6 threads
-    go_df <- mclapply(unique(node_df$species), \(sp) {
+    go_df <- safe_mclapply(unique(node_df$species), \(sp) {
 
         go_file <- list.files(god(), sp, full.names = TRUE)
 
@@ -107,7 +107,7 @@ for (.node in c("N0", "N1", "N3", "N5")) {
             go_df <- read_lines(go_file) |>
                 base::`[`(-1) |>
                 str_split("\t") |>
-                mclapply(\(x) {
+                safe_mclapply(\(x) {
                     gox <- x[startsWith(x, "go")]
                     # Some weird ones were "go:GO" for some reason:
                     gox <- gox[gsub("[0-9]+", "", gox) == "go:"]

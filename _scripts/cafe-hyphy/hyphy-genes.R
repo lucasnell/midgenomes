@@ -109,7 +109,7 @@ focal_go_df <- tibble(go = c("GO:0010038", "GO:0010212", "GO:0034059",
                              "GO:0006979", "GO:0098542"),
                       term = get_term(go),
                       # parent GO term plus offspring (recursive)
-                      offspring = mclapply(go, get_offs),
+                      offspring = safe_mclapply(go, get_offs),
                       hogs = map(offspring, \(o) unique(hog_gos$hog[hog_gos$go %in% o])))
 focal_go_df
 

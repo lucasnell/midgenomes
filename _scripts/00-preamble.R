@@ -126,6 +126,30 @@ save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {
     invisible(NULL)
 }
 
+
+#' Safe call to `mcmapply` that reverts to `mapply` on Windows:
+safe_mcmapply <- function(FUN, ..., MoreArgs = NULL) {
+    if (.Platform$OS.type == "unix") {
+        out <- mcmapply(FUN, ..., MoreArgs = MoreArgs,
+                        SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    } else {
+        out <- mapply(FUN, ..., MoreArgs = MoreArgs,
+                      SIMPLIFY = FALSE, USE.NAMES = FALSE)
+    }
+    return(out)
+}
+#' Safe call to `mclapply` that reverts to `lapply` on Windows:
+safe_mclapply <- function(X, FUN, ...) {
+    if (.Platform$OS.type == "unix") {
+        out <- mclapply(X, FUN, ...)
+    } else {
+        out <- lapply(X, FUN, ...)
+    }
+    return(out)
+}
+
+
+
 #' Functions to expand and abbreviate species names.
 #' Because they both involve reading `_data/species-names-families.csv`,
 #' they're best used on vectors.

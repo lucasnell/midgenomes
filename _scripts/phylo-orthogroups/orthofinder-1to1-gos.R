@@ -163,7 +163,7 @@ for (.node in all_nodes) {
         select(species, gene, hog) |>
         # Now fill in the GO terms:
         split(~ species) |>
-        mclapply(get_gos) |>
+        safe_mclapply(get_gos) |>
         do.call(what = bind_rows)
 
     if (!dir.exists(oed("Single_Copy_HOG_GO"))) {
