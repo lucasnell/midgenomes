@@ -1,6 +1,7 @@
 
 #'
 #' Use ddBD method to inform priors for the speciation birth--death process
+#' in MCMCTree
 #'
 #' Note that this script must be run on R < 4.0.*, so I used the Docker
 #' image `lucasnell/midgenomes:v1.0.10`.

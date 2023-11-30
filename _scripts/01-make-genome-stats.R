@@ -1,13 +1,14 @@
 
 #' Make `genome-stats.csv`, `intergenic/*.csv.xz`, and `introns/*.csv.xz`
-#' files all inside `_data`.
+#' files all inside `midgenomes/_data`, based on assemblies, annotations,
+#' repeats, and OrthoFinder output.
 #'
 #' This script should be run after the scripts in `chtc` but before `_scripts`
 #'
 #' This script depends on...
 #' - `"_data/species-names-families.csv"`
 #' - `"*_assembly.fasta.gz"` files being in `dirs$assembly`
-#' - `"*_proteins.faa.gz"` files being in `dirs$$proteins`
+#' - `"*_proteins.faa.gz"` files being in `dirs$proteins`
 #' - `"./Phylogenetic_Hierarchical_Orthogroups/N0.tsv"` inside `dirs$orthofinder`
 #' - `"*_features.gff3.gz"` files being in `dirs$features`
 #' - `"*_repeats.tsv"` files being in `dirs$repeats`

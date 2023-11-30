@@ -1,6 +1,6 @@
 
 #'
-#' Maps for *Tanytarsus gracilentus* samples.
+#' Maps of *Tanytarsus gracilentus* sample locations.
 #'
 
 source("_scripts/00-preamble.R")

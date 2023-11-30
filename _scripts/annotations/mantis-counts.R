@@ -1,6 +1,7 @@
 
+#'
 #' Summarize output from mantis
-#' Updated on 2023-09-20
+#'
 
 
 source("_scripts/00-preamble.R")
