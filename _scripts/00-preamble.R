@@ -71,56 +71,19 @@ if (file.exists(".Rprofile")) source(".Rprofile")
 theme_set(theme_classic() +
               theme(strip.background = element_blank()))
 
+
+#' Palette for chironomid species:
 spp_pal <- full_spp_pal <- turbo(100)[c(70+3*0:8, 60, 15+4*2:0, 30)] |> as.list()
 names(spp_pal) <- read_csv("_data/species-names-families.csv", col_types = cols(),
                            progress = FALSE)[["spp_abbrev"]]
 names(full_spp_pal) <- read_csv("_data/species-names-families.csv", col_types = cols(),
                                 progress = FALSE)[["species"]]
 
-#' Generic colorblind-safe palettes from
-#' http://mkweb.bcgsc.ca/colorblind/palettes.mhtml#projecthome
-safe_pals <- list(main = c("#000000", "#2271B2", "#3DB7E9", "#F748A5",
-                           "#359B73", "#d55e00", "#e69f00", "#f0e442"),
-                  alt = c("#000000", "#AA0DB4", "#FF54ED", "#00B19F",
-                          "#EB057A", "#F8071D", "#FF8D1A", "#9EFF37"))
 
-
-#' Make names of genome features and repeat element classes pretty for plotting:
-pretty <- new.env()
-pretty$map <- list("gsize" = "Genome size",
-                   "n_genes" = "Protein-coding genes",
-                   "sum_interg_len" = "Intergenic DNA",
-                   "mean_intron_len" = "Intron length",
-                   "SINE" = "SINE",
-                   "LINE" = "LINE",
-                   "LTR" = "LTR",
-                   "DNA" = "DNA",
-                   "non_TE" = "non-TE",
-                   "Unclassified" = "Unclassified")
-pretty$convert <- function(yucks, to_fct = FALSE, units = FALSE) {
-    yucks <- gsub("log_", "", yucks)
-    if (any(! yucks %in% names(pretty$map))) {
-        stop("These inputs are not in the pretty map: ",
-             paste(yucks[! yucks %in% names(pretty$map)], collapse = ", "))
-    }
-    pretties <- map_chr(yucks, \(x) pretty$map[[x]])
-    if (units) {
-        lgl <- pretties != "Protein-coding genes"
-        pretties[lgl] <- paste(pretties[lgl], "(bp)")
-    }
-    if (to_fct) {
-        idx <- map_int(gsub(" \\(bp\\)", "", unique(pretties)),
-                       \(x) which(paste(pretty$map) == x))
-        pretties <- factor(pretties, levels = unique(pretties)[rank(idx)])
-    }
-    return(pretties)
-}
-
-# non-TE (but known) element classes:
+#' non-TE (but known) element classes:
 nonTE_classes <- c("RC", "Small_RNA", "Satellite", "Simple_repeat",
                    "Low_complexity")
-# Repeat classes to keep (in order of plotting):
-repeat_classes <- c("SINE", "LINE", "LTR", "DNA", "non_TE", "Unclassified")
+
 
 
 save_plot <- function(n, p, w, h, .pdf = TRUE, .png = TRUE, ...) {

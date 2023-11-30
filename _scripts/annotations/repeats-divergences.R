@@ -38,6 +38,38 @@ simplify_class <- function(.class, combine_nonTE = TRUE) {
 }
 
 
+#' Make names of genome features and repeat element classes pretty for plotting:
+pretty_repeats <- function(yucks, to_fct = FALSE, units = FALSE) {
+    pretty_map <- list("gsize" = "Genome size",
+                       "n_genes" = "Protein-coding genes",
+                       "sum_interg_len" = "Intergenic DNA",
+                       "mean_intron_len" = "Intron length",
+                       "SINE" = "SINE",
+                       "LINE" = "LINE",
+                       "LTR" = "LTR",
+                       "DNA" = "DNA",
+                       "non_TE" = "non-TE",
+                       "Unclassified" = "Unclassified")
+    yucks <- gsub("log_", "", yucks)
+    if (any(! yucks %in% names(pretty_map))) {
+        stop("These inputs are not in the pretty map: ",
+             paste(yucks[! yucks %in% names(pretty_map)], collapse = ", "))
+    }
+    pretties <- map_chr(yucks, \(x) pretty_map[[x]])
+    if (units) {
+        lgl <- pretties != "Protein-coding genes"
+        pretties[lgl] <- paste(pretties[lgl], "(bp)")
+    }
+    if (to_fct) {
+        idx <- map_int(gsub(" \\(bp\\)", "", unique(pretties)),
+                       \(x) which(paste(pretty_map) == x))
+        pretties <- factor(pretties, levels = unique(pretties)[rank(idx)])
+    }
+    return(pretties)
+}
+
+
+
 one_spp_ds <- function(.spp) {
     # .spp = "Tgraci"
 
@@ -62,7 +94,7 @@ one_spp_ds <- function(.spp) {
         summarize(bp = sum(bp), .groups = "drop") |>
         mutate(perc = bp / gsizes[[.spp]] * 100) |>
         filter(class != "Unclassified") |>
-        mutate(plot_class = pretty$convert(class, to_fct = TRUE),
+        mutate(plot_class = pretty_repeats(class, to_fct = TRUE),
                spp_abbrev = .spp)
 
     return(ds_df)
