@@ -1,4 +1,13 @@
 
+#'
+#' Use ddBD method to inform priors for the speciation birth--death process
+#'
+#' Note that this script must be run on R < 4.0.*, so I used the Docker
+#' image `lucasnell/midgenomes:v1.0.10`.
+#' Instructions on how I did it are below.
+#'
+
+
 
 #' code: https://github.com/cathyqqtao/ddBD-tree-prior
 #' permalink for ddBD.R script pasted below:
@@ -134,12 +143,4 @@ rel_tr <- read.tree("/data/phylo/chir_mega_relTimes.nwk")
 ddBD(rel_tr, outgroup = c("Asteph", "Aaegyp", "Cquinq"), root.time = 2.2, measure = "SSE")
 #    lambda        mu       rho
 # 1.0694326 1.0694338 0.7733908
-
-
-# # previous version:
-# ddBD(rel_tr, outgroup = "Culicoides_sonorensis", root.time = 2.2, measure = "SSE")
-# #    lambda        mu       rho
-# # 3.6612684 3.6612434 0.2195345
-
-
 

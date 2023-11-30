@@ -210,8 +210,8 @@ repeats_p <- do.call(wrap_plots, c(list(nrow = 1), phy_feature_ps[5:10]))
 
 # traits_p / repeats_p
 
-save_plot("cc-tree-inset", tree_inset, 1, 1.255, .png = FALSE)
-save_plot("cc-traits", traits_p, 5.5, 2, .png = FALSE)
-save_plot("cc-repeats", repeats_p, 5.5, 2, .png = FALSE)
+# save_plot("cc-tree-inset", tree_inset, 1, 1.255, .png = FALSE)
+# save_plot("cc-traits", traits_p, 5.5, 2, .png = FALSE)
+# save_plot("cc-repeats", repeats_p, 5.5, 2, .png = FALSE)
 
 

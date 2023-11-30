@@ -1,4 +1,9 @@
 
+#'
+#' Summarize significant results for HyPhy tests BUSTED and RELAX, including
+#' describing HOGs that were significant for both tests.
+#'
+
 source("_scripts/00-preamble.R")
 
 library(jsonlite)

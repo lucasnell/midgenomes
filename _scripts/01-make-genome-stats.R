@@ -1,10 +1,25 @@
 
 #' Make `genome-stats.csv`, `intergenic/*.csv.xz`, and `introns/*.csv.xz`
 #' files all inside `_data`.
+#'
+#' This script should be run after the scripts in `chtc` but before `_scripts`
+#'
+#' This script depends on...
+#' - `"_data/species-names-families.csv"`
+#' - `"*_assembly.fasta.gz"` files being in `dirs$assembly`
+#' - `"*_proteins.faa.gz"` files being in `dirs$$proteins`
+#' - `"./Phylogenetic_Hierarchical_Orthogroups/N0.tsv"` inside `dirs$orthofinder`
+#' - `"*_features.gff3.gz"` files being in `dirs$features`
+#' - `"*_repeats.tsv"` files being in `dirs$repeats`
+#'
+#'
 
 
 source("_scripts/00-preamble.R")
 
+
+# Overwrite previous versions of CSV files produced here?
+.overwrite <- FALSE
 
 
 
@@ -337,7 +352,7 @@ get_one_intron_set <- function(exon_mat, trans_row, .label_format) {
 #' Get intron sizes and optionally write to csv file based on species abbreviation,
 #' source database, and list of genes to use.
 #' Then return tibble to summarize by species.
-get_introns <- function(.spp, .source, .genes, .write = FALSE) {
+get_introns <- function(.spp, .source, .genes, .write = .overwrite) {
 
     # .spp = "Tgraci"; .source = "here"
     # .genes = unique(do.call(c, gnames_df[[.spp]])); .write = FALSE
@@ -421,7 +436,7 @@ intron_df <- gstats_df |>
 #' source database, and list of genes to use.
 #' Then return tibble to summarize by species.
 get_intergenic <- function(.spp, .source,
-                           .seq_len_df = seq_len_df, .write = FALSE) {
+                           .seq_len_df = seq_len_df, .write = .overwrite) {
 
     stopifnot(.source %in% c("VectorBase", "GenBank", "InsectBase", "here"))
 
@@ -482,8 +497,6 @@ interg_df <- gstats_df |>
 #' ===========================================================================
 
 
-
-# make sure this section works
 
 simplify_class <- function(.class) {
     .class <- str_split(.class, "\\/") |>
@@ -564,5 +577,8 @@ if (all(gstats_df$spp_abbrev == repeats_len_df$spp_abbrev)) {
     }
 } else stop("not all(gstats_df$spp_abbrev == repeats_len_df$spp_abbrev)")
 
-write_csv(gstats_df, "_data/genome-stats.csv")
+
+if (!file.exists("_data/genome-stats.csv") || .overwrite) {
+    write_csv(gstats_df, "_data/genome-stats.csv")
+}
 

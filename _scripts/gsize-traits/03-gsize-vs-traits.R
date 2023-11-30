@@ -1,4 +1,13 @@
 
+#'
+#' Plot genome size versus other traits that may relate to it
+#'
+#' File `_data/family-regressions.rds` (created in
+#' `_scripts/gsize-traits/01-gsize-traits-analysis.R`)
+#' is required for these plots.
+#'
+
+
 
 source("_scripts/00-preamble.R")
 
@@ -132,7 +141,7 @@ gsize_corr_p <- do.call(wrap_plots, c(list(nrow = 3), gsize_corr_ps))
 #' ========================================================================
 
 
-save_plot("gsize-corrs", gsize_corr_p, 5.5, 4)
+# save_plot("gsize-corrs", gsize_corr_p, 5.5, 4)
 
 
 

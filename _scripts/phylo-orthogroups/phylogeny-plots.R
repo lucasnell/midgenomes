@@ -1,6 +1,6 @@
 
 #'
-#' Create plots maximum likelihood and time-calibrated phylogenetic trees
+#' Plot maximum likelihood and time-calibrated phylogenetic trees
 #'
 
 source("_scripts/00-preamble.R")
@@ -37,7 +37,7 @@ ml_tr_p <- ggtree(ml_tr) +
 # ml_tr_p
 
 
-save_plot("ML-tree", ml_tr_p, 6.5, 4)
+# save_plot("ML-tree", ml_tr_p, 6.5, 4)
 
 
 
@@ -130,5 +130,5 @@ time_tr_p <- time_tr_p0 |>
 
 time_tr_p
 
-save_plot("time-tree", time_tr_p, 6, 4, .png = FALSE)
+# save_plot("time-tree", time_tr_p, 6, 4, .png = FALSE)
 

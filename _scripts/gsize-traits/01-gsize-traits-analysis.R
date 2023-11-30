@@ -1,4 +1,12 @@
 
+#'
+#' Analyze the following:
+#'
+#' 1. Do genome traits differ for families Chironomidae and Ceratopogonidae
+#'    versus all other dipterans in the phylogeny?
+#' 2. Do genome traits significantly correlate with genome size when accounting
+#'    for phylogenetic autocorrelation?
+#'
 
 source("_scripts/00-preamble.R")
 

@@ -5,11 +5,6 @@
 
 source("_scripts/00-preamble.R")
 
-library(lubridate)
-library(readxl)
-library(patchwork)
-library(viridis)
-
 library(sf)
 
 
@@ -52,7 +47,7 @@ myvatn_p <- myvatn_map |>
     theme(panel.background = element_rect(fill = "transparent", color = NA),
           plot.background = element_rect(fill = "transparent", color = NA))
 
-save_plot("myvatn_map", myvatn_p, 4, 5, .png = FALSE)
+# save_plot("myvatn_map", myvatn_p, 4, 5, .png = FALSE)
 
 
 
@@ -87,7 +82,7 @@ iceland_p <- iceland_map |>
           plot.background = element_rect(fill = "transparent", color = NA),
           legend.box.background = element_rect(fill = "transparent"))
 
-save_plot("iceland_map", iceland_p, 4, 3, .png = FALSE)
+# save_plot("iceland_map", iceland_p, 4, 3, .png = FALSE)
 
 
 

@@ -1,6 +1,11 @@
 
-library(tidyverse)
+#'
+#' Make plot of BUSCO scores for all species' transcriptomes.
+#'
+
+
 source("_scripts/00-preamble.R")
+
 
 # Species whose gene predictions we made:
 made_here_spp <- c("Tanytarsus gracilentus", "Parochlus steinenii",
@@ -12,6 +17,9 @@ spp_lvls <- read_csv("_data/species-names-families.csv",
                      progress = FALSE)[["species"]]
 
 
+#'
+#' Read csv output from `cds-busco.sh` script
+#'
 busco_df <- "species,BUSCO_C,BUSCO_C-S,BUSCO_C-D,BUSCO_F,BUSCO_M,BUSCO_n
 Aaegyp,3224,3099,125,33,28,3285
 Asteph,3265,3129,136,4,16,3285

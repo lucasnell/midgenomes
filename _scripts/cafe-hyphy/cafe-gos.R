@@ -1,4 +1,11 @@
 
+#'
+#' This script...
+#' - filters for HOGs that significantly expanded in Chironomidae
+#' - does overrepresentation test on GO terms in expanded HOGs
+#' - produces treemap plot of overrepresented GO terms
+#'
+
 library(clusterProfiler)
 library(GO.db)
 library(AnnotationDbi)
@@ -95,7 +102,6 @@ genes <- chir_hogs |>
     arrange(pval) |>
     filter(pval < 0.001, chir_d > 0) |>
     getElement("hog") |>
-    # base::`[`(1:20) |>
     identity()
 
 

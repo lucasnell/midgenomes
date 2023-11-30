@@ -1,9 +1,16 @@
 
+#'
+#' This script produces files necessary to use in HyPhy only 1-to-1 HOGs that
+#' are linked to GO terms related to stressful environments.
+#'
+
 library(GO.db)
 # ^^ make sure this is loaded before tidyverse ^^
 
 source("_scripts/00-preamble.R")
 
+# Overwrite previous versions of CSV files produced here?
+.overwrite <- FALSE
 
 
 read_fasta <- function(fn) {
@@ -114,9 +121,11 @@ focal_go_df <- tibble(go = c("GO:0010038", "GO:0010212", "GO:0034059",
 focal_go_df
 
 # Write to CSV for use in summarizing output later:
-focal_go_df |>
-    mutate(across(offspring:hogs, \(x) map_chr(x, paste, collapse = ";"))) |>
-    write_csv("_data/hyphy-focal-hog-go.csv")
+if (!file.exists("_data/hyphy-focal-hog-go.csv") || .overwrite) {
+    focal_go_df |>
+        mutate(across(offspring:hogs, \(x) map_chr(x, paste, collapse = ";"))) |>
+        write_csv("_data/hyphy-focal-hog-go.csv")
+}
 
 
 #' Below shows that some HOGs are shared among the GO terms:
@@ -158,4 +167,7 @@ hog_genes <- dirs$orthofinder_extr |>
     arrange(species, gene, hog) |>
     select(species, gene, hog)
 
-write_csv(hog_genes, "_data/hyphy-hog-genes.csv")
+
+if (!file.exists("_data/hyphy-hog-genes.csv") || .overwrite) {
+    write_csv(hog_genes, "_data/hyphy-hog-genes.csv")
+}

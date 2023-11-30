@@ -1,5 +1,9 @@
 
 
+#'
+#' Make repeat divergence landscape plots.
+#'
+
 source("_scripts/00-preamble.R")
 
 library(ggtree)
@@ -133,4 +137,4 @@ rep_div_p <- tree_p + gsize_p + divergence_panels_p +
     plot_layout(nrow = 1, widths = c(1, 1, 1.5))
 
 
-save_plot("repeat-divergences", rep_div_p, w = 7.5, h = 8)
+# save_plot("repeat-divergences", rep_div_p, w = 7.5, h = 8)
