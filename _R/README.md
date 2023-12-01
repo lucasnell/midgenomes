@@ -37,11 +37,12 @@ Folder contents:
 ```
 
 
+## Content descriptions
 
 - `00-preamble.R`: shared code used in all R scripts.
 
 
-## `01-samps-annots` folder:
+### `01-samps-annots` folder:
 
 - `01-sample-maps.R`: Maps of *Tanytarsus gracilentus* sample locations.
 - `02-repeats-divergences.R`: Make repeat divergence landscape plots.
@@ -50,7 +51,7 @@ Folder contents:
 
 
 
-## `02-phylo` folder:
+### `02-phylo` folder:
 
 - `01-ddBD.R`: Use ddBD method to inform priors for the speciation birth--death 
   process in MCMCTree
@@ -58,7 +59,7 @@ Folder contents:
   phylogenetic trees
 
 
-## `03-gsize-traits` folder:
+### `03-gsize-traits` folder:
 
 - `01-make-genome-stats.R`: Make `midgenomes/_data/genome-stats.csv` file 
   based on assemblies, annotations, repeats, and OrthoFinder output.
@@ -74,7 +75,7 @@ Folder contents:
 
 
 
-## `04-cafe` folder:
+### `04-cafe` folder:
 
 - `01-cafe-orthofinder-gos.R`: Extract GO terms for all OrthoFinder HOGs. 
   Output is used for CAFE.
@@ -83,7 +84,7 @@ Folder contents:
   produces treemap plot of overrepresented GO terms.
 
 
-## `05-hyphy` folder:
+### `05-hyphy` folder:
 
 - `01-hyphy-orthofinder-gos.R`: Extract GO terms for 1-to-1 OrthoFinder HOGs. 
   Output is used for HyPhy.
