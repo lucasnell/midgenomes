@@ -8,7 +8,7 @@
 #'    for phylogenetic autocorrelation?
 #'
 
-source("_scripts/00-preamble.R")
+source("_R/00-preamble.R")
 
 library(phylolm)
 library(phyr)

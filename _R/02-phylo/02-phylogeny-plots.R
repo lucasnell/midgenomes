@@ -3,7 +3,7 @@
 #' Plot maximum likelihood and time-calibrated phylogenetic trees
 #'
 
-source("_scripts/00-preamble.R")
+source("_R/00-preamble.R")
 
 library(ggtree)
 library(treeio)

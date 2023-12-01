@@ -3,13 +3,13 @@
 #' Plot genome size versus other traits that may relate to it
 #'
 #' File `_data/family-regressions.rds` (created in
-#' `_scripts/gsize-traits/01-gsize-traits-analysis.R`)
+#' `_R/03-gsize-traits/02-gsize-traits-analysis.R`)
 #' is required for these plots.
 #'
 
 
 
-source("_scripts/00-preamble.R")
+source("_R/00-preamble.R")
 
 library(phyr)
 library(ggtree)

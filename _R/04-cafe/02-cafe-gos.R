@@ -15,7 +15,7 @@ library(rrvgo)
 library(org.Dm.eg.db)
 library(treemap)
 
-source("_scripts/00-preamble.R")
+source("_R/00-preamble.R")
 
 
 #' #' Show node names of cafe tree:
