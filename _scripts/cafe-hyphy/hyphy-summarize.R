@@ -115,7 +115,7 @@ hyphy_df <- tibble(hog = names(busted_data),
 
 
 
-hog_focal_go_df <- "_data/hyphy-focal-hog-go.csv" |>
+hog_focal_go_df <- "_data/hyphy/focal-hog-go.csv" |>
     read_csv(col_types = cols()) |>
     select(-offspring) |>
     rename(hog = hogs) |>

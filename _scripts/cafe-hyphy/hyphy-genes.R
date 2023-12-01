@@ -121,10 +121,10 @@ focal_go_df <- tibble(go = c("GO:0010038", "GO:0010212", "GO:0034059",
 focal_go_df
 
 # Write to CSV for use in summarizing output later:
-if (!file.exists("_data/hyphy-focal-hog-go.csv") || .overwrite) {
+if (!file.exists("_data/hyphy/focal-hog-go.csv") || .overwrite) {
     focal_go_df |>
         mutate(across(offspring:hogs, \(x) map_chr(x, paste, collapse = ";"))) |>
-        write_csv("_data/hyphy-focal-hog-go.csv")
+        write_csv("_data/hyphy/focal-hog-go.csv")
 }
 
 
@@ -168,6 +168,6 @@ hog_genes <- dirs$orthofinder_extr |>
     select(species, gene, hog)
 
 
-if (!file.exists("_data/hyphy-hog-genes.csv") || .overwrite) {
-    write_csv(hog_genes, "_data/hyphy-hog-genes.csv")
+if (!file.exists("_data/hyphy/hog-genes.csv") || .overwrite) {
+    write_csv(hog_genes, "_data/hyphy/hog-genes.csv")
 }

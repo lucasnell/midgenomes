@@ -1,9 +1,6 @@
 
-#' Make `genome-stats.csv`, `intergenic/*.csv.xz`, and `introns/*.csv.xz`
-#' files all inside `midgenomes/_data`, based on assemblies, annotations,
-#' repeats, and OrthoFinder output.
-#'
-#' This script should be run after the scripts in `chtc` but before `_scripts`
+#' Make `midgenomes/_data/genome-stats.csv` file based on
+#' assemblies, annotations, repeats, and OrthoFinder output.
 #'
 #' This script depends on...
 #' - `"_data/species-names-families.csv"`
@@ -353,7 +350,7 @@ get_one_intron_set <- function(exon_mat, trans_row, .label_format) {
 #' Get intron sizes and optionally write to csv file based on species abbreviation,
 #' source database, and list of genes to use.
 #' Then return tibble to summarize by species.
-get_introns <- function(.spp, .source, .genes, .write = .overwrite) {
+get_introns <- function(.spp, .source, .genes, .write = FALSE) {
 
     # .spp = "Tgraci"; .source = "here"
     # .genes = unique(do.call(c, gnames_df[[.spp]])); .write = FALSE
@@ -437,7 +434,7 @@ intron_df <- gstats_df |>
 #' source database, and list of genes to use.
 #' Then return tibble to summarize by species.
 get_intergenic <- function(.spp, .source,
-                           .seq_len_df = seq_len_df, .write = .overwrite) {
+                           .seq_len_df = seq_len_df, .write = FALSE) {
 
     stopifnot(.source %in% c("VectorBase", "GenBank", "InsectBase", "here"))
 

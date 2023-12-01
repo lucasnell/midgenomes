@@ -10,14 +10,26 @@ library(ggtree)
 library(patchwork)
 
 
-gsizes <- "_data/genome-stats.csv" |>
-        read_csv(col_types = cols()) |>
-        select(spp_abbrev, gsize) |>
-        (\(x) {
-            z <- as.list(x[["gsize"]])
-            names(z) <- x[["spp_abbrev"]]
-            return(z)
-        })()
+if (!file.exists("_data/gsizes-list.rds")) {
+    # Takes ~1 min
+    gsizes <- read_csv("_data/species-names-families.csv", col_types = "ccc") |>
+        getElement("spp_abbrev") |>
+        set_names() |>
+        safe_mclapply(\(s) {
+            .fn <- paste0(dirs$assembly, "/", s, "_assembly.fasta.gz")
+            sl <- read_lines(.fn, progress = FALSE)
+            hl <- which(grepl("^>", sl))
+            ll <- c(hl[-1] - 1L, length(sl))
+            stopifnot(length(hl) == length(ll))
+            lens <- map_int(1:length(hl), \(i) sum(nchar(sl[(hl[i]+1L):(ll[i])])))
+            return(sum(lens))
+        })
+    write_rds(gsizes, "_data/gsizes-list.rds")
+} else {
+    gsizes <- read_rds("_data/gsizes-list.rds")
+}
+
+
 
 
 simplify_class <- function(.class, combine_nonTE = TRUE) {

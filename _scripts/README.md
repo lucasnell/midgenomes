@@ -42,9 +42,8 @@
 
 - `03-gsize-vs-traits.R`: Plot genome size versus other traits that may relate to it
 
-- `02-make-genome-stats.R`: Make `genome-stats.csv`, `intergenic/*.csv.xz`, and
-  `introns/*.csv.xz` files all inside `midgenomes/_data`, based on assemblies, 
-  annotations, repeats, and OrthoFinder output.
+- `02-make-genome-stats.R`: Make `midgenomes/_data/genome-stats.csv` file 
+  based on assemblies, annotations, repeats, and OrthoFinder output.
 
 - `00-preamble.R`: shared code used in all R scripts.
 
