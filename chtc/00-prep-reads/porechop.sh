@@ -2,8 +2,10 @@
 
 #' Code to attempt to use PoreChop to remove adapters from P. steinii ONT reads,
 #' but it turns out they're already removed.
-
-# using docker container quay.io/biocontainers/porechop::0.2.4--py39hc16433a_3
+#'
+#' using docker container quay.io/biocontainers/porechop::0.2.4--py39hc16433a_3
+#' in an interactive job
+#'
 
 
 export THREADS=$(count_threads)

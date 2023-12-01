@@ -1,0 +1,35 @@
+# fastp.sub
+
+# trim Illumina DNA- or RNA-seq reads
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.10
+
+log = fastp_$(seqtype)_$(readtar).log
+error = fastp_$(seqtype)_$(readtar).err
+output = fastp_$(seqtype)_$(readtar).out
+
+executable = fastp.sh
+arguments = $(seqtype) $(readtar)
+
+batch_name = "fastp"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 8
+request_memory = 16GB
+request_disk = 60GB
+
+# Run one instance of this job per line in `readtars.txt`
+queue readtar,seqtype from readtars.txt
+
+# `readtars.txt` should look like this:
+# dna_reads1.tar, dna
+# dna_reads2.tar, dna
+# rna_reads1.tar, rna
+# rna_reads2.tar, rna
+# ...
+

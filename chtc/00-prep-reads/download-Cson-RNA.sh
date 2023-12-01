@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Download RNAseq data for Culicoides sonorensis from SRA
-# This does not need to be run on the docker container.
+# This does not need to be run on the `midgenomes` docker container.
 # It should be run in a vanilla CentOS environment.
-# (For midgenomes docker, use https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.0/sratoolkit.3.0.0-ubuntu64.tar.gz)
+# (For midgenomes docker, use
+#  https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.0/sratoolkit.3.0.0-ubuntu64.tar.gz)
 
 mkdir working
 cd working
