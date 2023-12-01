@@ -60,8 +60,6 @@ suppressPackageStartupMessages({
 #'
 
 
-
-
 options(mc.cores = max(1L, detectCores()-2L))
 
 
