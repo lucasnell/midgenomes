@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #'
-#' Functional annotations using mantis - initial database downloads.
+#' Initial database downloads for functional annotations using mantis.
 #'
 
 

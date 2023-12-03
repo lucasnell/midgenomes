@@ -1,8 +1,7 @@
 #!/bin/bash
 
 #'
-#' Use RepeatMasker to count repeat elements and to softmask the
-#' Aedes aegypti assembly.
+#' Calculate repeat divergences.
 #'
 
 
