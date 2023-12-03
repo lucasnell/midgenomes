@@ -1,6 +1,10 @@
 # `04-ortho-analyses`
 
 
+This folder contains scripts for identifying orthogroups using OrthoFinder,
+and for analyses resulting from OrthoFinder output: 
+gene family evolution (using CAFE) and positive selection (using HyPhy).
+
 
 Folder contents:
 
@@ -19,8 +23,8 @@ Folder contents:
 
 The bash scripts in this folder are as follows:
 
-- `cafe.sh`: 
-- `hyphy-align.sh`: 
-- `hyphy-busted.sh`: 
-- `hyphy-relax.sh`: 
-- `orthofinder.sh`: 
+- `cafe.sh`: Gene family evolution analysis using CAFE.
+- `hyphy-align.sh`: Do alignments for later selection tests using HyPhy.
+- `hyphy-busted.sh`: Selection tests using HyPhy BUSTED method.
+- `hyphy-relax.sh`: Selection tests using HyPhy RELAX method.
+- `orthofinder.sh`: Find orthogroups using OrthoFinder.
