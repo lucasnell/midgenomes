@@ -105,3 +105,22 @@ Note that these only install the proper versions of the packages I manually
 installed, so dependencies might vary from what I used.
 
 
+
+# Replicating the bash environment
+
+Most scripts in `_bash` were run using the Docker image found at
+<https://hub.docker.com/r/lucasnell/midgenomes>, so to replicate this
+environment you can pull the latest version:
+
+```bash
+docker pull lucasnell/midgenomes:v1.0.10
+```
+
+
+The main exception to this was ``, which uses the image found
+at <https://hub.docker.com/r/lucasnell/tany_backmap>,
+which you can pull using the following:
+
+```bash
+docker pull lucasnell/tany_backmap:v0.0.1
+```
