@@ -2,7 +2,7 @@
 # `_docker`
 
 This folder contains the files used to create the Docker container in which 
-most scripts inside `chtc` were run.
+most scripts inside `_bash` were run.
 
 
 Folder contents:

@@ -1,5 +1,5 @@
 ############################################################
-# Dockerfile used for most scripts run inside `chtc`.
+# Dockerfile used for most scripts run inside `_bash`.
 ############################################################
 
 

@@ -1,5 +1,5 @@
 
-# `chtc`
+# `_bash`
 
 This folder contains bash scripts used to run much of the bioinformatic
 software for this project.
@@ -39,7 +39,7 @@ Folder descriptions:
   using OrthoFinder, and for analyses resulting from OrthoFinder output: 
   gene family evolution (using CAFE) and positive selection (using HyPhy).
 - `_docker`: Files used to create the Docker container in which most scripts
-  inside `chtc` were run.
+  inside `_bash` were run.
 - `_docker_backmap`: Dockerfile for using backmap on *Tanytarsus gracilentus*
   reference assembly. This is in a separate docker container bc the qualimap 
   conda install hangs for some reason.

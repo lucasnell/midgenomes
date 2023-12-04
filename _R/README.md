@@ -2,8 +2,8 @@
 # `_R`
 
 This folder contains R scripts mostly used to create figures and analyze
-data output from the programs used inside the `chtc` folder's scripts, but 
-some create necessary output used in `chtc`.
+data output from the programs used inside the `_bash` folder's scripts, but 
+some create necessary output used in `_bash`.
 Folders are sorted by the order they're presented in the text, and
 scripts within are sorted by when they're used.
 

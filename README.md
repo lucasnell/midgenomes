@@ -19,7 +19,7 @@ Folder contents:
 ├── midgenomes.Rproj
 ├── _data
 ├── _R
-└── chtc
+└── _bash
 ```
 
 The following files/folders should be present:
@@ -29,13 +29,15 @@ The following files/folders should be present:
 - `midgenomes.Rproj`: file saving this RStudio Project's preferences
 - `_data`: Small datasets associated with this paper.
 - `_R`: R scripts mostly used to create figures and analyze data output 
-  from the programs used inside the `chtc` folder's scripts, but some create
-  necessary output used in `chtc`.
-- `chtc`: Bash scripts used to run much of the bioinformatic
-software for this project.
+  from the programs used inside the `_bash` folder's scripts, but some create
+  necessary output used in `_bash`.
+- `_bash`: Bash scripts used to run much of the bioinformatic
+  software for this project. Most were run on UW--Madison's
+  [Center for High Throughput Computing (CHTC)](https://chtc.cs.wisc.edu/),
+  using the [HTCondor Software Suite](http://htcondor.org/).
 
 
-The folders `_R`, `_data`, and `chtc` have separate
+The folders `_bash`, `_data`, and `_R` have separate
 `README.md` files that have more information on each.
 
 
