@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Summarize scaffolds
+Summarize contigs and scaffolds
 
 usage:
     ./summ-scaffs.py <input FASTA>
