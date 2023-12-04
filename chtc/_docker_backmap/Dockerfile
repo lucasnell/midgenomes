@@ -6,7 +6,7 @@
 
 
 FROM condaforge/mambaforge:4.11.0-0
-MAINTAINER Lucas Nell <lucas@lucasnell.com>
+MAINTAINER Lucas Nell <lucnell@gmail.com>
 WORKDIR /app
 ENV HOME /app
 ARG DEBIAN_FRONTEND=noninteractive

@@ -1,5 +1,5 @@
 ############################################################
-# Dockerfile for Tanytarsus gracilentus reference assembly.
+# Dockerfile used for most scripts run inside `chtc`.
 ############################################################
 
 

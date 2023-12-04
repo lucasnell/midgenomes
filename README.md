@@ -31,8 +31,8 @@ The following files/folders should be present:
 - `_R`: R scripts mostly used to create figures and analyze data output 
   from the programs used inside the `chtc` folder's scripts, but some create
   necessary output used in `chtc`.
-
-- `chtc`: 
+- `chtc`: Bash scripts used to run much of the bioinformatic
+software for this project.
 
 
 The folders `_R`, `_data`, and `chtc` have separate
