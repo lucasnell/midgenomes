@@ -61,7 +61,7 @@ gstats_df$annot_source[gstats_df$species == "Musca domestica"] <- "InsectBase"
 #' Note: `seq_len_df` is necessary for intergenic sequences below
 #'
 seq_len_df <- gstats_df$spp_abbrev |>
-    map_dfr(\(s) {
+    safe_mclapply(\(s) {
         .fn <- paste0(dirs$assembly, "/", s, "_assembly.fasta.gz")
         sl <- read_lines(.fn, progress = FALSE)
         hl <- which(grepl("^>", sl))
@@ -70,7 +70,8 @@ seq_len_df <- gstats_df$spp_abbrev |>
         lens <- map_int(1:length(hl), \(i) sum(nchar(sl[(hl[i]+1L):(ll[i])])))
         ids <- sl[hl] |> str_remove_all(">") |> str_remove("\ .*")
         tibble(spp_abbrev = s, seqid = ids, length = lens)
-    })
+    }) |>
+    do.call(what = bind_rows)
 
 
 gsize_df <- seq_len_df |>
@@ -513,7 +514,7 @@ one_spp_repeats <- function(.spp) {
     .col_names <- c("SW", "p_div", "p_del", "p_ins", "query_seq",
                     "begin", "end", "left", "unk1", "matching_repeat",
                     "class", "begin2", "end2", "left2", "id", "star")
-    .fn <- sprintf("%s/%s_repeats.tsv", dirs$repeats, .spp)
+    .fn <- sprintf("%s/%s_repeats.tsv.gz", dirs$repeats, .spp)
     repeats <- read_table(.fn, skip = 3, col_types = cols(), progress = FALSE,
                           col_names = .col_names)
     repeat_sums <- repeats |>
@@ -528,7 +529,6 @@ one_spp_repeats <- function(.spp) {
     cat(.spp, "finished\n")
     return(repeat_sums)
 }
-
 
 repeats_len_df <- c("Aaegyp", "Asteph", "Bantar", "Cmarin", "Cquinq", "Cripar",
                 "Csonor", "Ctenta", "Mdomes", "Pakamu", "Ppemba",

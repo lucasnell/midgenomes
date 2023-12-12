@@ -1,6 +1,6 @@
 # midgenomes
 
-<!-- [![DOI](https://zenodo.org/badge/632674820.svg)](https://zenodo.org/badge/latestdoi/632674820) -->
+[![DOI](https://zenodo.org/badge/499583048.svg)](https://zenodo.org/badge/latestdoi/499583048)
 
 Code and small datasets related to the shared features underlying compact 
 genomes and extreme habitat use in chironomid midges.
@@ -39,6 +39,13 @@ The following files/folders should be present:
 
 The folders `_bash`, `_data`, and `_R` have separate
 `README.md` files that have more information on each.
+
+
+# Required dataset
+
+The smaller datasets necessary to run the code herein is located inside
+the `_data` folder.
+See `_R/README.md` for how to download and use the larger datasets.
 
 
 
@@ -108,7 +115,7 @@ installed, so dependencies might vary from what I used.
 
 # Replicating the bash environment
 
-Most scripts in `_bash` were run using the Docker image found at
+Most scripts in `_bash` should be run using the Docker image found at
 <https://hub.docker.com/r/lucasnell/midgenomes>, so to replicate this
 environment you can pull the latest version:
 
@@ -117,8 +124,8 @@ docker pull lucasnell/midgenomes:v1.0.10
 ```
 
 
-The main exception to this was ``, which uses the image found
-at <https://hub.docker.com/r/lucasnell/tany_backmap>,
+The main exception to this is `_bash/01-contigs/backmap.sh`,
+which uses the image found at <https://hub.docker.com/r/lucasnell/tany_backmap>,
 which you can pull using the following:
 
 ```bash

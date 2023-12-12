@@ -9,7 +9,7 @@
 #'
 dirs <- new.env()
 #' You should only need to change this one:
-dirs$parent <- "~/_data/__to-deposit"
+dirs$parent <- "~/midgenomes-data"
 #' ^^^^^^^^
 #'
 
@@ -61,9 +61,6 @@ suppressPackageStartupMessages({
 
 
 options(mc.cores = max(1L, detectCores()-2L))
-
-
-if (file.exists(".Rprofile")) source(".Rprofile")
 
 
 theme_set(theme_classic() +

@@ -100,7 +100,8 @@ cd ${PROT_FOLDER} \
     && cd ..
 check_exit_status "move, rename OrthoFinder output" $?
 
-
+# Remove large working directory folder:
+rm -r ${OUT_DIR}/orthofinder-output/WorkingDirectory
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR} \

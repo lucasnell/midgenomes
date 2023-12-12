@@ -166,10 +166,13 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                       paste(collapse = ";"),
                   .groups = "drop")
 
+    print(node_go_df)
+    print(node_go_hog_df)
+
     fn1 <- paste0(.node, "-GO-by-species-genes.tsv")
     fn2 <- paste0(.node, "-GO-by-HOG.tsv")
-    write_tsv(node_go_df, oed("All_HOG_GO/", fn1))
-    write_tsv(node_go_hog_df, oed("All_HOG_GO/", fn2))
+    # write_tsv(node_go_df, oed("All_HOG_GO/", fn1))
+    # write_tsv(node_go_hog_df, oed("All_HOG_GO/", fn2))
     cat("Wrote to\n", fn1, "\nand\n", fn2, "\ninside\n",
         ofd("All_HOG_GO"), "\n\n")
 

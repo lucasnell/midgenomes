@@ -109,8 +109,6 @@ if (!file.exists("_data/phylo/time-tree.nwk")) {
 
 time_tr@data[["CI"]] <- time_tr@data[["0.95HPD"]] |> map(as.numeric)
 time_tr@phylo$tip.label <- expand_spp(time_tr@phylo$tip.label)
-time_tr@data[["species"]] <- factor(time_tr@phylo$tip.label,
-                                    levels = names(full_spp_pal))
 
 
 time_tr_p0 <- time_tr |>
