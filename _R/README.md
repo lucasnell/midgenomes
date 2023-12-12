@@ -36,6 +36,35 @@ Folder contents:
 └── README.md
 ```
 
+## Using these scripts
+
+The first thing you need to do is edit the `dirs$parent` object inside
+`_R/00-preamble.R` to specify the folder containing the larger 
+datasets you should download from <https://doi.org/10.5281/zenodo.10366330>.
+(Note that this can take a while to download; it took ~30 min on my computer.)
+If, for example, you wanted to put the large-dataset folder on your Desktop
+(and you're on a unix computer), 
+you could run the following on the command line:
+
+```bash
+cd ~/Desktop
+wget https://zenodo.org/records/10366330/files/midgenomes-data.tar.gz
+tar -xzf midgenomes-data.tar.gz
+rm midgenomes-data.tar.gz
+```
+
+Then inside the `_R/00-preamble.R` file, you would set `dirs$parent`
+to `~/Desktop/midgenomes-data`, so the relevant lines in that file would
+look like this:
+
+```r
+#' You should only need to change this one:
+dirs$parent <- "~/Desktop/midgenomes-data"
+#' ^^^^^^^^
+```
+
+
+
 
 ## Content descriptions
 
