@@ -17,4 +17,5 @@ dependencies:
   - r-fnn=1.1.3
   - r-readr=1.4.0
   - raxml-ng=1.1.0
+  - trimal=1.4.1
 prefix: /opt/conda/envs/phylo-env
