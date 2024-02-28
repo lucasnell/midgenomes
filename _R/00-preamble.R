@@ -41,6 +41,7 @@ suppressPackageStartupMessages({
 #'
 #' - AnnotationDbi
 #' - clusterProfiler
+#' - coda
 #' - future
 #' - future.apply
 #' - ggtext

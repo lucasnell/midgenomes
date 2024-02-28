@@ -66,6 +66,19 @@ sprintf("%.9f", cor(tt2$reltime, tt4$reltime))
 sprintf("%.9f", cor(tt3$reltime, tt4$reltime))
 
 
+# For each run, calculate minimum effective sample size for any estimate:
+
+map_dfr(1:4, \(i) {
+    ess <- paste0(dirs$mcmctree, sprintf("/mcmc_%i/chir_mcmctree_mcmc.txt", i)) |>
+        read_tsv(col_types = paste(c("i", rep("d", 15)), collapse = "")) |>
+        select(-Gen) |>
+        summarize(across(everything(), coda::effectiveSize)) |>
+        as.numeric()
+    return(tibble(run = i, min_ess = min(ess)))
+})
+
+
+
 
 
 #' ===========================================================================
