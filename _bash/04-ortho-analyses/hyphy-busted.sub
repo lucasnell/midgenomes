@@ -3,7 +3,7 @@
 # Selection tests using HyPhy BUSTED method.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.10
+docker_image = lucasnell/midgenomes:v1.0.11
 
 log = hyphy-busted.log
 error = hyphy-busted.err

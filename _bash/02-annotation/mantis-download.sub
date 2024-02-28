@@ -3,7 +3,7 @@
 # Download databases for gene functional analysis using mantis.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.10
+docker_image = lucasnell/midgenomes:v1.0.11
 
 log = mantis-download.log
 error = mantis-download.err

@@ -3,7 +3,7 @@
 # Create library of repetitive elements in Aedes aegypti assembly using RepeatModeler.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.10
+docker_image = lucasnell/midgenomes:v1.0.11
 
 log = repeats-Aaegyp-model.log
 error = repeats-Aaegyp-model.err

@@ -120,7 +120,7 @@ Most scripts in `_bash` should be run using the Docker image found at
 environment you can pull the latest version:
 
 ```bash
-docker pull lucasnell/midgenomes:v1.0.10
+docker pull lucasnell/midgenomes:v1.0.11
 ```
 
 

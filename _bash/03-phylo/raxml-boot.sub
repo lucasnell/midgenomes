@@ -3,7 +3,7 @@
 # Generate tree bootstraps using RAxML-NG
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.10
+docker_image = lucasnell/midgenomes:v1.0.11
 
 log = raxml-boot_$(Process).log
 error = raxml-boot_$(Process).err
