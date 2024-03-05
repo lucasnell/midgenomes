@@ -7,6 +7,7 @@ source("_R/00-preamble.R")
 
 library(ggtree)
 library(treeio)
+library(deeptime)
 
 
 
@@ -114,14 +115,26 @@ force_ultrametric <- function(treedata_obj) {
 }
 
 time_tr <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre")) |>
-    force_ultrametric()
+    force_ultrametric() |>
+    (\(tr) {
+        # convert units from 100 My to 1 My:
+        tr@phylo$edge.length <- tr@phylo$edge.length * 100
+        tr@data[["CI"]] <- tr@data[["0.95HPD"]] |>
+            map(\(x) 100 * as.numeric(x))
+        tr@data[["reltime"]] <- tr@data[["reltime"]] * 100
+        # expand species names:
+        tr@phylo$tip.label <- expand_spp(tr@phylo$tip.label)
+        return(tr)
+    })()
 
 if (!file.exists("_data/phylo/time-tree.nwk")) {
-    write.tree(time_tr@phylo, "_data/phylo/time-tree.nwk")
+    read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre")) |>
+        force_ultrametric() |>
+        getElement("phylo") |>
+        write.tree("_data/phylo/time-tree.nwk")
 }
 
-time_tr@data[["CI"]] <- time_tr@data[["0.95HPD"]] |> map(as.numeric)
-time_tr@phylo$tip.label <- expand_spp(time_tr@phylo$tip.label)
+
 
 
 time_tr_p0 <- time_tr |>
@@ -135,8 +148,12 @@ time_tr_p0 <- time_tr |>
 
 time_tr_p <- time_tr_p0 |>
     revts() +
-    scale_x_continuous("Million years ago", breaks = -3:0, labels = 3:0 * 100) +
-    coord_cartesian(clip = "off") +
+    scale_x_continuous("Million years ago", breaks = -3:0 * 100) +
+    coord_geo(dat = "period",
+              xlim = c(-325, 0), ylim = c(-1, Ntip(time_tr)+1), neg = TRUE,
+              abbrv = FALSE, clip = "off",
+              fill = plasma(8, begin = 0.2), color = NA,
+              skip = c("Quaternary", "Neogene", "Carboniferous")) +
     theme(plot.margin = margin(0,0,0,r=1.5, unit = "in"))
 
 time_tr_p
