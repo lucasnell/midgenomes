@@ -2,7 +2,7 @@
 
 
 #'
-#' Sequence alignment using MAFFT, then concatenation of alignments.
+#' Sequence alignment using MAFFT, trim using trimAl, then concatenate alignments.
 #'
 
 
@@ -47,6 +47,8 @@ chmod +x one_align.sh
 export inter_job="False"
 if [[ $- == *i* ]]; then inter_job="True"; fi
 
+
+# Takes ~5 min with 32 threads
 python3 << EOF
 import glob
 import subprocess as sp
@@ -82,6 +84,67 @@ rm -r prequal_filt one_align.sh
 #' ============================================================================
 #' ============================================================================
 #'
+#' Trim alignments
+#'
+#' ============================================================================
+#' ============================================================================
+
+cd ${OUT_DIR}
+
+
+
+#' This is to create a RAxML-style partitions file to be use in
+#' phylogeny construction.
+#' It should look like this:
+#'
+#' WAG, part1 = 1-100
+#' WAG, part2 = 101-384
+#'
+#' ... where part1/part2 is the gene name
+#'
+export ALIGNS_LENGTHS=trim_aligns.partition
+export start=1
+#'
+#' Function to get unique sequence lengths in a fasta file
+#' (return error if >1 value).
+#'
+#' Usage:
+#' fa_unq_lens FILE_NAME
+fa_unq_lens () {
+python3 << EOF
+fa_file = "$1"
+lengths = []
+with open(fa_file, "r") as f:
+    for line in f:
+        if line.startswith(">"):
+            lengths.append(0)
+        else:
+            lengths[-1] += len(line.rstrip())
+unq_lengths = list(set(lengths))
+if len(unq_lengths) > 1:
+    raise AttributeError(">1 unique length in " + fa_file)
+print(unq_lengths[0])
+EOF
+}
+
+# Takes ~1 min
+for f in *.faa; do
+    g=${f%.faa}_trim.faa
+    trimal -in $f -out $g -automated1
+    check_exit_status "null" $?
+    len=$(fa_unq_lens $g)
+    end=$(( start + len - 1 ))
+    echo "WAG, ${f%.faa} = ${start}-${end}" >> ../${ALIGNS_LENGTHS}
+    start=$(( end + 1 ))
+done
+
+cd ..
+
+
+
+#' ============================================================================
+#' ============================================================================
+#'
 #' Concatenate alignments
 #'
 #' ============================================================================
@@ -96,7 +159,6 @@ export CONCAT_ALIGNS=${OUT_DIR}_concat.faa
 #' It assumes that all alignments contain all species.
 #'
 python3 << EOF
-import glob
 import sys
 
 def one_file(fa_file):
@@ -113,8 +175,13 @@ def one_file(fa_file):
     return out
 
 if __name__ == "__main__":
-    genes_files = glob.glob("${OUT_DIR}/*.faa")
-    genes_files.sort()
+    genes_files = []
+    # Get gene names from partition file to make sure order is the same:
+    with open("trim_aligns.partition", "r") as f:
+        for line in f:
+            g = line.rstrip().split(" ")[1]
+            gf = "mafft_aligns/" + g + "_trim.faa"
+            genes_files.append(gf)
     species = []
     with open(genes_files[0], "r") as f:
         for line in f:
@@ -148,9 +215,10 @@ EOF
 
 
 gzip ${CONCAT_ALIGNS}
+gzip ${ALIGNS_LENGTHS}
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
 
-mv ${CONCAT_ALIGNS}.gz ${OUT_DIR}.tar.gz ${TARGET}/
+mv ${CONCAT_ALIGNS}.gz ${ALIGNS_LENGTHS}.gz ${OUT_DIR}.tar.gz ${TARGET}/
 
 
 rm -r ${OUT_DIR}
