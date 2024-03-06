@@ -172,6 +172,24 @@ beta=$(python -c "print('{:.5f}'.format($alpha / $est_rate))")
 export rgene_gamma_PRIORS="${alpha} ${beta} 1"
 unset -v est_rate beta
 
+#' We're using the correlated rates model (clock = 3).
+#' For the priors for the gamma distribution used to generate sigma^2 values
+#' for among-branch variability, we're using the methods from "The Impact of the
+#' Representation of Fossil Calibrations on Bayesian Estimation of Species
+#' Divergence Times".
+#' In this paper, they set the alpha parameter to m / s and
+#' the beta parameter to m / s^2, where m and s are the mean and stdev of
+#' the gamma distribution, respectively.
+#' Because they set m = s = 1 / rt_mean (rt_mean is the mean of the distribution
+#' used to generate root age), beta simplifies to rt_mean.
+#' For rt_mean, we'll use the middle of the uniform portion of the distribution
+#' used to generate root ages (i.e., (max + min) / 2).
+#'
+export sigma2_gamma_PRIORS="1 $(python -c "print('{:.4f}'.format((2.385 + 2.954) / 2))") 1"
+
+
+
+
 
 #' Create control file:
 cat << EOF > mcmctree.ctl
@@ -182,7 +200,7 @@ mcmcfile = ${OUT_PREFIX}_mcmc.txt
 outfile = ${OUT_PREFIX}.out
 seqtype = 2 * 0 : nucleotides; 1: codons; 2: AAs
 usedata = 3 * 0: no data; 1:seq; 2:approximation; 3:out.BV (in.BV)
-clock = 1 * 1: global clock; 2: independent; and 3: correlated rates
+clock = 3 * 1: global clock; 2: independent; and 3: correlated rates
 RootAge = 'B(2.385, 2.954, 0.025, 0.1)' * minimum and maximum constraints on root age
 ndata = 1
 model = 0 * 0:JC69, 1:K80, 2:F81, 3:F84, 4:HKY85
@@ -193,7 +211,7 @@ BDparas = ${BDparas_PRIORS} * birth, death, sampling
 kappa_gamma = 6 2 * gamma prior for kappa
 alpha_gamma = 1 1 * gamma prior for alpha
 rgene_gamma = ${rgene_gamma_PRIORS} * gammaDir prior for rate for genes
-sigma2_gamma = 1 10 1 * gammaDir prior for sigma^2 (for clock=2 or 3)
+sigma2_gamma = ${sigma2_gamma_PRIORS} * gammaDir prior for sigma^2 (for clock=2 or 3)
 finetune = 1: .1 .1 .1 .1 .1 .1 * auto (0 or 1) : times, rates, mixing...
 print = 1 * 0: no mcmc sample; 1: everything except branch 2: ev...
 burnin = 2000
