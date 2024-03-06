@@ -2,7 +2,8 @@
 
 
 #'
-#' Create ML tree using RAxML-NG, using partitioning by gene.
+#' Create ML tree using RAxML-NG, using partitioning from ModelFinder, but
+#' manually fitting substition model.
 #'
 #' Requires an integer argument indicating what type of model to use:
 #' 0 - LG
@@ -12,8 +13,8 @@
 #' 4 - Q.pfam
 #'
 #' Outputs:
-#' - chir_raxml_${RAXML_MODEL}
-#' - chir_ml_${RAXML_MODEL}.tree
+#' - chir_raxml_mfmerge_${RAXML_MODEL}
+#' - chir_ml_mfmerge_${RAXML_MODEL}.tree
 #'
 #' Usage:
 #' raxml.sh RAXML_MODEL_INDEX
@@ -30,15 +31,14 @@ if ! [[ $RAXML_MODEL_INDEX =~ ^[0-9]+$ ]] || (( RAXML_MODEL_INDEX < 0 )) ||
         (( RAXML_MODEL_INDEX > 4 )); then
     echo -n "ERROR: First argument should be an integer 0-4. " 1>&2
     echo "Yours is '${RAXML_MODEL_INDEX}'." 1>&2
-    exit 1
+    # exit 1
 fi
-
 
 
 ALL_RAXML_MODELS=("LG" "JTT" "WAG" "Q.insect" "Q.pfam")
 export RAXML_MODEL=${ALL_RAXML_MODELS[$RAXML_MODEL_INDEX]}
 
-ALL_RAXML_SEEDS=(1407460523 9286090 1018150065 1760220796 1179042090)
+ALL_RAXML_SEEDS=(407078463 314333995 851292978 1725688976 958824602)
 export RAXML_SEED=${ALL_RAXML_SEEDS[$RAXML_MODEL_INDEX]}
 
 . /app/.bashrc
@@ -48,22 +48,21 @@ export THREADS=$(count_threads)
 
 export TARGET=/staging/lnell/phylo
 
-export OUT_DIR=chir_raxml_${RAXML_MODEL}
-export ML_TREE_NAME=chir_ml_${RAXML_MODEL}.tree
-export PREFIX=chir_phy_${RAXML_MODEL}
+export OUT_DIR=chir_raxml_mfmerge_${RAXML_MODEL}
+export ML_TREE_NAME=chir_ml_mfmerge_${RAXML_MODEL}.tree
+export PREFIX=chir_phy_mfmerge_${RAXML_MODEL}
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 
 export CONCAT_ALIGNS=mafft_aligns_concat.faa
 cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
-export ALIGNS_PART=trim_aligns.partition
-cp ${TARGET}/${ALIGNS_PART}.gz ./ && gunzip ${ALIGNS_PART}.gz
+export ALIGNS_PART=chir_modfind_raxml.part
+cp ${TARGET}/${ALIGNS_PART} ./
 
-# Replace WAG with model of choice:
+# Change models to the one we're choosing:
 FULL_MODEL=$(echo ${RAXML_MODEL}"+I+G")
-sed -i "s/WAG,/${FULL_MODEL},/g" ${ALIGNS_PART}
-
+sed -i "s/^[^,]*,/${FULL_MODEL},/" ${ALIGNS_PART}
 
 
 
@@ -107,7 +106,6 @@ fi
 aicc=$(grep "AIC score:" ${PREFIX}.raxml.log | sed 's/^[^\/]*\/ //; s/ \/.*//; s/AICc score: //g')
 # Write to file for simpler comparison:
 echo -e "${FULL_MODEL}\t${aicc}" >> ${TARGET}/${OUT_DIR/_${RAXML_MODEL}/}_AICc.tsv
-
 
 
 # #' How consistent are final trees?

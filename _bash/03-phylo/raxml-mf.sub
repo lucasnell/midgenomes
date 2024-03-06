@@ -1,18 +1,17 @@
-# raxml.sub
+# raxml-mf.sub
 
-# Create phylogeny using RAxML-NG
+# Create phylogeny using RAxML-NG, using ModelFinder scheme/models as inputs.
 
 universe = docker
 docker_image = lucasnell/midgenomes:v1.0.11
 
-log = raxml_$(Process).log
-error = raxml_$(Process).err
-output = raxml_$(Process).out
+log = raxml-mf.log
+error = raxml-mf.err
+output = raxml-mf.out
 
-executable = raxml.sh
-arguments = $(Process)
+executable = raxml-mf.sh
 
-batch_name = "raxml"
+batch_name = "raxml-mf"
 
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
@@ -23,4 +22,4 @@ request_cpus = 32
 request_memory = 32GB
 request_disk = 100GB
 
-queue 3
+queue 1
