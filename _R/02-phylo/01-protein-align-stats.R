@@ -26,7 +26,7 @@ gene_df <- paste0(dirs$odb, "/shared_odb/single-copy-gene-counts.tsv") |>
     mutate(species = expand_spp(species, to_fct = TRUE))
 
 # Percent missing in alignments (before trimming):
-miss_df <- list.files(dirs$mafft, "*.faa", full.names = TRUE) |>
+miss_df <- list.files(dirs$mafft, "*7147.faa", full.names = TRUE) |>
     safe_mclapply(\(f) {
         faa <- read_fasta(f)
         tibble(species = expand_spp(names(faa), TRUE),
@@ -41,5 +41,12 @@ miss_df <- list.files(dirs$mafft, "*.faa", full.names = TRUE) |>
 full_join(gene_df, miss_df, by = "species") |>
     arrange(species)
 
+
+
+# Total number of sites in alignment after trimming:
+paste0(dirs$mafft, "/../mafft_aligns_concat.faa") |>
+    read_fasta() |>
+    map_int(nchar) |>
+    unique()
 
 

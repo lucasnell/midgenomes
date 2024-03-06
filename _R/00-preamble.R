@@ -13,6 +13,8 @@ dirs$parent <- "~/midgenomes-data"
 #' ^^^^^^^^
 #'
 
+dirs$odb <- paste0(dirs$parent, "/phylo/odb")
+dirs$mafft <- paste0(dirs$parent, "/phylo/chir_aligns/mafft_aligns")
 dirs$raxml_supp <- paste0(dirs$parent, "/phylo/chir_raxml_supp")
 dirs$mcmctree <- paste0(dirs$parent, "/phylo/chir_mcmctree")
 dirs$cafe <- paste0(dirs$parent, "/chir_cafe")
@@ -42,6 +44,7 @@ suppressPackageStartupMessages({
 #' - AnnotationDbi
 #' - clusterProfiler
 #' - coda
+#' - deeptime
 #' - future
 #' - future.apply
 #' - ggtext

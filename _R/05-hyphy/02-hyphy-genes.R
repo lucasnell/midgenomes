@@ -13,27 +13,6 @@ source("_R/00-preamble.R")
 .overwrite <- FALSE
 
 
-read_fasta <- function(fn) {
-    z <- read_lines(fn, progress = FALSE)
-    heads <- which(grepl("^>", z))
-    nh <- length(heads)
-    sl <- c(map(2:nh, \(i) (heads[i-1]+1L):(heads[i]-1L)),
-            list((heads[nh]+1L):length(z)))
-    zz <- map_chr(sl, \(inds) paste0(z[inds], collapse = ""))
-    names(zz) <- z[heads]
-    return(zz)
-}
-write_faa <- function(faa_obj, fn) {
-    stopifnot(inherits(faa_obj, "character"))
-    stopifnot(!is.null(names(faa_obj)))
-    stopifnot(all(grepl("^>", names(faa_obj))))
-    file_conn <- file(fn, "at")
-    for (i in 1:length(faa_obj)) {
-        writeLines(c(names(faa_obj)[i], faa_obj[[i]]), file_conn)
-    }
-    close(file_conn)
-    invisible(NULL)
-}
 
 
 hog_gos <- dirs$orthofinder_extr |>
