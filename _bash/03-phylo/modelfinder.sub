@@ -3,7 +3,7 @@
 # Find optimum model and partition scheme using IQ-TREE's ModelFinder
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.11
+docker_image = lucasnell/midgenomes:v1.0.12
 
 log = modelfinder.log
 error = modelfinder.err

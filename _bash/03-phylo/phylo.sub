@@ -4,7 +4,7 @@
 
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.11
+docker_image = lucasnell/midgenomes:v1.0.12
 
 log = phylo.log
 

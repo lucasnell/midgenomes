@@ -3,11 +3,14 @@
 # Create phylogeny using RAxML-NG
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.11
+docker_image = lucasnell/midgenomes:v1.0.12
 
 log = raxml_$(Process).log
 error = raxml_$(Process).err
 output = raxml_$(Process).out
+
+# notification = Complete
+# notify_user = <email-address>
 
 executable = raxml.sh
 arguments = $(Process)

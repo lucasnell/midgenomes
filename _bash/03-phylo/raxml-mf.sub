@@ -3,7 +3,7 @@
 # Create phylogeny using RAxML-NG, using ModelFinder scheme/models as inputs.
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.11
+docker_image = lucasnell/midgenomes:v1.0.12
 
 log = raxml-mf.log
 error = raxml-mf.err

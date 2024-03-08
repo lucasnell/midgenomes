@@ -4,7 +4,7 @@
 #' in MCMCTree
 #'
 #' Note that this script must be run on R < 4.0.*, so I used the Docker
-#' image `lucasnell/midgenomes:v1.0.11`.
+#' image `lucasnell/midgenomes:v1.0.12`.
 #' Instructions on how I did it are below.
 #'
 
@@ -21,7 +21,7 @@
 #'
 #' ```
 #' docker run -it --rm=true --platform linux/amd64 -v <midgenomes DIRECTORY>/_data:/data \
-#'     lucasnell/midgenomes:v1.0.11 /bin/bash
+#'     lucasnell/midgenomes:v1.0.12 /bin/bash
 #' ```
 #'
 #' Once inside the container, I run the following bash code:

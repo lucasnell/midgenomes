@@ -3,7 +3,7 @@
 # trim Illumina DNA- or RNA-seq reads
 
 universe = docker
-docker_image = lucasnell/midgenomes:v1.0.11
+docker_image = lucasnell/midgenomes:v1.0.12
 
 log = fastp_$(seqtype)_$(readtar).log
 error = fastp_$(seqtype)_$(readtar).err
