@@ -9,6 +9,7 @@ dependencies:
   - iqtree=2.2.6
   - mafft=7.515
   - mcl=14.137
+  - modeltest-ng=0.1.7
   - orthofinder=2.5.4
   - paml=4.10.6
   - prequal=1.02

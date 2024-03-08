@@ -68,11 +68,6 @@ RUN . /app/.bashrc && \
         ./config/MANTIS.cfg && \
     cd /app && \
     rm -rf build
-# creating phylogeny and associated analyses:
-COPY env-phylo.yml .
-RUN mamba env create -q -f env-phylo.yml && \
-    rm env-phylo.yml && \
-    conda clean --all -y
 
 # BUSCO:
 RUN mamba create -q -y -c bioconda -c conda-forge -n busco-env busco=5.4.3 && \
@@ -257,4 +252,13 @@ RUN chmod +x summ-scaffs.py pretty-csv.py longest-isoforms.py && \
     echo -e "\n\n" >> ~/.bashrc && \
     rm helpers.sh
 
+
+# --------------------------------
+# creating phylogeny and associated analyses.
+# (Adding this last bc I've been having to change it)
+# --------------------------------
+COPY env-phylo.yml .
+RUN mamba env create -q -f env-phylo.yml && \
+    rm env-phylo.yml && \
+    conda clean --all -y
 
