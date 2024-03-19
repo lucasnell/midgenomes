@@ -6,15 +6,15 @@
 #'
 #'
 #' Outputs:
-#' - chir_modeltest_noGTR.tar.gz
-#' - chir_modeltest_noGTR.partition
+#' - chir_modeltest.tar.gz
+#' - chir_modeltest.partition
 #'
 
 . /app/.bashrc
 
 export TARGET=/staging/lnell/phylo
 
-export PREFIX=chir_modeltest_noGTR
+export PREFIX=chir_modeltest
 export OUT_DIR=${PREFIX}
 export OUT_PART=${PREFIX}.partition
 mkdir ${OUT_DIR}

@@ -97,8 +97,8 @@ cd ${OUT_DIR}
 #' phylogeny construction.
 #' It should look like this:
 #'
-#' WAG, part1 = 1-100
-#' WAG, part2 = 101-384
+#' AA, part1 = 1-100
+#' AA, part2 = 101-384
 #'
 #' ... where part1/part2 is the gene name
 #'
@@ -134,7 +134,7 @@ for f in *.faa; do
     check_exit_status "null" $?
     len=$(fa_unq_lens $g)
     end=$(( start + len - 1 ))
-    echo "WAG, ${f%.faa} = ${start}-${end}" >> ../${ALIGNS_LENGTHS}
+    echo "AA, ${f%.faa} = ${start}-${end}" >> ../${ALIGNS_LENGTHS}
     start=$(( end + 1 ))
 done
 

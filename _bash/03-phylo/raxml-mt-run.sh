@@ -11,12 +11,12 @@
 #' Requires an integer argument for which rep this is (0-9).
 #'
 #' Outputs:
-#' - chir_raxml_mt_noGTR_${index}.tar.gz
+#' - chir_raxml_mt_${index}.tar.gz
 #'
 
 
 if (( $# != 1 )); then
-    echo "ERROR: Exactly one argument required for raxml-mt-sep-noGTR.sh" 1>&2
+    echo "ERROR: Exactly one argument required for raxml-mt-sep.sh" 1>&2
     exit 1
 fi
 
@@ -44,7 +44,7 @@ export THREADS=$(count_threads)
 
 export TARGET=/staging/lnell/phylo
 
-export OUT_DIR=chir_raxml_mt_noGTR_${index}
+export OUT_DIR=chir_raxml_mt_${index}
 export PREFIX=chir_phy_mt_${index}
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
@@ -52,7 +52,7 @@ cd ${OUT_DIR}
 
 export CONCAT_ALIGNS=mafft_aligns_concat.faa
 cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
-export ALIGNS_PART=chir_modeltest_noGTR.partition
+export ALIGNS_PART=chir_modeltest.partition
 cp ${TARGET}/${ALIGNS_PART} ./
 
 
@@ -96,12 +96,6 @@ if [ "$status" != "0" ]; then
 fi
 
 
-
-# #' How consistent are final trees?
-# mkdir rfdist
-# cd rfdist
-# raxml-ng --rfdist --tree ../${PREFIX}.raxml.mlTrees --prefix ${PREFIX}_RF
-# cd ..
 
 # These are stored elsewhere:
 rm ${CONCAT_ALIGNS} ${ALIGNS_PART}

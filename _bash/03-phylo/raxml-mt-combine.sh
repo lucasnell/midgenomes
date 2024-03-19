@@ -5,7 +5,7 @@
 #' Create ML tree using RAxML-NG, using ModelTest-NG models as inputs.
 #'
 #' Outputs:
-#' - chir_raxml_mt_noGTR.tar.gz
+#' - chir_raxml_mt.tar.gz
 #'
 
 
@@ -42,7 +42,9 @@ done
 #' How consistent are final trees?
 mkdir rfdist
 cd rfdist
-raxml-ng --rfdist --tree ../${PREFIX}.raxml.mlTrees --prefix ${PREFIX}_RF
+raxml-ng --rfdist --tree ../${PREFIX}.raxml.mlTrees --prefix ${PREFIX}_RF \
+    | tee ../${PREFIX}.raxml.rfdist
+check_exit_status "raxml rfdist" $?
 cd ..
 #' Very consistent:
 #'
@@ -59,19 +61,21 @@ lld = read.table(llf)
 cat(lld[,1][lld[,2] == max(lld[,2])])
 EOF
 )
+check_exit_status "get best run" $?
 
-cp chir_raxml_mt_${best_run}/chir_phy_mt_${best_run}.raxml.bestTree ${PREFIX}.raxml.bestTree
-cp ${PREFIX}.raxml.bestTree ${ML_TREE_NAME}
-mv ${ML_TREE_NAME} ${TARGET}/
+cp chir_raxml_mt_${best_run}/chir_phy_mt_${best_run}.raxml.bestTree ${PREFIX}.raxml.bestTree \
+    && cp ${PREFIX}.raxml.bestTree ${ML_TREE_NAME} \
+    && mv ${ML_TREE_NAME} ${TARGET}/
+check_exit_status "renaming, moving trees" $?
 
-cd ..
-tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}
-mv ${OUT_DIR}.tar.gz ${TARGET}/
-rm -r ${OUT_DIR}
+cd .. \
+    && tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR} \
+    && mv ${OUT_DIR}.tar.gz ${TARGET}/ \
+    && rm -r ${OUT_DIR}
+check_exit_status "compressing, moving output dir" $?
 
-
-cd ${TARGET}
-rm chir_raxml_mt_?.tar.gz
+# cd ${TARGET}
+# rm chir_raxml_mt_?.tar.gz
 
 
 exit 0

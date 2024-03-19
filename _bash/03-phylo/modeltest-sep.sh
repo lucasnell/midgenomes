@@ -1,16 +1,17 @@
 #!/bin/bash
 
 
+
 #'
 #' Model selection using ModelTest-NG.
 #'
 #'
 #' Outputs:
-#' - chir_modeltest_noGTR_${MT_INDEX}.tar.gz
+#' - chir_modeltest_${MT_INDEX}.tar.gz
 #'
 
 if (( $# != 1 )); then
-    echo "ERROR: Exactly one argument required for modeltest.sh" 1>&2
+    echo "ERROR: Exactly one argument required for modeltest-sep.sh" 1>&2
     exit 1
 fi
 
@@ -37,7 +38,7 @@ export THREADS=$(count_threads)
 
 export TARGET=/staging/lnell/phylo
 
-export OUT_DIR=chir_modeltest_noGTR_${MT_INDEX}
+export OUT_DIR=chir_modeltest_${MT_INDEX}
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 

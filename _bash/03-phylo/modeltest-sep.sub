@@ -1,0 +1,29 @@
+# mt.sub
+
+# Model selection using ModelTest-NG
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.12
+
+log = mt_$(Process).log
+error = mt_$(Process).err
+output = mt_$(Process).out
+
+# notification = Complete
+# notify_user = <email-address>
+
+executable = modeltest-sep.sh
+arguments = $(Process)
+
+batch_name = "mt"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 24
+request_memory = 48GB
+request_disk = 100GB
+
+queue 10
