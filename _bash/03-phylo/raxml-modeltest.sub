@@ -1,0 +1,25 @@
+# raxml-modeltest.sub
+
+# Create phylogeny using RAxML-NG, using ModelTest-NG models as inputs.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.12
+
+log = raxml-modeltest.log
+error = raxml-modeltest.err
+output = raxml-modeltest.out
+
+executable = raxml-modeltest.sh
+
+batch_name = "raxml-modeltest"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 32
+request_memory = 32GB
+request_disk = 100GB
+
+queue 1

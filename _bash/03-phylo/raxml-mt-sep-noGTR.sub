@@ -1,0 +1,41 @@
+# raxml-mt-sep-noGTR.sub
+
+# Create phylogeny using RAxML-NG, using ModelTest-NG models as inputs
+# and splitting the task into 10 separate jobs.
+# This version does not allow use of GTR model bc it hangs when doing the
+# tree search.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.12
+
+log = raxml-mt-sep-noGTR_$(Process).log
+error = raxml-mt-sep-noGTR_$(Process).err
+output = raxml-mt-sep-noGTR_$(Process).out
+
+# notification = Complete
+# notify_user = <email-address>
+
+executable = raxml-mt-sep-noGTR.sh
+arguments = $(Process)
+
+# automatically release jobs held for exceeding resources up to 5 times
+periodic_release = (JobStatus == 5) && (HoldReasonCode == 34) && (NumJobStarts < 5)
+
+# if the job has run before, request either a multiple of the memory
+# used by a previous run, or the default, whichever is larger.
+# Else, use the default.
+request_memory = ifthenelse(MemoryUsage =!= undefined, MAX({MemoryUsage * 3/2, 32000}), 32000)
+
+
+batch_name = "raxml-mt-sep-noGTR"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+## request_memory = 24GB
+request_disk = 100GB
+
+queue 10

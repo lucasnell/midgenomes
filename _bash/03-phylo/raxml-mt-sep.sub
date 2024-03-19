@@ -1,0 +1,33 @@
+# raxml-mt-sep.sub
+
+# Create phylogeny using RAxML-NG, using ModelTest-NG models as inputs
+# and splitting the task into 10 separate jobs.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.12
+
+log = raxml-mt-sep_$(Process).log
+error = raxml-mt-sep_$(Process).err
+output = raxml-mt-sep_$(Process).out
+
+# notification = Complete
+# notify_user = <email-address>
+
+executable = raxml-mt-sep.sh
+arguments = $(Process)
+
+# automatically release those held jobs up to 5 times
+periodic_release = (JobStatus == 5) && (HoldReasonCode == 3) && (NumJobStarts < 5)
+
+batch_name = "raxml-mt-sep"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 16
+request_memory = 24GB
+request_disk = 100GB
+
+queue 10

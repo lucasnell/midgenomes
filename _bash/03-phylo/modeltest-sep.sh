@@ -6,9 +6,27 @@
 #'
 #'
 #' Outputs:
-#' - chir_modeltest.tar.gz
+#' - chir_modeltest_${MT_INDEX}.tar.gz
 #'
 
+if (( $# != 1 )); then
+    echo "ERROR: Exactly one argument required for modeltest.sh" 1>&2
+    exit 1
+fi
+
+export MT_INDEX=$1
+
+if ! [[ $MT_INDEX =~ ^[0-9]+$ ]] || (( MT_INDEX < 0 )) ||
+        (( MT_INDEX > 9 )); then
+    echo -n "ERROR: First argument should be an integer 0-9. " 1>&2
+    echo "Yours is '${MT_INDEX}'." 1>&2
+    exit 1
+fi
+
+RNG_SEEDS=(800899873 269997286 362470401 61320647 996066934 \
+           1085297174 221024413 1350768726 23079768 1075989655)
+export RNG_SEED=${RNG_SEEDS[$MT_INDEX]}
+unset -v RNG_SEEDS
 
 
 . /app/.bashrc
@@ -19,7 +37,7 @@ export THREADS=$(count_threads)
 
 export TARGET=/staging/lnell/phylo
 
-export OUT_DIR=chir_modeltest
+export OUT_DIR=chir_modeltest_${MT_INDEX}
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
@@ -33,8 +51,8 @@ export ALIGNS_PART=trim_aligns.partition
 cp ${TARGET}/${ALIGNS_PART}.gz ./ && gunzip ${ALIGNS_PART}.gz
 # Change formatting to match expected input:
 sed -i 's/WAG,/AA,/g' ${ALIGNS_PART}
-# Make 10 separate folders to split partitions:
-for i in {0..9}; do mkdir modeltest_${i}; done
+
+
 # python code to split partition into 10 separate files
 # (we don't need to do this to the alignment):
 python3 << EOF
@@ -44,18 +62,16 @@ with open("${ALIGNS_PART}", "r") as file:
 starts = [round(len(parts) * x / 10) for x in range(10)]
 ends = [x-1 for x in starts[1:]]
 ends.append(len(parts)-1)
-for i in range(10):
-    fn = "./modeltest_" + str(i) + "/${ALIGNS_PART%.*}_" + str(i) + ".partition"
-    n_lines = ends[i] - starts[i] + 1
-    with open(fn, "w") as f:
-        for j in range(n_lines):
-            f.write(parts[j+starts[i]])
+i=${MT_INDEX}
+fn = "${ALIGNS_PART%.*}_" + str(i) + ".partition"
+n_lines = ends[i] - starts[i] + 1
+with open(fn, "w") as f:
+    for j in range(n_lines):
+        f.write(parts[j+starts[i]])
 sys.exit(0)
 EOF
 
-
-export RNG_SEEDS=(800899873 269997286 362470401 61320647 996066934 \
-                  1085297174 221024413 1350768726 23079768 1075989655)
+rm ${ALIGNS_PART}
 
 #'
 #' -t ml
@@ -69,7 +85,7 @@ export RNG_SEEDS=(800899873 269997286 362470401 61320647 996066934 \
 #' (I chose all models that are for nuclear or mitochondrial sources,
 #'  where MT sources are filtered for those relevant to dipterans)
 #'
-#' -o modeltest_${i}.log
+#' -o modeltest_${MT_INDEX}.log
 #' pipes the output into a file
 #'
 #' -q ${ALIGNS_PART}
@@ -86,21 +102,15 @@ export RNG_SEEDS=(800899873 269997286 362470401 61320647 996066934 \
 #' proportion of invariant sites (+I) and discrete Gamma rate categories (+G)
 #'
 
-for i in {0..9}; do
-
-    cd modeltest_${i}
-    modeltest-ng -i ../${CONCAT_ALIGNS} \
-        -t ml \
-        -d aa \
-        -m DAYHOFF,LG,DCMUT,JTT,WAG,VT,BLOSUM62,PMB,JTT-DCMUT,GTR,MTREV,MTART,MTZOA \
-        -o modeltest_${i}.log \
-        -q ${ALIGNS_PART%.*}_${i}.partition \
-        -p ${THREADS} \
-        -r ${RNG_SEEDS[${i}]} \
-        -h f
-    cd ..
-
-done
+modeltest-ng -i ${CONCAT_ALIGNS} \
+    -t ml \
+    -d aa \
+    -m DAYHOFF,LG,DCMUT,JTT,WAG,VT,BLOSUM62,PMB,JTT-DCMUT,GTR,MTREV,MTART,MTZOA \
+    -o modeltest_${MT_INDEX}.log \
+    -q ${ALIGNS_PART%.*}_${MT_INDEX}.partition \
+    -p ${THREADS} \
+    -r ${RNG_SEED} \
+    -h f
 
 # This is stored elsewhere:
 rm ${CONCAT_ALIGNS}
