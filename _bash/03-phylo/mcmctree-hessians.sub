@@ -1,0 +1,28 @@
+# mcmctree-hessians.sub
+
+# Prepare for MCMCTree up to the point where we compute Hessians using CODEML.
+
+universe = docker
+docker_image = lucasnell/midgenomes:v1.0.12
+
+log = mcmctree-hessians.log
+error = mcmctree-hessians.err
+output = mcmctree-hessians.out
+
+notification = Complete
+# notify_user = <email-address>
+
+executable = mcmctree-hessians.sh
+
+batch_name = "mcmctree-hessians"
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+
+requirements = (Target.HasCHTCStaging == true)
+
+request_cpus = 48
+request_memory = 48GB
+request_disk = 100GB
+
+queue 1
