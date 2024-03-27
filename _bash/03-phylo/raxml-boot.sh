@@ -43,21 +43,56 @@ cd ${OUT_DIR}
 export CONCAT_ALIGNS=mafft_aligns_concat.faa
 cp ${TARGET}/${CONCAT_ALIGNS}.gz ./ && gunzip ${CONCAT_ALIGNS}.gz
 check_exit_status "move, extract alignments" $?
+export ALIGNS_PART=chir_modeltest.partition
+cp ${TARGET}/${ALIGNS_PART} ./
+check_exit_status "move partitions" $?
 
 
 
+#' Note that `--extra thread-pin` was added to avoid the following error:
+#' "ERROR: CPU core oversubscription detected! RAxML-NG will terminate now
+#'  to avoid wasting resources."
 raxml-ng --bootstrap --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} \
     --bs-trees 100 \
-    --threads ${THREADS} --extra thread-pin \
-    --force perf_threads \
+    --threads ${THREADS} \
+    --extra thread-pin \
     --outgroup Mdomes \
-    --data-type AA \
-    --model LG+I+G \
+    --data-type aa \
+    --model ${ALIGNS_PART} \
+    --brlen scaled \
     --seed ${THIS_SEED} \
     1> >(tee -a ${PREFIX}.stdout)
+status=$?
 
 
-rm ${CONCAT_ALIGNS}
+#' Sometimes we still get the 'CPU core oversubscription' error by chance,
+#' so if that happens, we'll try it again with `--extra thread-nopin` to see
+#' if that fixes the problem.
+if [ "$status" != "0" ]; then
+    if grep -Fq 'ERROR: CPU core oversubscription detected!' ${PREFIX}.raxml.log; then
+        mv ${CONCAT_ALIGNS} ${ALIGNS_PART} ../ \
+            && rm * \
+            && mv ../${CONCAT_ALIGNS} ../${ALIGNS_PART} ./
+        raxml-ng --bootstrap --msa ${CONCAT_ALIGNS} --prefix ${PREFIX} \
+            --bs-trees 100 \
+            --threads ${THREADS} \
+            --extra thread-nopin \
+            --outgroup Mdomes \
+            --data-type aa \
+            --model ${ALIGNS_PART} \
+            --brlen scaled \
+            --seed ${THIS_SEED} \
+            1> >(tee -a ${PREFIX}.stdout)
+        check_exit_status "raxml-ng thread-nopin" $?
+    else
+        check_exit_status "raxml-ng" $status
+    fi
+fi
+
+
+
+# These are stored elsewhere:
+rm ${CONCAT_ALIGNS} ${ALIGNS_PART}
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR}

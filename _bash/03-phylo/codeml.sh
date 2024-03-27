@@ -5,6 +5,9 @@
 #' Use codeml in PAML to estimate amino acid substitution rate from
 #' concatenated alignments.
 #'
+#' THis was run in an interactive session using 4 threads, 16GB memory,
+#' and 100GB disk.
+#'
 
 
 . /app/.bashrc
@@ -195,10 +198,8 @@ codeml codeml.ctl \
 
 grep -v '^$' ${OUT_PREFIX}_main.out | grep -A1 "Substitution rate"
 # Substitution rate is per time unit
-# 0.090526
+# 0.087005
 
-# # previous estimate:
-# #     0.090545
 
 gzip < ${ALIGN_PHYLIP} > ${ALIGN_PHYLIP}.gz
 mv ${ALIGN_PHYLIP}.gz ${TARGET}/

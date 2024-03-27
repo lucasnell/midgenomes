@@ -29,7 +29,7 @@
 #' ```
 #' . /app/.bashrc
 #' conda activate phylo-env
-#' R
+#' R --vanilla
 #' ```
 
 
@@ -143,5 +143,4 @@ rel_tr <- read.tree("/data/phylo/chir_mega_relTimes.nwk")
 
 ddBD(rel_tr, outgroup = c("Asteph", "Aaegyp", "Cquinq"), root.time = 2.2, measure = "SSE")
 #    lambda        mu       rho
-# 1.0694326 1.0694338 0.7733908
-
+# 1.0683690 1.0683750 0.7739223

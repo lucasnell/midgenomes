@@ -6,6 +6,7 @@
 #'
 #' Outputs:
 #' - chir_raxml_mt.tar.gz
+#' - chir_ml.tree
 #'
 
 
@@ -18,12 +19,13 @@ export TARGET=/staging/lnell/phylo
 
 export OUT_DIR=chir_raxml_mt
 export PREFIX=chir_phy_mt
-export ML_TREE_NAME=${PREFIX}.tree
+export ML_TREE_NAME=chir_ml.tree
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 
-
+# tsv of AIC by run:
+echo -e "run\taic" > ${PREFIX}.raxml.aic
 
 for i in {0..9}; do
     cp ${TARGET}/chir_raxml_mt_${i}.tar.gz ./ \
@@ -31,9 +33,9 @@ for i in {0..9}; do
         && rm chir_raxml_mt_${i}.tar.gz \
         && cd ./chir_raxml_mt_${i} \
         && cat chir_phy_mt_${i}.raxml.mlTrees >> ../${PREFIX}.raxml.mlTrees \
-        && LL=$(grep "Final LogLikelihood: " chir_phy_mt_${i}.raxml.log \
-            | sed 's/Final LogLikelihood: //g') \
-        && echo -e "${i}\t${LL}" >> ../${PREFIX}.raxml.logLik \
+        && aic=$(grep "AIC" chir_phy_mt_${i}.raxml.log \
+            | sed 's/AIC score: //g; s/[[:space:]].*$//') \
+        && echo -e "${i}\t${aic}" >> ../${PREFIX}.raxml.aic \
         && cd ..
     check_exit_status "copy raxml output $i" $?
 done
@@ -54,11 +56,13 @@ cd ..
 #'
 
 
-# Run with the highest log likelihood:
+# Run with the lowest AIC:
 best_run=$(R --vanilla --slave << EOF
-llf = "${PREFIX}.raxml.logLik"
-lld = read.table(llf)
-cat(lld[,1][lld[,2] == max(lld[,2])])
+aic_f = "${PREFIX}.raxml.aic"
+aic_data = read.table(aic_f, header = TRUE)
+run = aic_data[,"run"]
+aic = aic_data[,"aic"]
+cat(run[aic == min(aic)])
 EOF
 )
 check_exit_status "get best run" $?

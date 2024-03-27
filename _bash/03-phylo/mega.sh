@@ -107,6 +107,7 @@ echo "Mdomes=outgroup" > chir_outgroup.txt
 #'     produce multiple results files and their names will be prefixed with
 #'     this value
 
+# Takes ~7 hours
 megacc \
     -a chir_tree_mega.mao \
     -d ${CONCAT_ALIGNS} \

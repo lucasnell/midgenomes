@@ -25,7 +25,7 @@ cp ${TARGET}/${ML_TREE_NAME} ./
 export ALL_BOOTS=chir_phy_all.raxml.bootstraps
 for t in ${TARGET}/chir_raxml_boot_*.tar.gz; do
     tar -xzf ${t} -C ./
-    boot_dir=$(basename ${t} | sed 's/\.tar\.gz//g')
+    boot_dir=$(basename ${t%.tar.gz})
     cat ${boot_dir}/chir_phy.raxml.bootstraps >> ${ALL_BOOTS}
     rm -r ${boot_dir}
     unset -v boot_dir
@@ -34,14 +34,17 @@ done
 
 #' Did the boostraps converge? (--bs-cutoff 0.01 is extra strict)
 raxml-ng --bsconverge --bs-trees ${ALL_BOOTS} --prefix chir_bsconverge \
-    --seed 1171609222 --threads ${THREADS} --bs-cutoff 0.01
-
+    --seed 1171609222 --threads ${THREADS} --bs-cutoff 0.01 \
+    | tee chir_raxml_bsconverge.stdout
+# Output:
+# Bootstopping test converged after 100 trees
 
 
 #' If that looks good, look at branch support
 raxml-ng --support --tree ${ML_TREE_NAME} --bs-trees ${ALL_BOOTS} \
     --outgroup Mdomes \
-    --prefix chir_supp --threads ${THREADS} --bs-metric fbp,tbe
+    --prefix chir_supp --threads ${THREADS} --bs-metric fbp,tbe \
+    | tee chir_raxml_support.stdout
 
 
 rm ${ML_TREE_NAME}
