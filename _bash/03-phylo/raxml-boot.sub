@@ -5,14 +5,13 @@
 universe = docker
 docker_image = lucasnell/midgenomes:v1.0.12
 
-log = raxml-boot_$(Process).log
-error = raxml-boot_$(Process).err
-output = raxml-boot_$(Process).out
+log = raxml-boot.log
+error = raxml-boot.err
+output = raxml-boot.out
 
 notification = Complete
 
 executable = raxml-boot.sh
-arguments = $(Process)
 
 batch_name = "raxml-boot"
 
@@ -21,8 +20,8 @@ when_to_transfer_output = ON_EXIT
 
 requirements = (Target.HasCHTCStaging == true)
 
-request_cpus = 16
-request_memory = 32GB
+request_cpus = 64
+request_memory = 48GB
 request_disk = 100GB
 
-queue 10
+queue 1
