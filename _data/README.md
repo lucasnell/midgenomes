@@ -19,7 +19,7 @@ Folder contents:
 │   └── hog-genes.csv
 ├── phylo
 │   ├── chir_mega_relTimes.nwk
-│   ├── chir_ml.nwk
+│   ├── chir_ml.tree
 │   └── time-tree.nwk
 └── spatial
     ├── Myvatn_WSGUTM28.geojson
@@ -127,7 +127,7 @@ Column descriptions:
 #### `chir_mega_relTimes.nwk`:
 Tree output from RelTime-ML in MEGA-CC in newick format.
 
-#### `chir_ml.nwk`:
+#### `chir_ml.tree`:
 Maximum likelihood tree from RAxML-NG in newick format.
 
 #### `time-tree.nwk`:

@@ -2,7 +2,7 @@ library(tidyverse)
 library(ape)
 
 # Original version without trimming or partitioning:
-orig <- read.tree("_data/phylo/chir_ml.nwk") |>
+orig <- read.tree("_data/phylo/chir_ml.tree") |>
     ladderize()
 
 # RAxML using merged partitions (39 in total):
