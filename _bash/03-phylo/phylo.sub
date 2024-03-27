@@ -10,6 +10,10 @@ log = phylo.log
 
 batch_name = "phylo"
 
+# In the latest version of HTCondor on CHTC, interactive jobs require an executable.
+# If you do not have an existing executable, use a generic linux command like hostname as shown below.
+executable = /usr/bin/hostname
+
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 

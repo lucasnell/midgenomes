@@ -9,6 +9,8 @@ log = orthodb.log
 error = orthodb.err
 output = orthodb.out
 
+notification = Complete
+
 executable = orthodb.sh
 
 batch_name = "orthodb"

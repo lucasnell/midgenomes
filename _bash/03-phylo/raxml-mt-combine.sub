@@ -9,7 +9,7 @@ log = raxml-mt-combine.log
 error = raxml-mt-combine.err
 output = raxml-mt-combine.out
 
-# notification = Complete
+notification = Complete
 # notify_user = <email-address>
 
 executable = raxml-mt-combine.sh

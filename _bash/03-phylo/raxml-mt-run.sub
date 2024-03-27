@@ -10,6 +10,8 @@ log = raxml-mt-run-$(Process).log
 error = raxml-mt-run-$(Process).err
 output = raxml-mt-run-$(Process).out
 
+notification = Complete
+
 executable = raxml-mt-run.sh
 arguments = $(Process)
 

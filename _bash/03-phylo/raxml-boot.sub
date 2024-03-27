@@ -9,6 +9,8 @@ log = raxml-boot_$(Process).log
 error = raxml-boot_$(Process).err
 output = raxml-boot_$(Process).out
 
+notification = Complete
+
 executable = raxml-boot.sh
 arguments = $(Process)
 
