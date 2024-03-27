@@ -59,25 +59,33 @@ tt4 <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_4/FigTree.tre"))@data
 all(tt1$node == tt2$node) && all(tt1$node == tt3$node) && all(tt1$node == tt4$node)
 
 # All times are consistent across runs:
-sprintf("%.9f", cor(tt1$reltime, tt2$reltime))
-sprintf("%.9f", cor(tt1$reltime, tt3$reltime))
-sprintf("%.9f", cor(tt1$reltime, tt4$reltime))
-sprintf("%.9f", cor(tt2$reltime, tt3$reltime))
-sprintf("%.9f", cor(tt2$reltime, tt4$reltime))
-sprintf("%.9f", cor(tt3$reltime, tt4$reltime))
+sprintf("%.3f", cor(tt1$reltime, tt2$reltime))
+sprintf("%.3f", cor(tt1$reltime, tt3$reltime))
+sprintf("%.3f", cor(tt1$reltime, tt4$reltime))
+sprintf("%.3f", cor(tt2$reltime, tt3$reltime))
+sprintf("%.3f", cor(tt2$reltime, tt4$reltime))
+sprintf("%.3f", cor(tt3$reltime, tt4$reltime))
 
 
-# For each run, calculate minimum effective sample size for any estimate:
+# For each run, calculate minimum effective sample size for any estimate
+# (takes ~7 sec with >=4 threads):
 
-map_dfr(1:4, \(i) {
-    ess <- paste0(dirs$mcmctree, sprintf("/mcmc_%i/chir_mcmctree_mcmc.txt", i)) |>
+mclapply(1:4, \(i) {
+    ess <- paste0(dirs$mcmctree, sprintf("/mcmc_%i/chir_mcmctree_%i.txt", i, i)) |>
         read_tsv(col_types = paste(c("i", rep("d", 15)), collapse = "")) |>
         select(-Gen) |>
         summarize(across(everything(), coda::effectiveSize)) |>
         as.numeric()
     return(tibble(run = i, min_ess = min(ess)))
-})
-
+}) |>
+    do.call(what = bind_rows)
+# # A tibble: 4 × 2
+#     run min_ess
+#   <int>   <dbl>
+# 1     1    642.
+# 2     2    652.
+# 3     3    559.
+# 4     4    567.
 
 
 
@@ -88,35 +96,10 @@ map_dfr(1:4, \(i) {
 #' ===========================================================================
 #' ===========================================================================
 
-#' Force tree to be ultrametric. Taken from
-#' https://github.com/PuttickMacroevolution/MCMCtreeR/blob/2330e7a9916c3929513ee217d3854be993965f6b/R/readMCMCTree.R#L53-L70
-#'
-force_ultrametric <- function(treedata_obj) {
-    phy <- treedata_obj@phylo
-    outer <- phy$edge[,2]
-    inner <- phy$edge[,1]
-    totalPath <- c()
-    for(i in which(outer<=Ntip(phy))) {
-        start <- i
-        end <- inner[start]
-        edgeTimes <- phy$edge.length[start]
-        while(end != inner[1]) {
-            start <- which(outer == end)
-            end <- inner[start]
-            edgeTimes <- c(edgeTimes, phy$edge.length[start])
-        }
-        totalPath <- c(totalPath, sum(edgeTimes))
-    }
-    addLength <- max(totalPath) - totalPath
-    phy$edge.length[which(outer <= Ntip(phy))] <- phy$edge.length[
-        which(outer <= Ntip(phy))] + addLength
-    treedata_obj@phylo <- phy
-    return(treedata_obj)
-}
-
 time_tr <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre")) |>
-    force_ultrametric() |>
     (\(tr) {
+        # use the pre-processed (ultrametric) tree for phylogeny:
+        tr@phylo <- read.tree("_data/phylo/time-tree.nwk")
         # convert units from 100 My to 1 My:
         tr@phylo$edge.length <- tr@phylo$edge.length * 100
         tr@data[["CI"]] <- tr@data[["0.95HPD"]] |>
@@ -126,13 +109,6 @@ time_tr <- read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre")) |>
         tr@phylo$tip.label <- expand_spp(tr@phylo$tip.label)
         return(tr)
     })()
-
-if (!file.exists("_data/phylo/time-tree.nwk")) {
-    read.mcmctree(paste0(dirs$mcmctree, "/mcmc_1/FigTree.tre")) |>
-        force_ultrametric() |>
-        getElement("phylo") |>
-        write.tree("_data/phylo/time-tree.nwk")
-}
 
 
 
@@ -148,13 +124,16 @@ time_tr_p0 <- time_tr |>
 
 time_tr_p <- time_tr_p0 |>
     revts() +
-    scale_x_continuous("Million years ago", breaks = -3:0 * 100) +
+    scale_x_continuous("Million years ago", breaks = -3:0 * 100,
+                       labels = 3:0 * 100) +
     coord_geo(dat = "period",
-              xlim = c(-325, 0), ylim = c(-1, Ntip(time_tr)+1), neg = TRUE,
+              xlim = c(-350, 0), ylim = c(0, Ntip(time_tr)+1), neg = TRUE,
               abbrv = FALSE, clip = "off",
               fill = plasma(8, begin = 0.2), color = NA,
-              skip = c("Quaternary", "Neogene", "Carboniferous")) +
-    theme(plot.margin = margin(0,0,0,r=1.5, unit = "in"))
+              height = unit(1.5, "line"), size = 7/2.8,
+              center_end_labels = TRUE,
+              skip = c("Quaternary", "Neogene")) +
+    theme(plot.margin = margin(0,0,0,r=1.7, unit = "in"))
 
 time_tr_p
 
