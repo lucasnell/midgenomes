@@ -3,7 +3,7 @@
 
 #'
 #' Gene family evolution analysis using CAFE.
-#' Ran this using interactive job with 16 threads, 32 GB RAM, 100 GB disk.
+#' Ran this using interactive job with 48 threads, 64 GB RAM, 100 GB disk.
 #'
 
 
@@ -33,7 +33,7 @@ check_exit_status "moving, ungzipping HOG file" $?
 export COUNTS_FILE=orthofinder-counts-n0.tsv
 
 #' Convert HOG file to count file for CAFE input:
-R --vanilla << EOF
+R --vanilla --slave << EOF
 library(readr)
 count_df <- read_tsv("${HOG_FILE}", col_types = cols())
 count_df <- count_df[,-which(colnames(count_df) %in%
@@ -61,8 +61,8 @@ rm ${HOG_FILE}
 
 
 #' Remove Cmarin from species tree:
-export SPECIES_TREE=${FULL_SPECIES_TREE%.nwk}_noCmarin.nwk
-R --vanilla << EOF
+export SPECIES_TREE=${FULL_SPECIES_TREE%.nwk}-noCmarin.nwk
+R --vanilla --slave << EOF
 library(ape)
 phy <- read.tree("${FULL_SPECIES_TREE}")
 phy <- drop.tip(phy, "Cmarin")
@@ -97,38 +97,53 @@ rm $FULL_SPECIES_TREE
 # Run for multiple levels of k and save negative log likelihoods to choose
 # which k to stick with
 
-echo -e "k\t-lnL" >> nLL.txt
+# This takes ~ 40 min with 48 threads
+
+echo "k,-lnL" > nLL.csv
 for i in {3..9}; do
     CAFE_OUT=cafe_k${i}
     cafe5 -t ${SPECIES_TREE} -i ${COUNTS_FILE} -c ${THREADS} -p -k $i \
         -o ${CAFE_OUT} \
         > ${CAFE_OUT}.out
-    echo -ne "$i\t" >> nLL.txt
+    echo -n "$i," >> nLL.csv
     grep -A 1 "Inferring processes for Gamma model" ${CAFE_OUT}.out \
         | grep "^Score" \
         | sed 's/Score (-lnL): *//g' \
-        >> nLL.txt
+        >> nLL.csv
     unset -v CAFE_OUT
+    echo "$i finished"
 done
 
+#$ cat nLL.csv
+# k,-lnL
+# 3,91696.314026833
+# 4,91411.877673727
+# 5,91259.849022074
+# 6,91169.250635369
+# 7,91112.56846517
+# 8,91072.542543363
+# 9,91046.328272427
 
 #' I then looked at the following plots in R:
 #' ```r
 #' library(readr)
 #' library(ggplot2)
 #' library(dplyr)
-#' x = read_tsv("nLL.txt")
+#' x = read_csv("nLL.csv")
 #' ggplot(x, aes(k, `-lnL`)) + geom_point() + geom_line()
 #' ggplot(filter(x, k != 6), aes(k, `-lnL`)) + geom_point() + geom_line()
 #' ```
 #'
 
-# I chose k = 8 from this bc that's when the plot starting flattening out.
+# I chose k = 8 from this bc that's when the plot started flattening out.
 
 export k=8
 
-mv cafe_k${k} cafe_k${k}_run1
-mv cafe_k${k}.out cafe_k${k}_run1.out
+mkdir other_k_vals
+mv cafe_k* ./other_k_vals/
+
+mv ./other_k_vals/cafe_k${k} cafe_k${k}_run1
+mv ./other_k_vals/cafe_k${k}.out cafe_k${k}_run1.out
 
 
 #' Run it with k=8 two more times because of the following from the CAFE docs:
@@ -138,6 +153,7 @@ mv cafe_k${k}.out cafe_k${k}_run1.out
 #'
 
 
+# Takes ~15 min with 48 threads
 for i in {2..3}; do
     CAFE_OUT=cafe_k${k}_run${i}
     cafe5 -t ${SPECIES_TREE} -i ${COUNTS_FILE} -c ${THREADS} -p -k $k \
@@ -145,7 +161,6 @@ for i in {2..3}; do
         > ${CAFE_OUT}.out
     unset -v CAFE_OUT
 done
-
 
 
 

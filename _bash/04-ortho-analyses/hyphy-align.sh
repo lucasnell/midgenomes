@@ -3,7 +3,9 @@
 
 #'
 #' Do alignments for later selection tests using HyPhy.
-#' Ran this using interactive job with 16 threads, 32 GB RAM, 100 GB disk.
+#' Ran this using interactive job with 48 threads, 64 GB RAM, 100 GB disk.
+#' This script doesn't take very long (< 10 min) so could be easily run
+#' with fewer resources.
 #'
 
 
@@ -161,14 +163,14 @@ if __name__ == "__main__":
             h = csv_info.hogs[sp][j]
             hog_filename = h + ".fasta"
             with open(hog_filename, "a") as hog_file:
-                hog_file.write(">" + sp + "\n")
+                b = hog_file.write(">" + sp + "\n")
                 fa_string = cds_fa[g]
                 if fa_string == "":
                     err_msg = "could not find key " + g + " for species " + sp
                     sys.stderr.write(err_msg + "\n")
                     sys.exit(1)
-                hog_file.write(fa_string)
-                hog_file.write("\n")
+                b = hog_file.write(fa_string)
+                b = hog_file.write("\n")
     sys.exit(0)
 
 EOF

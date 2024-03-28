@@ -9,6 +9,9 @@ log = hyphy-busted.log
 error = hyphy-busted.err
 output = hyphy-busted.out
 
+notification = Complete
+# notify_user = <email-address>
+
 executable = hyphy-busted.sh
 
 batch_name = "hyphy-busted"

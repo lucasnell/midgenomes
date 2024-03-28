@@ -9,6 +9,9 @@ log = hyphy-relax.log
 error = hyphy-relax.err
 output = hyphy-relax.out
 
+notification = Complete
+# notify_user = <email-address>
+
 executable = hyphy-relax.sh
 
 batch_name = "hyphy-relax"
