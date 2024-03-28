@@ -16,23 +16,32 @@ unmerged <- read.tree(text = "(((Asteph:0.155176,(Aaegyp:0.064525,Cquinq:0.07371
 modeltest <- read.tree(text = "(((Asteph:0.156520,(Aaegyp:0.065208,Cquinq:0.074194):0.057944):0.168449,(Csonor:0.318813,(Pstein:0.186366,(Pakamu:0.120384,((Cmarin:0.109025,Bantar:0.114402):0.042142,(Tgraci:0.144855,((Cripar:0.029377,Ctenta:0.020046):0.097137,(Pvande:0.027186,Ppemba:0.028879):0.099397):0.032419):0.081253):0.025352):0.160455):0.144115):0.033708):0.205549,Mdomes:0.205549);") |>
     ladderize()
 
+# merging via ModelFinder followed by ModelTest-NG, then RAxML-NG
+mt_merged <- read.tree(text = "(((Csonor:0.316222,(Pstein:0.185230,(((Tgraci:0.143694,((Pvande:0.027031,Ppemba:0.028656):0.098421,(Cripar:0.029158,Ctenta:0.019919):0.096342):0.032217):0.080356,(Cmarin:0.108348,Bantar:0.113455):0.041668):0.025169,Pakamu:0.119583):0.158749):0.142484):0.034187,((Cquinq:0.073425,Aaegyp:0.064767):0.057564,Asteph:0.154777):0.166175):0.203337,Mdomes:0.203337);") |>
+    ladderize()
+
+
 {
-    par(mfrow = c(1, 2))
+    par(mfrow = c(1, 3))
     plot(orig, main = "original"); nodelabels(); tiplabels()
-    # plot(merged, main = "merged"); nodelabels(); tiplabels()
-    # plot(unmerged, main = "unmerged"); nodelabels(); tiplabels()
-    plot(modeltest, main = "modeltest"); nodelabels(); tiplabels()
+    plot(merged, main = "merged"); nodelabels(); tiplabels()
+    plot(unmerged, main = "unmerged"); nodelabels(); tiplabels()
+    # plot(modeltest, main = "modeltest"); nodelabels(); tiplabels()
 }
 
 
 orig_cp <- cophenetic(orig)
 # merged_cp <- cophenetic(merged)[rownames(orig_cp), colnames(orig_cp)]
-unmerged_cp <- cophenetic(unmerged)[rownames(orig_cp), colnames(orig_cp)]
-modeltest_cp <- cophenetic(modeltest)[rownames(orig_cp), colnames(orig_cp)]
+# unmerged_cp <- cophenetic(unmerged)[rownames(orig_cp), colnames(orig_cp)]
+mt_merged_cp <- cophenetic(mt_merged)[rownames(orig_cp), colnames(orig_cp)]
+# modeltest_cp <- cophenetic(modeltest)[rownames(orig_cp), colnames(orig_cp)]
 
 mean(abs(orig_cp - unmerged_cp))
-mean(abs(orig_cp - modeltest_cp))
-mean(abs(unmerged_cp - modeltest_cp))
+mean(abs(orig_cp - mt_merged_cp))
+mean(abs(orig_cp - merged_cp))
+mean(abs(unmerged_cp - merged_cp))
+# mean(abs(orig_cp - modeltest_cp))
+# mean(abs(unmerged_cp - modeltest_cp))
 
 
 node_df <- "orig,merged,unmerged,modeltest
@@ -69,16 +78,18 @@ node_df <- "orig,merged,unmerged,modeltest
 
 
 orig_dn <- dist.nodes(orig)
-# merged_dn <- dist.nodes(merged)[node_df$merged, node_df$merged]
+merged_dn <- dist.nodes(merged)[node_df$merged, node_df$merged]
 unmerged_dn <- dist.nodes(unmerged)[node_df$unmerged, node_df$unmerged]
-modeltest_dn <- dist.nodes(modeltest)[node_df$modeltest, node_df$modeltest]
+# modeltest_dn <- dist.nodes(modeltest)[node_df$modeltest, node_df$modeltest]
 
 
 
-orig_dn[1:5, 1:5]; unmerged_dn[1:5, 1:5]; modeltest_dn[1:5,1:5]
+# orig_dn[1:5, 1:5]; unmerged_dn[1:5, 1:5]; modeltest_dn[1:5,1:5]
 mean(abs(orig_dn - unmerged_dn))
-mean(abs(orig_dn - modeltest_dn))
-mean(abs(unmerged_dn - modeltest_dn))
+mean(abs(orig_dn - merged_dn))
+mean(abs(unmerged_dn - merged_dn))
+# mean(abs(orig_dn - modeltest_dn))
+# mean(abs(unmerged_dn - modeltest_dn))
 
 
 
