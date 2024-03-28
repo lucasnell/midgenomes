@@ -35,39 +35,45 @@ check_exit_status "moving, renaming protein folder" $?
 
 # Takes just a couple of minutes
 for f in *.faa.gz; do
-    g=$(echo ${f%.gz} | sed 's/_proteins//g')
-    spp=${f/_proteins.faa.gz/}
-    echo $spp >> longest-isoform.log
-    longest-isoform.py $f 1> ${g} 2>> longest-isoform.log
+    g=$(echo ${f%.gz} | sed 's/_proteins//g') \
+        && spp=${f%_proteins.faa.gz} \
+        && echo $spp >> longest-isoforms.log \
+        && longest-isoforms.py $f 1> ${g} 2>> longest-isoforms.log \
+        && echo -e "\n\n" >> longest-isoforms.log \
+        && rm $f
     check_exit_status "only longest isoforms - $spp" $?
-    echo -e "\n\n" >> longest-isoform.log
-    rm $f
 done
 
-mv longest-isoform.* ../
+mv longest-isoforms.log ../
 cd ..
 
 
-
+# Takes ~10 min with 48 threads
 orthofinder -f ${PROT_FOLDER} -t ${THREADS} -a $(( THREADS / 4 )) \
     -s ${SPECIES_TREE} \
     2>&1 \
     | tee orthofinder.log
 check_exit_status "run OrthoFinder" $?
 
+
+
 # Move OrthoFinder output out of the proteins folder and rename:
-cd ${PROT_FOLDER} \
-    && mv OrthoFinder OrthoFinder_tmp \
-    && cd OrthoFinder_tmp \
+cd ${PROT_FOLDER}/OrthoFinder \
     && mv Results_* orthofinder-output \
     && mv orthofinder-output ../../ \
     && cd .. \
-    && rm -r OrthoFinder_tmp \
+    && rm -r OrthoFinder \
     && cd ..
 check_exit_status "move, rename OrthoFinder output" $?
 
 # Remove large working directory folder:
-rm -r ${OUT_DIR}/orthofinder-output/WorkingDirectory
+rm -r ./orthofinder-output/WorkingDirectory
+
+# This is used in CAFE:
+cp ./orthofinder-output/Phylogenetic_Hierarchical_Orthogroups/N0.tsv orthofinder-hogs-n0.tsv
+gzip orthofinder-hogs-n0.tsv
+mv orthofinder-hogs-n0.tsv.gz ${TARGET}/
+
 
 cd ..
 tar -czf ${OUT_DIR}.tar.gz ${OUT_DIR} \
