@@ -147,6 +147,6 @@ hog_genes <- dirs$orthofinder_extr |>
     select(species, gene, hog)
 
 
-if (!file.exists("_data/hyphy/hog-genes.csv") || .overwrite) {
-    write_csv(hog_genes, "_data/hyphy/hog-genes.csv")
+if (!file.exists("_data/hyphy/hyphy-hog-genes.csv") || .overwrite) {
+    write_csv(hog_genes, "_data/hyphy/hyphy-hog-genes.csv")
 }

@@ -1,10 +1,13 @@
 #'
 #' Extract GO terms for 1-to-1 OrthoFinder HOGs.
-#' Output from here is used for HyPhy.
+#' Output from here is used in `02-hyphy-genes.R`
 #'
 
 source("_R/00-preamble.R")
 
+
+# Rewrite previous files?
+.rewrite <- FALSE
 
 
 
@@ -178,15 +181,18 @@ for (.node in all_nodes) {
                    map_chr(\(x) paste(unique(x), collapse = ";")),
                go = ifelse(go == "NA", NA, go))
 
-    print(hog_gene_df)
-    print(hog_summ_df)
+
 
     fn1 <- paste0(.node, "-GO-by-species-genes.tsv")
     fn2 <- paste0(.node, "-GO-by-HOG.tsv")
-    # write_tsv(hog_gene_df, oed("Single_Copy_HOG_GO/", fn1))
-    # write_tsv(hog_summ_df, oed("Single_Copy_HOG_GO/", fn2))
-    cat("Wrote to", fn1, "and", fn2, "inside\n  ",
-        oed("Single_Copy_HOG_GO"), "\n\n")
-
+    if (.rewrite) {
+        write_tsv(hog_gene_df, oed("Single_Copy_HOG_GO/", fn1))
+        write_tsv(hog_summ_df, oed("Single_Copy_HOG_GO/", fn2))
+        cat("Wrote to", fn1, "and", fn2, "inside\n  ",
+            oed("Single_Copy_HOG_GO"), "\n\n")
+    } else {
+        print(hog_gene_df)
+        print(hog_summ_df)
+    }
 }
 

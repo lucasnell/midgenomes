@@ -16,7 +16,7 @@ Folder contents:
 ├── species-names-families.csv
 ├── hyphy
 │   ├── focal-hog-go.csv
-│   └── hog-genes.csv
+│   └── hyphy-hog-genes.csv
 ├── phylo
 │   ├── chir_mega_relTimes.nwk
 │   ├── chir_ml.tree
@@ -110,7 +110,7 @@ Column descriptions:
 - `hogs`: all OrthoFinder 1-to-1 HOGs that match to the GO term in `go` or 
   to any of its offspring in `offspring`; multiples separated by `";"`
 
-#### `hog-genes.csv`:
+#### `hyphy-hog-genes.csv`:
 All genes across the phylogeny that are part of 1-to-1 HOGs that match to our
 list of GO terms related to stressful environments.
 Created in `_R/05-hyphy/02-hyphy-genes.R`<br>

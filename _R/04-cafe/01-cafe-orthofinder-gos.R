@@ -1,12 +1,15 @@
 
 #'
 #' Extract GO terms for all OrthoFinder HOGs.
-#' Output from here is used for CAFE.
+#' Output from here is used in `02-cafe-gos.R`
 #'
 
 
 source("_R/00-preamble.R")
 
+
+# Rewrite previous files?
+.rewrite <- FALSE
 
 
 #' OrthoFinder directory. It's assumed this directory is unchanged from the
@@ -166,14 +169,16 @@ for (.node in c("N0", "N1", "N3", "N5")) {
                       paste(collapse = ";"),
                   .groups = "drop")
 
-    print(node_go_df)
-    print(node_go_hog_df)
-
     fn1 <- paste0(.node, "-GO-by-species-genes.tsv")
     fn2 <- paste0(.node, "-GO-by-HOG.tsv")
-    # write_tsv(node_go_df, oed("All_HOG_GO/", fn1))
-    # write_tsv(node_go_hog_df, oed("All_HOG_GO/", fn2))
-    cat("Wrote to\n", fn1, "\nand\n", fn2, "\ninside\n",
-        ofd("All_HOG_GO"), "\n\n")
+    if (.rewrite) {
+        write_tsv(node_go_df, oed("All_HOG_GO/", fn1))
+        write_tsv(node_go_hog_df, oed("All_HOG_GO/", fn2))
+        cat("Wrote to\n", fn1, "\nand\n", fn2, "\ninside\n",
+            oed("All_HOG_GO"), "\n\n")
+    } else {
+        print(node_go_df)
+        print(node_go_hog_df)
+    }
 
 }
