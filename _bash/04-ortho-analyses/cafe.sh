@@ -19,7 +19,7 @@ mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
 #' Ultrametric species tree:
-export FULL_SPECIES_TREE=chir_mcmctree.nwk
+export FULL_SPECIES_TREE=time-tree.nwk
 cp ${TARGET}/phylo/${FULL_SPECIES_TREE} ./
 check_exit_status "moving species tree" $?
 

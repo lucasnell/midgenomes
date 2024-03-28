@@ -18,9 +18,15 @@ export OUT_DIR=chir_orthofinder
 mkdir ${OUT_DIR}
 cd ${OUT_DIR}
 
+#' Time tree in NEWICK format from MCMCTree output.
+export SPECIES_TREE=time-tree.nwk
+cp ${TARGET}/phylo/${SPECIES_TREE} ./
+check_exit_status "copy time tree" $?
+
+
 export PROT_FOLDER=chir_proteins
 
-cp -r /staging/lnell/proteins ./ \
+cp -r ${TARGET}/proteins ./ \
     && mv proteins ${PROT_FOLDER} \
     && cd ${PROT_FOLDER}
 check_exit_status "moving, renaming protein folder" $?
@@ -42,46 +48,6 @@ mv longest-isoform.* ../
 cd ..
 
 
-
-#' Create simplified time tree in NEWICK format from MCMCTree output.
-#' Use this here in OrthoFinder and save for potentially using elsewhere.
-export SPECIES_TREE_MCMCTREE=chir_mcmctree.tre
-export SPECIES_TREE=chir_mcmctree.nwk
-cat /staging/lnell/phylo/${SPECIES_TREE_MCMCTREE} \
-    | sed -e 's/\[[^][]*\]//g' \
-    | grep "UTREE" \
-    | sed 's/[^(]*//' \
-    > ${SPECIES_TREE}
-check_exit_status "create simple newick time tree" $?
-
-#' This forces the NEWICK tree to be ultrametric. Taken from
-#' https://github.com/PuttickMacroevolution/MCMCtreeR/blob/2330e7a9916c3929513ee217d3854be993965f6b/R/readMCMCTree.R#L53-L70
-#'
-R --vanilla << EOF
-library(ape)
-phy <- read.tree("${SPECIES_TREE}")
-outer <- phy\$edge[,2]
-inner <- phy\$edge[,1]
-totalPath <- c()
-for(i in which(outer<=Ntip(phy))) {
-    start <- i
-    end <- inner[start]
-    edgeTimes <- phy\$edge.length[start]
-    while(end != inner[1]) {
-        start <- which(outer == end)
-        end <- inner[start]
-        edgeTimes <- c(edgeTimes, phy\$edge.length[start])
-    }
-    totalPath <- c(totalPath, sum(edgeTimes))
-}
-addLength <- max(totalPath) - totalPath
-phy\$edge.length[which(outer <= Ntip(phy))] <- phy\$edge.length[
-    which(outer <= Ntip(phy))] + addLength
-write.tree(phy,"${SPECIES_TREE}")
-EOF
-check_exit_status "make simple newick time tree ultrametric" $?
-
-cp ${SPECIES_TREE} /staging/lnell/phylo/
 
 orthofinder -f ${PROT_FOLDER} -t ${THREADS} -a $(( THREADS / 4 )) \
     -s ${SPECIES_TREE} \

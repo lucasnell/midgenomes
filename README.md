@@ -87,7 +87,7 @@ jsonlite@1.8.7
 knitr@1.45
 org.Dm.eg.db@3.17.0
 parallel@4.3.2
-patchwork@1.1.3
+patchwork@1.2.0
 phylolm@2.6.2
 phyr@1.1.2
 rrvgo@1.12.2
@@ -105,7 +105,7 @@ pkgs <- c("AnnotationDbi@1.62.2", "ape@5.7.1", "clusterProfiler@4.8.2",
           "future@1.33.0", "future.apply@1.11.0", "ggtext@0.1.2", 
           "ggtree@3.8.2", "GO.db@3.17.0", "grid@4.3.2", "gt@0.10.0", 
           "jsonlite@1.8.7", "knitr@1.45", "org.Dm.eg.db@3.17.0", 
-          "parallel@4.3.2", "patchwork@1.1.3", "phylolm@2.6.2", 
+          "parallel@4.3.2", "patchwork@1.2.0", "phylolm@2.6.2", 
           "phyr@1.1.2", "rrvgo@1.12.2", "tidyverse@2.0.0", "treeio@1.24.3", 
           "treemap@2.4.4", "viridisLite@0.4.2")
 install.packages(pkgs)

@@ -1,5 +1,0 @@
-# File name: raxml-mt.dag
-
-JOB  A  raxml-mt-run.sub
-JOB  B  raxml-mt-combine.sub
-PARENT A CHILD B

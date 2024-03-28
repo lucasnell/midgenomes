@@ -18,7 +18,7 @@ cd ${OUT_DIR}
 
 #' Ultrametric species tree without Cmarin (bc of poor matching in OrthoFinder)
 #' ... and with labels for family Chironomidae:
-export SPECIES_TREE_LABELLED=chir_mcmctree_noCmarin_labelled.nwk
+export SPECIES_TREE_LABELLED=time-tree-noCmarin-labelled.nwk
 
 cp ${TARGET}/phylo/${SPECIES_TREE_LABELLED} ./
 check_exit_status "moving species tree" $?

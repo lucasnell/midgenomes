@@ -25,7 +25,7 @@ export THREADS=$(count_threads)
 #' ============================================================================
 
 export OUT_DIR=chir_mcmctree
-export OUT_TREE=chir_mcmctree.nwk
+export OUT_TREE=time-tree.nwk
 export OUT_PREFIX=chir_mcmctree
 
 mkdir ${OUT_DIR}
