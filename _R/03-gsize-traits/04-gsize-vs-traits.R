@@ -144,31 +144,3 @@ gsize_corr_p <- do.call(wrap_plots, c(list(nrow = 3), gsize_corr_ps))
 # save_plot("gsize-corrs", gsize_corr_p, 5.5, 4)
 
 
-
-
-
-# #' Not sure if this is necessary. It's a larger dataset just on number of
-# #' proteins vs genome size for a bunch of Dipteran species.
-# #' I collected these two variables for all dipterans with assemblies on
-# #' InsectBase (on 29 Sep 2023), except for those in genera with many assemblies,
-# #' at which point I randomly chose 5 species to represent that genus.
-# #' I don't have the phylogenetic info to analyze this properly, but it shows
-# #' that compared to a wide range of dipterans, chironomids have an especially
-# #' steep slope between genome size and number of proteins.
-# #'
-# gs_df <- "~/Stanford_Drive/UW/midgenomes/midgenomes.xlsx" |>
-#     readxl::read_excel(sheet = "gsize-proteins") |>
-#     filter(accession != "x") |>
-#     mutate(chir_cerat = family %in% c("Chironomidae", "Ceratopogonidae"))
-#
-# gs_df |>
-#     arrange(chir_cerat) |>
-#     ggplot(aes(log10(gsize), log10(n_genes / 1e3))) +
-#     geom_point(aes(color = chir_cerat)) +
-#     scale_y_continuous("Protein-coding\ngenes (\u00D71000)",
-#                        breaks = log10(12 * 1.5^(0:2)),
-#                        labels = 12 * 1.5^(0:2)) +
-#     scale_x_continuous("Genome size (Mb)",
-#                        breaks = log10(100e6 * 2^(0:3)),
-#                        labels = 100 * 2^(0:3)) +
-#     scale_color_manual(values = c("gray70", "red"), guide = "none")

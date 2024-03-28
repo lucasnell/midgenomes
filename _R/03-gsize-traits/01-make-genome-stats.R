@@ -125,14 +125,14 @@ ngenes_df <- gstats_df |>
 
 
 # ngenes_df
-# Updated on 2023-09-22
+# Updated on 2024-03-27
 # # A tibble: 14 × 3
 #    spp_abbrev n_prots n_genes
 #    <fct>        <int>   <int>
-#  1 Ctenta       20615   20615
-#  2 Cripar       16522   16522
-#  3 Pvande       17631   17631
-#  4 Ppemba       17339   17339
+#  1 Ppemba       17339   17339
+#  2 Pvande       17631   17631
+#  3 Ctenta       20615   20615
+#  4 Cripar       16522   16522
 #  5 Tgraci       15561   15499
 #  6 Bantar       10853   10853
 #  7 Cmarin       21259   21259
@@ -143,7 +143,6 @@ ngenes_df <- gstats_df |>
 # 12 Aaegyp       28391   14718
 # 13 Asteph       29673   12705
 # 14 Mdomes       14215   14215
-
 
 
 
