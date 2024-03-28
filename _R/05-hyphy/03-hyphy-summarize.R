@@ -45,18 +45,18 @@ BY_correct <- function(Pvals, .names, fdr = 0.1) {
 #'
 #' The same 12 HOGs failed for both tests:
 #'
-#' - N0.HOG0005474
-#' - N0.HOG0005567
-#' - N0.HOG0006093
-#' - N0.HOG0006291
-#' - N0.HOG0006401
-#' - N0.HOG0006823
-#' - N0.HOG0006968
-#' - N0.HOG0007232
-#' - N0.HOG0007353
-#' - N0.HOG0007393
-#' - N0.HOG0007749
-#' - N0.HOG0008307
+#' - N0.HOG0004554
+#' - N0.HOG0005878
+#' - N0.HOG0006313
+#' - N0.HOG0006365
+#' - N0.HOG0006541
+#' - N0.HOG0006837
+#' - N0.HOG0007063
+#' - N0.HOG0007106
+#' - N0.HOG0007112
+#' - N0.HOG0007224
+#' - N0.HOG0007399
+#' - N0.HOG0009075
 #'
 #'
 #' The errors occur as a form of this:
@@ -92,6 +92,16 @@ relax_data <- list.files(paste0(dirs$hyphy_relax, "/", ""), "*.json") |>
     map(read_hyphy, .test = "relax") |>
     discard(\(x) isTRUE(is.na(x)))
 
+
+# Keep term levels consistent:
+term_lvls <- c("response to hypoxia",
+               "response to metal ion",
+               "defense response to other organism",
+               "response to oxidative stress",
+               "response to anoxia",
+               "response to heat",
+               "response to ionizing radiation",
+               "response to cold")
 
 
 
@@ -137,7 +147,7 @@ hog_focal_go_p_df <- hog_focal_go_df |>
     arrange(desc(both), desc(any)) |>
     select(-any) |>
     mutate(go = factor(go, levels = go),
-           term = factor(term, levels = term)) |>
+           term = factor(term, levels = term_lvls)) |>
     pivot_longer(BUSTED:both) |>
     mutate(name = factor(name, levels = c("RELAX_rel", "RELAX_int", "both", "BUSTED"))) |>
     arrange(go, term, name) |>
@@ -194,6 +204,13 @@ sign_hogs <- hog_focal_go_df |>
     getElement("hog") |>
     unique()
 
+# To help create table to look these up:
+"_data/hyphy/hyphy-hog-genes.csv" |>
+    read_csv(col_types = cols()) |>
+    filter(hog %in% sign_hogs, species == "Cquinq") |>
+    mutate(hog = factor(hog, levels = sign_hogs)) |>
+    arrange(hog) |>
+    select(gene, hog)
 
 #'
 #' Below, I replace p-values of zero with <1e-26 because this is more accurate
@@ -205,20 +222,16 @@ sign_hogs <- hog_focal_go_df |>
 hyphy_sign_hogs_table <- hyphy_df |>
     filter(hog %in% sign_hogs) |>
     select(1:4) |>
-    mutate(desc = case_when(hog == "N0.HOG0006267" ~ "exportin",
-                            hog == "N0.HOG0001010" ~ "peroxiredoxin-1",
-                            hog == "N0.HOG0005696" ~ "sulfonylurea receptor",
-                            hog == "N0.HOG0007992" ~ "F-box/WD-40 domain protein 7",
-                            hog == "N0.HOG0007399" ~ "SERRATE protein",
-                            hog == "N0.HOG0007118" ~ "dynein heavy chain",
-                            hog == "N0.HOG0007838" ~ "prohibitin",
-                            hog == "N0.HOG0008783" ~ "protein kinase D",
-                            hog == "N0.HOG0001074" ~ "ribosomal protein S6 kinase",
-                            hog == "N0.HOG0004934" ~ "4-aminobutyrate aminotransferase",
-                            hog == "N0.HOG0006858" ~ "Vav guanine nucleotide exchange factor",
-                            hog == "N0.HOG0006910" ~ "ETS domain-containing protein",
-                            hog == "N0.HOG0007233" ~ "heat shock protein 83",
-                            hog == "N0.HOG0007347" ~ "cyclic-nucleotide-gated cation channel",
+    mutate(desc = case_when(hog == "N0.HOG0006310" ~ "histone acetyltransferase",
+                            hog == "N0.HOG0004708" ~ "sulfonylurea receptor",
+                            hog == "N0.HOG0006733" ~ "heat shock protein 83",
+                            hog == "N0.HOG0007287" ~ "HIF-proline dioxygenase",
+                            hog == "N0.HOG0007767" ~ "prohibitin",
+                            hog == "N0.HOG0006410" ~ "peroxiredoxin",
+                            hog == "N0.HOG0008312" ~ "protein kinase D",
+                            hog == "N0.HOG0001080" ~ "ribosomal protein S6 kinase II",
+                            hog == "N0.HOG0007283" ~ "ETS domain-containing protein",
+                            hog == "N0.HOG0007710" ~ "Serrate protein",
                             TRUE ~ NA)) |>
     mutate(gos = map_chr(hog,
                          \(h) {

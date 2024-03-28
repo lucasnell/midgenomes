@@ -32,21 +32,21 @@ source("_R/00-preamble.R")
 #'     geom_tiplab() +
 #'     geom_nodelab()
 #' ```
-#' #' from this, I can see that Chironomidae starts at node 17 (from node 20)
+#' #' from this, I can see that Chironomidae starts at node 16 (from node 20)
 
-.node <- rlang::sym("<17>")
+.node <- rlang::sym("<16>")
 
 
 #' Gene count changes:
 gc_df <- paste0(dirs$cafe, "/cafe_k8_run1/Gamma_change.tab") |>
     read_tsv(col_types = paste0(c("c", rep("d", 25)), collapse = "")) |>
-    # change in count from node 20 to 17 (i.e., to chironomidae):
+    # change in count from node 20 to 16 (i.e., to chironomidae):
     mutate(chir_d = !!.node, hog = FamilyID) |>
     select(hog, chir_d)
 
 
-#' Start by reading branch probabilities, to get p-value (at node 17),
-#' then combine with `gc_df` to add change in gene count (from node 17 to 20)
+#' Start by reading branch probabilities, to get p-value (at node 16),
+#' then combine with `gc_df` to add change in gene count (from node 16 to 20)
 #' for each HOG.
 #' I had to do the column names this way because it has a weird extra
 #' tab at the end of the line.
@@ -69,7 +69,7 @@ hog_gos <- paste0(dirs$orthofinder_extr, "/All_HOG_GO/N0-GO-by-HOG.tsv") |>
 
 
 #' All N0 HOGs with GO terms and descriptions.
-#' No filtering for whether they rapidly evolved at node 17 yet!
+#' No filtering for whether they rapidly evolved at node 16 yet!
 chir_hogs <- hog_pd_df |>
     mutate(go = map_chr(hog, \(h) hog_gos$go[hog_gos$hog == h]) |> toupper()) |>
     filter(!is.na(go)) |>
