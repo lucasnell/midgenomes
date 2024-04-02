@@ -161,9 +161,9 @@ treemap_p <- function() {
 
 
 
-#' --------------------------------
-#' This helped me manually describe each HOG:
-#' --------------------------------
+# #' --------------------------------
+# #' This helped me manually describe each HOG:
+# #' --------------------------------
 #
 #
 # hogs <- genes
@@ -236,7 +236,10 @@ treemap_p <- function() {
 #     mutate(desc = desc |>
 #                str_remove(" variant.*") |>
 #                str_remove("(?i)probable ") |>
-#                str_remove("%2C.*")) |>
+#                str_remove("%2C.*"),
+#            hog = paste(hog)) |>
+#     mutate(hog = ifelse(hog == lag(hog, default = "ZZZZ"), NA, hog)) |>
+#     set_names(c("HOG", "Species", "Gene", "Description")) |>
 #     clipr::write_clip()
 
 

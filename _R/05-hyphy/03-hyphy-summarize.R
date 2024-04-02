@@ -93,18 +93,6 @@ relax_data <- list.files(paste0(dirs$hyphy_relax, "/", ""), "*.json") |>
     discard(\(x) isTRUE(is.na(x)))
 
 
-# Keep term levels consistent:
-term_lvls <- c("response to hypoxia",
-               "response to metal ion",
-               "defense response to other organism",
-               "response to oxidative stress",
-               "response to anoxia",
-               "response to heat",
-               "response to ionizing radiation",
-               "response to cold")
-
-
-
 
 hyphy_df <- tibble(hog = names(busted_data),
                    busted_pvals = map_dbl(busted_data, \(x) x[["test results"]][["p-value"]]),
@@ -124,6 +112,19 @@ hyphy_df <- tibble(hog = names(busted_data),
                    relax_disc = BY_correct(relax_pvals, hog))
 
 
+#' Summary stats:
+hyphy_df |>
+    summarize(n_busted = sum(busted_disc),
+              p_busted = 100 * mean(busted_disc),
+              n_relax = sum(relax_disc),
+              n_relax_int = sum(relax_disc & relax_k > 1),
+              p_relax = 100 * mean(relax_disc),
+              n_both = sum(relax_disc & busted_disc),
+              p_both = 100 * mean(relax_disc & busted_disc),
+              n = n())
+
+
+
 
 hog_focal_go_df <- "_data/hyphy/focal-hog-go.csv" |>
     read_csv(col_types = cols()) |>
@@ -136,6 +137,25 @@ hog_focal_go_df <- "_data/hyphy/focal-hog-go.csv" |>
            relax_disc = map_lgl(hog, \(h) hyphy_df$relax_disc[hyphy_df$hog == h]),
            relax_k = map_dbl(hog, \(h) hyphy_df$relax_k[hyphy_df$hog == h]))
 
+
+# Keep term and GO levels consistent:
+term_lvls <- c("response to hypoxia",
+               "response to metal ion",
+               "defense response to other organism",
+               "response to oxidative stress",
+               "response to anoxia",
+               "response to heat",
+               "response to ionizing radiation",
+               "response to cold")
+go_lvls <- "_data/hyphy/focal-hog-go.csv" |>
+    read_csv(col_types = cols()) |>
+    mutate(term = factor(term, levels = term_lvls)) |>
+    arrange(term) |>
+    getElement("go")
+
+
+
+
 hog_focal_go_p_df <- hog_focal_go_df |>
     group_by(go, term) |>
     summarize(BUSTED = mean(busted_disc & !relax_disc),
@@ -146,7 +166,7 @@ hog_focal_go_p_df <- hog_focal_go_df |>
               .groups = "drop") |>
     arrange(desc(both), desc(any)) |>
     select(-any) |>
-    mutate(go = factor(go, levels = go),
+    mutate(go = factor(go, levels = go_lvls),
            term = factor(term, levels = term_lvls)) |>
     pivot_longer(BUSTED:both) |>
     mutate(name = factor(name, levels = c("RELAX_rel", "RELAX_int", "both", "BUSTED"))) |>
@@ -193,9 +213,12 @@ hog_focal_go_p <- hog_focal_go_p_df |>
 # save_plot("hyphy-focal-go-percent", hog_focal_go_p, w = 4, h = 1.6, .png = FALSE)
 
 
-
-
-
+#' Numbers of significant HOGs by GO:
+hog_focal_go_df |>
+    filter(busted_disc & relax_disc) |>
+    group_by(term) |>
+    summarize(n = n()) |>
+    arrange(desc(n))
 
 
 #' Names of HOGs where null is rejected for both models.
@@ -222,7 +245,7 @@ sign_hogs <- hog_focal_go_df |>
 hyphy_sign_hogs_table <- hyphy_df |>
     filter(hog %in% sign_hogs) |>
     select(1:4) |>
-    mutate(desc = case_when(hog == "N0.HOG0006310" ~ "histone acetyltransferase",
+    mutate(desc = case_when(hog == "N0.HOG0006310" ~ "CREB-binding protein",
                             hog == "N0.HOG0004708" ~ "sulfonylurea receptor",
                             hog == "N0.HOG0006733" ~ "heat shock protein 83",
                             hog == "N0.HOG0007287" ~ "HIF-proline dioxygenase",
@@ -237,8 +260,8 @@ hyphy_sign_hogs_table <- hyphy_df |>
                          \(h) {
                              g <- hog_focal_go_df$go[hog_focal_go_df$hog == h]
                              #' Convert to factor based on
-                             #' `hog_focal_go_p_df$go`, then into integer:
-                             gint <- which(levels(hog_focal_go_p_df$go) %in% g)
+                             #' `go_lvls`, then into integer:
+                             gint <- which(go_lvls %in% g)
                              paste(gint, collapse = ",")
                          }),
            relax_pvals = ifelse(relax_pvals == 0, 1e-26, relax_pvals)) |>

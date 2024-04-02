@@ -97,7 +97,9 @@ focal_go_df <- tibble(go = c("GO:0010038", "GO:0010212", "GO:0034059",
                       # parent GO term plus offspring (recursive)
                       offspring = safe_mclapply(go, get_offs),
                       hogs = map(offspring, \(o) unique(hog_gos$hog[hog_gos$go %in% o])))
-focal_go_df
+# focal_go_df
+
+
 
 # Write to CSV for use in summarizing output later:
 if (!file.exists("_data/hyphy/focal-hog-go.csv") || .overwrite) {
