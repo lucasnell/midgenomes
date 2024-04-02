@@ -20,6 +20,7 @@ Folder contents:
 ├── phylo
 │   ├── chir_mega_relTimes.nwk
 │   ├── chir_ml.tree
+│   ├── time-tree-noCmarin.nwk
 │   └── time-tree.nwk
 └── spatial
     ├── Myvatn_WSGUTM28.geojson
@@ -132,7 +133,11 @@ Maximum likelihood tree from RAxML-NG in newick format.
 
 #### `time-tree.nwk`:
 Time tree from MCMCTree made to be ultrametric and in newick format
-Created in `_R/02-phylo/02-phylogeny-plots.R`.
+Created in `_bash/03-phylo/mcmctree.sh`.
+
+#### `time-tree-noCmarin.nwk`:
+Ultrametric time-tree without species *Clunio marinus* because of its
+poor matching in OrthoFinder.
 
 
 ### `spatial` folder:

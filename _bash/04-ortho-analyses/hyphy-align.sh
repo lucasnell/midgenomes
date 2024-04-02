@@ -2,7 +2,7 @@
 
 
 #'
-#' Do alignments for later selection tests using HyPhy.
+#' Do codon-aware alignments for later selection tests using HyPhy.
 #' Ran this using interactive job with 48 threads, 64 GB RAM, 100 GB disk.
 #' This script doesn't take very long (< 10 min) so could be easily run
 #' with fewer resources.

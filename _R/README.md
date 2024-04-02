@@ -19,8 +19,9 @@ Folder contents:
 │   ├── 03-cds-busco.R
 │   └── 04-mantis-counts.R
 ├── 02-phylo
-│   ├── 01-ddBD.R
-│   └── 02-phylogeny-plots.R
+│   ├── 01-protein-align-stats.R
+│   ├── 02-ddBD.R
+│   └── 03-phylogeny-plots.R
 ├── 03-gsize-traits
 │   ├── 01-make-genome-stats.R
 │   ├── 02-gsize-traits-analysis.R
@@ -40,7 +41,7 @@ Folder contents:
 
 The first thing you need to do is edit the `dirs$parent` object inside
 `_R/00-preamble.R` to specify the folder containing the larger 
-datasets you should download from <https://doi.org/10.5281/zenodo.10366330>.
+datasets you should download from <https://doi.org/10.5281/zenodo.10909791>.
 (Note that this can take a while to download; it took ~30 min on my computer.)
 If, for example, you wanted to put the large-dataset folder on your Desktop
 (and you're on a unix computer), 
@@ -48,7 +49,7 @@ you could run the following on the command line:
 
 ```bash
 cd ~/Desktop
-wget https://zenodo.org/records/10366330/files/midgenomes-data.tar.gz
+wget https://zenodo.org/records/10909791/files/midgenomes-data.tar.gz
 tar -xzf midgenomes-data.tar.gz
 rm midgenomes-data.tar.gz
 ```
@@ -82,9 +83,11 @@ dirs$parent <- "~/Desktop/midgenomes-data"
 
 ### `02-phylo` folder:
 
-- `01-ddBD.R`: Use ddBD method to inform priors for the speciation birth--death 
+- `01-protein-align-stats.R`: Create table with summary stats about 
+  alignments of proteins matching OrthoDB Diptera proteins.
+- `02-ddBD.R`: Use ddBD method to inform priors for the speciation birth--death 
   process in MCMCTree
-- `02-phylogeny-plots.R`: Plot maximum likelihood and time-calibrated 
+- `03-phylogeny-plots.R`: Plot maximum likelihood and time-calibrated 
   phylogenetic trees
 
 

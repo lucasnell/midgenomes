@@ -24,7 +24,7 @@ Folder contents:
 The bash scripts in this folder are as follows:
 
 - `cafe.sh`: Gene family evolution analysis using CAFE.
-- `hyphy-align.sh`: Do alignments for later selection tests using HyPhy.
+- `hyphy-align.sh`: Codon-aware alignments used in HyPhy selection tests.
 - `hyphy-busted.sh`: Selection tests using HyPhy BUSTED method.
 - `hyphy-relax.sh`: Selection tests using HyPhy RELAX method.
 - `orthofinder.sh`: Find orthogroups using OrthoFinder.

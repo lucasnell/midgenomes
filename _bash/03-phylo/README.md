@@ -27,8 +27,6 @@ Folder contents:
 ├── raxml-mt-combine.sub
 ├── raxml-mt-run.sh
 └── raxml-mt-run.sub
-
-
 ```
 
 
@@ -51,6 +49,6 @@ The bash scripts in this folder are as follows:
 - `prequal.sh`: Pre-alignment quality filter with prequal.
 - `raxml-boot.sh`: Run up to 1,000 bootstrap replicates for ML tree using 
   RAxML-NG, then evaluate ML tree branch support.
-- `raxml-mt-combine.sh`: Combine output from the 10 runs of `raxml-mt-combine.sh`.
+- `raxml-mt-combine.sh`: Combine output from the 10 runs of `raxml-mt-run.sh`.
 - `raxml-mt-run.sh`: Create ML tree using RAxML-NG. This task was split into
   10 jobs, and each run of this script did 1/10 of the work.

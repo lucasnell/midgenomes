@@ -4,6 +4,9 @@
 This folder contains the files used to create the Docker container in which 
 most scripts inside `_bash` were run.
 
+To use this docker container, see "Replicating the bash environment"
+inside the top-level `README.md` file.
+
 
 Folder contents:
 

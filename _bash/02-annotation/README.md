@@ -13,7 +13,6 @@ Folder contents:
 ├── braker-rna.sh
 ├── braker-rna.sub
 ├── cds-busco.sh
-├── mantis-Pstein-vanilla.sh
 ├── mantis-download.sh
 ├── mantis-download.sub
 ├── mantis.sh

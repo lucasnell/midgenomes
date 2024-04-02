@@ -63,7 +63,7 @@ My session info:
  collate  en_US.UTF-8
  ctype    en_US.UTF-8
  tz       America/Los_Angeles
- date     2024-03-05
+ date     2024-04-02
  rstudio  2023.12.1+402 Ocean Storm (desktop)
  pandoc   3.1.9 @ /opt/homebrew/bin/pandoc
 ```
@@ -126,9 +126,39 @@ environment you can pull the latest version:
 docker pull lucasnell/midgenomes:v1.0.12
 ```
 
+I also put it onto the zenodo repository:
 
-The main exception to this is `_bash/01-contigs/backmap.sh`,
-which uses the image found at <https://hub.docker.com/r/lucasnell/tany_backmap>,
+```bash
+wget https://zenodo.org/records/10909791/files/midgenomes-v1.0.12-archive.tar.gz
+```
+
+In either of these cases, if you want to run BRAKER2, you'll need to get
+a new license file for GeneMark-ES/ET/EP+ from here:
+<http://exon.gatech.edu/GeneMark/license_download.cgi>.
+You'll want to decompress it, name it `.gm_key`, and put it into the `/app`
+folder inside the Docker container after starting it up.
+
+
+You can also build the docker container yourself.
+To do this, you should download the GeneMark license, rename it `gm_key_64.gz`
+but don't do anything else to it.
+Then, download the compiled GeneMark-ES/ET/EP+ software package named
+`gmes_linux_64_4.tar.gz`.
+Lastly, download the Repbase-derived RepeatMasker libraries
+from <https://www.girinst.org/server/RepBase/> which should be named
+`RepBaseRepeatMaskerEdition-20181026.tar.gz`.
+Put all these files inside the `_docker` folder before building by running
+
+```bash
+cd /path/to/midgenomes/_bash/_docker
+docker build --platform linux/amd64 -t lucasnell/midgenomes:v1.0.12 .
+```
+
+
+
+The only script that doesn't use the `midgenomes` docker container is
+`_bash/01-contigs/backmap.sh`.
+It uses the image found at <https://hub.docker.com/r/lucasnell/tany_backmap>,
 which you can pull using the following:
 
 ```bash
