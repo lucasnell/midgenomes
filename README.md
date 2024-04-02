@@ -126,13 +126,7 @@ environment you can pull the latest version:
 docker pull lucasnell/midgenomes:v1.0.12
 ```
 
-I also put it onto the zenodo repository:
-
-```bash
-wget https://zenodo.org/records/10909791/files/midgenomes-v1.0.12-archive.tar.gz
-```
-
-In either of these cases, if you want to run BRAKER2, you'll need to get
+If you want to run BRAKER2, you'll need to get
 a new license file for GeneMark-ES/ET/EP+ from here:
 <http://exon.gatech.edu/GeneMark/license_download.cgi>.
 You'll want to decompress it, name it `.gm_key`, and put it into the `/app`
@@ -148,11 +142,16 @@ Lastly, download the Repbase-derived RepeatMasker libraries
 from <https://www.girinst.org/server/RepBase/> which should be named
 `RepBaseRepeatMaskerEdition-20181026.tar.gz`.
 Put all these files inside the `_docker` folder before building by running
+(replacing `/path/to` with your path to `midgenomes` and
+`self` with your username)
 
 ```bash
 cd /path/to/midgenomes/_bash/_docker
-docker build --platform linux/amd64 -t lucasnell/midgenomes:v1.0.12 .
+docker build --platform linux/amd64 -t self/midgenomes:v1.0.12 .
 ```
+
+If building it yourself, you'll obviously need to run it
+using `self/midgenomes:v1.0.12` instead of `lucasnell/midgenomes:v1.0.12`.
 
 
 
